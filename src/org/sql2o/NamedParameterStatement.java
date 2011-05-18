@@ -66,7 +66,7 @@ public class NamedParameterStatement {
     /**
      * Parses a query with named parameters.  The parameter-index mappings are put into the map, and the
      * parsed query is returned.  DO NOT CALL FROM CLIENT CODE.  This method is non-private so JUnit code can
-     * test it.
+     * testSelect it.
      * @param query    query to parse
      * @param paramMap map to hold parameter-index mappings
      * @return the parsed query

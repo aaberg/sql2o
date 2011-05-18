@@ -12,9 +12,9 @@ import java.util.List;
  * Time: 8:11 PM
  * To change this template use File | Settings | File Templates.
  */
-public class testTest extends TestCase {
+public class Test extends TestCase {
 
-    public void test(){
+    public void testSelect(){
         String driver = "com.mysql.jdbc.Driver";
         String url = "mysql://127.0.0.1/playblog";
         String user = "root";
