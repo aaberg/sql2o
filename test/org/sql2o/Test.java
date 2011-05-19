@@ -24,6 +24,16 @@ public class Test extends TestCase {
         Sql2o sql2o = new Sql2o(url, user, pass);
 
 
+        String query =
+                "select id, name, email, \n" +
+                "\t'test' as \"customer1.name\", \n" +
+                "\t1 as \"customer1.id\",\n" +
+                "\t'test2' as \"customer2.name\",\n" +
+                "\t2 as \"customer2.id\"\n" +
+                "from User where id = :id";
+
+        User user3 = sql2o.createQuery(query, User.class).addParameter("id", 2).fetchFirst();
+
         List<User> userO = sql2o.createQuery("select id, name, email from User where id = :id", User.class).addParameter("id", 2L).fetch();
 
         List<User> user1 = sql2o.createQuery("select id, name, email from User where id = :id", User.class).addParameter("id", 3L).fetch();

@@ -1,9 +1,11 @@
 package org.sql2o;
 
+import com.sun.servicetag.Installer;
 import org.sql2o.services.Helper;
 
 import javax.management.RuntimeOperationsException;
 import java.lang.reflect.Field;
+import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.sql.*;
 import java.util.ArrayList;
@@ -89,6 +91,53 @@ public class Query {
         return this;
     }
 
+    private String getSetterName(String fieldName){
+        return  "set" + fieldName.substring(0,1).toUpperCase() + fieldName.substring(1);
+    }
+
+    private String getGetterName(String fieldName){
+        return  "get" + fieldName.substring(0,1).toUpperCase() + fieldName.substring(1);
+    }
+
+    private void setField(Object obj, String fieldName, Object value) throws IllegalAccessException, NoSuchMethodException, InvocationTargetException {
+        Class objClass = obj.getClass();
+        try{
+            Field field = objClass.getField(fieldName);
+            field.set(obj, value);
+        }
+        catch(NoSuchFieldException nsfe){
+            String methodName = getSetterName(fieldName);
+            Method method = objClass.getMethod(methodName, value.getClass());
+            method.invoke(obj, value);
+        }
+    }
+
+    private Object instantiateIfNecessary(Object obj, String fieldName) throws IllegalAccessException, InstantiationException, NoSuchMethodException, InvocationTargetException {
+
+        Object instantiation;
+
+        Class objClass = obj.getClass();
+        try{
+            Field field = objClass.getField(fieldName);
+            instantiation = field.get(obj);
+            if (instantiation == null){
+                instantiation = field.getType().newInstance();
+                field.set(obj, instantiation);
+            }
+        }
+        catch(NoSuchFieldException nsfe){
+            Method getter = objClass.getMethod(getGetterName(fieldName));
+            instantiation = getter.invoke(obj);
+            if (instantiation == null){
+                Method setter = objClass.getMethod(getSetterName(fieldName), getter.getReturnType());
+                instantiation = getter.getReturnType().newInstance();
+                setter.invoke(obj, instantiation);
+            }
+        }
+
+        return instantiation;
+    }
+
 
     public <T> List<T> fetch(){
         List list = new ArrayList();
@@ -101,18 +150,24 @@ public class Query {
                 Object obj = this.destinationClass.newInstance();
                 for(int colIdx = 1; colIdx <= meta.getColumnCount(); colIdx++){
                     String colName = meta.getColumnName(colIdx);
-                    int colType = meta.getColumnType(colIdx);
+                    //int colType = meta.getColumnType(colIdx);
+
+                    String[] fieldPath = colName.split("\\.");
+                    if (fieldPath.length == 0){
+                        fieldPath = new String[]{colName};
+                    }
 
                     Object value = rs.getObject(colName);
 
-                    try{
-                        Field field = destinationClass.getField(colName);
-                        field.set(obj, value);
-                    }
-                    catch(NoSuchFieldException nsfe){
-                        String methodName = "set" + colName.substring(0,1).toUpperCase() + colName.substring(1);
-                        Method method = destinationClass.getMethod(methodName, value.getClass());
-                        method.invoke(obj, value);
+                    Object pathObject = obj;
+                    for (int pathIdx = 0; pathIdx < fieldPath.length; pathIdx++){
+                        if (pathIdx == fieldPath.length - 1){
+                            setField(pathObject, fieldPath[pathIdx], value);
+                            break;
+                        }
+
+                        pathObject = instantiateIfNecessary(pathObject, fieldPath[pathIdx]);
+
                     }
 
 

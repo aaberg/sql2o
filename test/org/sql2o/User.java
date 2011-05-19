@@ -13,11 +13,23 @@ public class User {
     public String name;
     private String email;
 
+    public Customer customer1;
+
+    private Customer customer2;
+
     public String getEmail() {
         return email;
     }
 
     public void setEmail(String email) {
         this.email = email;
+    }
+
+    public Customer getCustomer2() {
+        return customer2;
+    }
+
+    public void setCustomer2(Customer customer2) {
+        this.customer2 = customer2;
     }
 }
