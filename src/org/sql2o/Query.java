@@ -90,7 +90,7 @@ public class Query {
     }
 
 
-    public List fetch(){
+    public <T> List<T> fetch(){
         List list = new ArrayList();
         try{
             ResultSet rs = statement.executeQuery();
@@ -121,6 +121,7 @@ public class Query {
                 list.add(obj);
             }
 
+            rs.close();
         }
         catch(Exception ex){
             throw new RuntimeException(ex);
@@ -128,6 +129,7 @@ public class Query {
         finally {
             if (statement != null){
                 try{
+                    statement.getStatement().getConnection().close();
                     statement.close();
                 }
                 catch (Exception ex){
@@ -137,5 +139,15 @@ public class Query {
         }
 
         return list;
+    }
+
+    public <T> T fetchFirst(){
+        List l = this.fetch();
+        if (l.size() == 0){
+            return null;
+        }
+        else{
+            return (T)l.get(0);
+        }
     }
 }

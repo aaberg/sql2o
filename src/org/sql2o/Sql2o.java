@@ -28,6 +28,10 @@ public class Sql2o {
         return url;
     }
 
+    public void setUrl(String url) {
+        this.url = url;
+    }
+
     public String getUser() {
         return user;
     }

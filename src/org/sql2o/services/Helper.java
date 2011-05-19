@@ -27,7 +27,10 @@ public class Helper {
         conProps.put("password", sql2o.getPass());
         Connection con;
         try{
-            con = DriverManager.getConnection("jdbc:" + sql2o.getUrl(), conProps);
+            if (!sql2o.getUrl().startsWith("jdbc")){
+                sql2o.setUrl("jdbc:" + sql2o.getUrl());
+            }
+            con = DriverManager.getConnection(sql2o.getUrl(), conProps);
         }
         catch(Exception ex){
             throw new RuntimeException(ex);
