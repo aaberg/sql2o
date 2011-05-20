@@ -1,0 +1,3 @@
+h1. sql2o
+
+p. Sql2o is a small java library, with the purpose of making database interaction easy.
