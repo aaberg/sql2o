@@ -6,12 +6,12 @@ database, the resultset will automatically be filled into you POJO objects. Kind
 p. Here is a basic example.
 
 bc. Sql2o.registerDriver(new com.mysql.jdbc.Driver());
-.
-. Sql2o sql2o = new Sql2o("dbc:mysql://127.0.0.1/testDB", "username", "password");
-.
-. User user = sql2o.createQuery("select id, firstName, lastName, email from Users where email = :email")
-.    .addParameter("email", "test@domain.com")
-.    .executeAndFetchFirst(User.class);
+
+Sql2o sql2o = new Sql2o("dbc:mysql://127.0.0.1/testDB", "username", "password");
+
+User user = sql2o.createQuery("select id, firstName, lastName, email from Users where email = :email")
+   .addParameter("email", "test@domain.com")
+   .executeAndFetchFirst(User.class);
 
 p. Lets pretend you want to get a list of all users.
 
