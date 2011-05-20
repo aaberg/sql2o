@@ -1,11 +1,6 @@
 package org.sql2o;
 
-import java.sql.Connection;
-import java.sql.PreparedStatement;
-import java.sql.ResultSet;
-import java.sql.SQLException;
-import java.sql.Statement;
-import java.sql.Timestamp;
+import java.sql.*;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.LinkedList;
@@ -222,11 +217,17 @@ public class NamedParameterStatement {
      * @throws IllegalArgumentException if the parameter does not exist
      * @see PreparedStatement#setTimestamp(int, java.sql.Timestamp)
      */
-    public void setTimestamp(String name, Timestamp value) throws SQLException 
-{
+    public void setTimestamp(String name, Timestamp value) throws SQLException {
         int[] indexes=getIndexes(name);
         for(int i=0; i < indexes.length; i++) {
             statement.setTimestamp(indexes[i], value);
+        }
+    }
+
+    public void setDate(String name, Date value) throws SQLException{
+        int[] indexes=getIndexes(name);
+        for (int index : indexes){
+            statement.setDate(index, value);
         }
     }
 

@@ -1,9 +1,13 @@
 package org.sql2o;
 
 import junit.framework.TestCase;
+import sun.rmi.log.LogInputStream;
 
-import java.sql.Driver;
+import java.io.Console;
+import java.util.Date;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 /**
  * Created by IntelliJ IDEA.
@@ -14,32 +18,89 @@ import java.util.List;
  */
 public class Test extends TestCase {
 
-    public void testSelect(){
-        String driver = "com.mysql.jdbc.Driver";
-        String url = "mysql://127.0.0.1/playblog";
-        String user = "root";
-        String pass = "test123";
+    public void testWithH2(){
 
-        Sql2o.registerDriver(driver);
-        Sql2o sql2o = new Sql2o(url, user, pass);
+        Sql2o.registerDriver(new org.h2.Driver());
+
+        String url = "jdbc:h2:mem:test;DB_CLOSE_DELAY=-1";
+        //String url = "jdbc:h2:file:~/db/test";
+
+        Sql2o sql2o = new Sql2o(url, "sa", "");
+
+        HashMap<String, String> colMaps = new HashMap<String,String>();
+        colMaps.put("ID", "id");
+        colMaps.put("NAME", "name");
+        colMaps.put("EMAIL", "email");
+        colMaps.put("TEXT", "text2");
+
+        sql2o.setDefaultColumnMappings(colMaps);
+
+        String createQuery =
+                "create table User(" +
+                        "id int identity primary key," +
+                        "name varchar(20)," +
+                        "email varchar(255)," +
+                        "text varchar(100))";
+
+        sql2o.createQuery(createQuery).executeUpdate();
+
+        Date beginTime = new Date();
+        
+        int iterations = 10000;
+        for (int idx = 0; idx < iterations; idx++){
+            sql2o.createQuery("insert into User(name, email, text) values(:name, :email, :text)")
+                    .addParameter("name", "testnavn" + idx)
+                    .addParameter("text", "ipsum lupsim " + idx)
+                    .addParameter("email", "test@email" + idx + ".com")
+                    .executeUpdate();
+        }
+
+        System.out.println(String.format("inserted %s rows with no transaction: %s milliseconds", iterations, new Date().getTime() - beginTime.getTime()));
+
+        int iterations2 = 10000;
+        beginTime = new Date();
+
+        Query insertQuery = sql2o.createQuery("insert into User(name, email, text) values(:name, :email, :text)").beginTransaction();
+        for (int idx = 0; idx < iterations2; idx++){
+            insertQuery
+                    .addParameter("name", "testnavn" + idx)
+                    .addParameter("text", "ipsum lupsim " + idx)
+                    .addParameter("email", "test@email" + idx + ".com")
+                    .executeUpdate();
+        }
+        insertQuery.commit();
+        System.out.println(String.format("inserted %s rows in transaction and committed: %s milliseconds", iterations2, new Date().getTime() - beginTime.getTime()));
 
 
-        String query =
-                "select id, name, email, \n" +
-                "\t'test' as \"customer1.name\", \n" +
-                "\t1 as \"customer1.id\",\n" +
-                "\t'test2' as \"customer2.name\",\n" +
-                "\t2 as \"customer2.id\"\n" +
-                "from User where id = :id";
+        int iterations3 = 10000;
+        beginTime = new Date();
 
-        User user3 = sql2o.createQuery(query, User.class).addParameter("id", 2).fetchFirst();
+        Query insertQueryToRollback = sql2o.createQuery("insert into User(name, email, text) values(:name, :email, :text)").beginTransaction();
+        for (int idx = 0; idx < iterations2; idx++){
+            insertQueryToRollback
+                    .addParameter("name", "testnavn" + idx)
+                    .addParameter("text", "ipsum lupsim " + idx)
+                    .addParameter("email", "test@email" + idx + ".com")
+                    .executeUpdate();
+        }
+        insertQueryToRollback.rollback();
+        System.out.println(String.format("inserted %s rows in transaction and rolled back: %s milliseconds", iterations3, new Date().getTime() - beginTime.getTime()));
 
-        List<User> userO = sql2o.createQuery("select id, name, email from User where id = :id", User.class).addParameter("id", 2L).fetch();
+        String selectQuery =
+                "select id, name, email, text\n" +
+                "from user";
 
-        List<User> user1 = sql2o.createQuery("select id, name, email from User where id = :id", User.class).addParameter("id", 3L).fetch();
+        Date startTime = new Date();
 
-        List<User> user2 = sql2o.createQuery("select id, name, email from User", User.class).fetch();
+        List<User> allUsers = sql2o.createQuery(selectQuery)
+                .addColumnMapping("TEXT", "text")
+                .executeAndFetch(User.class);
 
-        assertNotNull(userO);
+        Date endTime = new Date();
+
+        Long ellapsedMilliseconds = endTime.getTime() - startTime.getTime();
+        System.out.println(String.format("fetch time for %s rows: %s", allUsers.size(), ellapsedMilliseconds));
+
+        assertTrue(allUsers.size() == iterations + iterations2);
     }
 }

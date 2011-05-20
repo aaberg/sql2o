@@ -1,16 +1,13 @@
 package org.sql2o;
 
-import com.sun.servicetag.Installer;
 import org.sql2o.services.Helper;
 
-import javax.management.RuntimeOperationsException;
 import java.lang.reflect.Field;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.sql.*;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Properties;
+import java.sql.Date;
+import java.util.*;
 
 /**
  * Created by IntelliJ IDEA.
@@ -21,9 +18,8 @@ import java.util.Properties;
  */
 public class Query {
 
-    public Query(Sql2o sql2O, Class destinationClass, String queryText) {
+    public Query(Sql2o sql2O, String queryText, Map<String, String> columnMappings) {
         this.sql2O = sql2O;
-        this.destinationClass = destinationClass;
         this.queryText = queryText;
 
         Connection con = Helper.createConnection(this.sql2O);
@@ -33,13 +29,18 @@ public class Query {
         catch(Exception ex){
             throw new RuntimeException(ex);
         }
+
+        this.columnMappings = columnMappings == null ? new HashMap<String, String>() : columnMappings;
     }
 
     private Sql2o sql2O;
     private String queryText;
-    private Class destinationClass;
+
+    private Map<String, String> columnMappings;
 
     private NamedParameterStatement statement;
+
+    private boolean autoCommit = false;
 
     public Query addParameter(String name, Object value){
         try{
@@ -91,6 +92,17 @@ public class Query {
         return this;
     }
 
+    public Query addParameter(String name, Date value){
+        try{
+            statement.setDate(name, value);
+        }
+        catch (Exception ex){
+            throw new RuntimeException(ex);
+        }
+
+        return this;
+    }
+
     private String getSetterName(String fieldName){
         return  "set" + fieldName.substring(0,1).toUpperCase() + fieldName.substring(1);
     }
@@ -101,6 +113,8 @@ public class Query {
 
     private void setField(Object obj, String fieldName, Object value) throws IllegalAccessException, NoSuchMethodException, InvocationTargetException {
         Class objClass = obj.getClass();
+
+        fieldName = columnMappings.containsKey(fieldName) ? columnMappings.get(fieldName) : fieldName;
         try{
             Field field = objClass.getField(fieldName);
             field.set(obj, value);
@@ -138,16 +152,19 @@ public class Query {
         return instantiation;
     }
 
-
-    public <T> List<T> fetch(){
+    public <T> List<T> executeAndFetch(Class returnType){
         List list = new ArrayList();
         try{
+
+            java.util.Date st = new java.util.Date();
             ResultSet rs = statement.executeQuery();
+            System.out.println(String.format("execute query time: %s", new java.util.Date().getTime() - st.getTime()));
 
             ResultSetMetaData meta = rs.getMetaData();
 
             while(rs.next()){
-                Object obj = this.destinationClass.newInstance();
+
+                Object obj = returnType.newInstance();
                 for(int colIdx = 1; colIdx <= meta.getColumnCount(); colIdx++){
                     String colName = meta.getColumnName(colIdx);
                     //int colType = meta.getColumnType(colIdx);
@@ -169,8 +186,6 @@ public class Query {
                         pathObject = instantiateIfNecessary(pathObject, fieldPath[pathIdx]);
 
                     }
-
-
                 }
 
                 list.add(obj);
@@ -196,13 +211,105 @@ public class Query {
         return list;
     }
 
-    public <T> T fetchFirst(){
-        List l = this.fetch();
+    public <T> T fetchFirst(Class returnType){
+        List l = this.executeAndFetch(returnType);
         if (l.size() == 0){
             return null;
         }
         else{
             return (T)l.get(0);
         }
+    }
+
+    public Query executeUpdate(){
+        int result;
+        try{
+            result = statement.executeUpdate();
+        }
+        catch(Exception ex){
+            rollback();
+            throw new RuntimeException(ex);
+        }
+        finally {
+            if (!autoCommit && statement != null){
+                try {
+                    statement.getStatement().getConnection().close();
+                    statement.close();
+                } catch (SQLException ex) {
+                    throw new RuntimeException(ex);
+                }
+            }
+        }
+
+        return this;
+    }
+
+    /*********** column mapping ****************/
+
+    public Map<String, String> getColumnMappings() {
+        return columnMappings;
+    }
+
+    public Query addColumnMapping(String columnName, String fieldName){
+        this.columnMappings.put(columnName, fieldName);
+
+        return this;
+    }
+
+
+    /*************** Transaction handling **************/
+    public Query beginTransaction(int isolationLevel){
+        try{
+            this.statement.getStatement().getConnection().setAutoCommit(false);
+            this.statement.getStatement().getConnection().setTransactionIsolation(isolationLevel);
+            this.autoCommit = true;
+        }
+        catch(Exception ex){
+            throw new RuntimeException(ex);
+        }
+
+        return this;
+    }
+
+    public Query beginTransaction(){
+        this.beginTransaction(Connection.TRANSACTION_READ_COMMITTED);
+        return this;
+    }
+
+    public void commit(){
+
+        try {
+            this.statement.getStatement().getConnection().commit();
+        } catch (SQLException e) {
+            throw new RuntimeException(e);
+        }
+        finally {
+            try{
+                this.statement.getStatement().getConnection().close();
+                this.statement.close();
+            }
+            catch(SQLException ex){
+                throw new RuntimeException(ex);
+            }
+        }
+    }
+
+    public void rollback(){
+
+        try {
+            this.statement.getStatement().getConnection().rollback();
+        } catch (SQLException e) {
+            throw new RuntimeException(e);
+        }
+        finally {
+            try{
+                this.statement.getStatement().getConnection().close();
+                this.statement.close();
+            }
+            catch(SQLException ex){
+                throw new RuntimeException(ex);
+            }
+        }
+
     }
 }

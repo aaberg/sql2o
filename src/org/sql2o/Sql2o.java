@@ -1,8 +1,13 @@
 package org.sql2o;
 
+import org.omg.CORBA.PUBLIC_MEMBER;
+
 import java.sql.Connection;
 import java.sql.Driver;
 import java.sql.DriverManager;
+import java.sql.SQLException;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.Properties;
 
 /**
@@ -18,11 +23,15 @@ public class Sql2o {
         this.url = url;
         this.user = user;
         this.pass = pass;
+
+        this.defaultColumnMappings = new HashMap<String, String>();
     }
 
     private String url;
     private String user;
     private String pass;
+
+    private Map<String, String> defaultColumnMappings;
 
     public String getUrl() {
         return url;
@@ -40,8 +49,16 @@ public class Sql2o {
         return pass;
     }
 
-    public Query createQuery(String query, Class c){
-        Query q = new Query(this, c, query);
+    public Map<String, String> getDefaultColumnMappings() {
+        return defaultColumnMappings;
+    }
+
+    public void setDefaultColumnMappings(Map<String, String> defaultColumnMappings) {
+        this.defaultColumnMappings = defaultColumnMappings;
+    }
+
+    public Query createQuery(String query){
+        Query q = new Query(this, query, defaultColumnMappings);
 
         return q;
     }
@@ -59,5 +76,13 @@ public class Sql2o {
             throw new RuntimeException(ex);
         }
 
+    }
+
+    public static void registerDriver(Driver driver){
+        try {
+            DriverManager.registerDriver(driver);
+        } catch (SQLException e) {
+            throw new RuntimeException(e);
+        }
     }
 }

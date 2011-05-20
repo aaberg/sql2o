@@ -9,13 +9,10 @@ package org.sql2o;
  */
 public class User {
 
-    public Long id;
+    public Integer id;
     public String name;
+    public String text;
     private String email;
-
-    public Customer customer1;
-
-    private Customer customer2;
 
     public String getEmail() {
         return email;
@@ -23,13 +20,5 @@ public class User {
 
     public void setEmail(String email) {
         this.email = email;
-    }
-
-    public Customer getCustomer2() {
-        return customer2;
-    }
-
-    public void setCustomer2(Customer customer2) {
-        this.customer2 = customer2;
     }
 }
