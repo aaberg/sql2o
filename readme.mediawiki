@@ -1,2 +1,0 @@
-= sql2o =
-Sql2o is a small java library, with the purpose of making database interaction easy.
