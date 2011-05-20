@@ -1,9 +1,11 @@
 package org.sql2o;
 
+import com.mysql.jdbc.Driver;
 import junit.framework.TestCase;
 import sun.rmi.log.LogInputStream;
 
 import java.io.Console;
+import java.sql.SQLException;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
@@ -18,9 +20,12 @@ import java.util.Map;
  */
 public class Test extends TestCase {
 
-    public void testWithH2(){
+    public void testWithH2() throws SQLException {
 
         Sql2o.registerDriver(new org.h2.Driver());
+
+        Sql2o.registerDriver(new com.mysql.jdbc.Driver());
+
 
         String url = "jdbc:h2:mem:test;DB_CLOSE_DELAY=-1";
         //String url = "jdbc:h2:file:~/db/test";

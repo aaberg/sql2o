@@ -211,7 +211,7 @@ public class Query {
         return list;
     }
 
-    public <T> T fetchFirst(Class returnType){
+    public <T> T executeAndFetchFirst(Class returnType){
         List l = this.executeAndFetch(returnType);
         if (l.size() == 0){
             return null;
