@@ -1,6 +1,7 @@
 package org.sql2o;
 
 import org.omg.CORBA.PUBLIC_MEMBER;
+import org.sql2o.tools.Helper;
 
 import java.sql.Connection;
 import java.sql.Driver;
@@ -25,11 +26,15 @@ public class Sql2o {
         this.pass = pass;
 
         this.defaultColumnMappings = new HashMap<String, String>();
+
+        this.createConnection();
     }
 
     private String url;
     private String user;
     private String pass;
+
+    private Connection connection;
 
     private Map<String, String> defaultColumnMappings;
 
@@ -57,14 +62,25 @@ public class Sql2o {
         this.defaultColumnMappings = defaultColumnMappings;
     }
 
-    public Query createQuery(String query){
-        Query q = new Query(this, query, defaultColumnMappings);
-
-        return q;
+    public Connection getConnection() {
+        return connection;
     }
 
 
+    public Query createQuery(String query){
 
+        try {
+            if (this.getConnection().isClosed()){
+                this.createConnection();
+            }
+        } catch (SQLException e) {
+            throw new RuntimeException(e);
+        }
+
+        Query q = new Query(this, query);
+
+        return q;
+    }
 
     public static void registerDriver(String driverName){
 
@@ -84,5 +100,78 @@ public class Sql2o {
         } catch (SQLException e) {
             throw new RuntimeException(e);
         }
+    }
+
+    private void createConnection(){
+
+        Properties conProps = new Properties();
+        conProps.put("user", this.getUser());
+        conProps.put("password", this.getPass());
+        try{
+            if (!this.getUrl().startsWith("jdbc")){
+                this.setUrl("jdbc:" + this.getUrl());
+            }
+            this.connection = DriverManager.getConnection(this.getUrl(), conProps);
+        }
+        catch(Exception ex){
+            throw new RuntimeException(ex);
+        }
+
+    }
+
+    public Sql2o beginTransaction(int isolationLevel){
+
+        try {
+            if (this.connection.isClosed()){
+                this.createConnection();
+            }
+
+            this.getConnection().setAutoCommit(false);
+            this.getConnection().setTransactionIsolation(isolationLevel);
+        } catch (SQLException e) {
+            throw new RuntimeException(e);
+        }
+
+        return this;
+    }
+
+    public Sql2o beginTransaction(){
+        return this.beginTransaction(Connection.TRANSACTION_READ_COMMITTED);
+    }
+
+    public Sql2o commit(){
+        try {
+            this.getConnection().commit();
+        }
+        catch (SQLException e) {
+            throw new RuntimeException(e);
+        }
+        finally {
+            try {
+                this.getConnection().close();
+            }
+            catch (SQLException e) {
+                throw new RuntimeException(e);
+            }
+        }
+        return this;
+    }
+
+    public Sql2o rollback(){
+        try {
+            this.getConnection().rollback();
+        }
+        catch (SQLException e) {
+            throw new RuntimeException(e);
+        }
+        finally {
+            try {
+                this.getConnection().close();
+            }
+            catch (SQLException e) {
+                throw new RuntimeException(e);
+            }
+        }
+        return this;
     }
 }

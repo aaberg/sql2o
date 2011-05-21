@@ -1,6 +1,7 @@
 package org.sql2o;
 
-import org.sql2o.services.Helper;
+import org.sql2o.tools.Helper;
+import org.sql2o.tools.NamedParameterStatement;
 
 import java.lang.reflect.Field;
 import java.lang.reflect.InvocationTargetException;
@@ -18,29 +19,24 @@ import java.util.*;
  */
 public class Query {
 
-    public Query(Sql2o sql2O, String queryText, Map<String, String> columnMappings) {
+    public Query(Sql2o sql2O, String queryText) {
         this.sql2O = sql2O;
-        this.queryText = queryText;
 
-        Connection con = Helper.createConnection(this.sql2O);
         try{
-            statement = new NamedParameterStatement(con, queryText);
+            statement = new NamedParameterStatement(sql2O.getConnection(), queryText);
         }
         catch(Exception ex){
             throw new RuntimeException(ex);
         }
 
-        this.columnMappings = columnMappings == null ? new HashMap<String, String>() : columnMappings;
+        this.columnMappings = sql2O.getDefaultColumnMappings() == null ? new HashMap<String, String>() : sql2O.getDefaultColumnMappings();
     }
 
     private Sql2o sql2O;
-    private String queryText;
 
     private Map<String, String> columnMappings;
 
     private NamedParameterStatement statement;
-
-    private boolean autoCommit = false;
 
     public Query addParameter(String name, Object value){
         try{
@@ -197,14 +193,14 @@ public class Query {
             throw new RuntimeException(ex);
         }
         finally {
-            if (statement != null){
-                try{
-                    statement.getStatement().getConnection().close();
+            try{
+                if (this.sql2O.getConnection().getAutoCommit() && statement != null){
+                    sql2O.getConnection().close();
                     statement.close();
                 }
-                catch (Exception ex){
-                    throw new RuntimeException(ex);
-                }
+            }
+            catch (Exception ex){
+                throw new RuntimeException(ex);
             }
         }
 
@@ -221,27 +217,31 @@ public class Query {
         }
     }
 
-    public Query executeUpdate(){
+    public Sql2o executeUpdate(){
         int result;
         try{
             result = statement.executeUpdate();
         }
         catch(Exception ex){
-            rollback();
+            this.sql2O.rollback();
             throw new RuntimeException(ex);
         }
         finally {
-            if (!autoCommit && statement != null){
-                try {
-                    statement.getStatement().getConnection().close();
-                    statement.close();
-                } catch (SQLException ex) {
-                    throw new RuntimeException(ex);
+            try {
+                if (this.sql2O.getConnection().getAutoCommit() && statement != null){
+                    try {
+                        this.sql2O.getConnection().close();
+                        statement.close();
+                    } catch (SQLException ex) {
+                        throw new RuntimeException(ex);
+                    }
                 }
+            } catch (SQLException e) {
+                throw new RuntimeException(e);
             }
         }
 
-        return this;
+        return this.sql2O;
     }
 
     /*********** column mapping ****************/
@@ -258,58 +258,58 @@ public class Query {
 
 
     /*************** Transaction handling **************/
-    public Query beginTransaction(int isolationLevel){
-        try{
-            this.statement.getStatement().getConnection().setAutoCommit(false);
-            this.statement.getStatement().getConnection().setTransactionIsolation(isolationLevel);
-            this.autoCommit = true;
-        }
-        catch(Exception ex){
-            throw new RuntimeException(ex);
-        }
-
-        return this;
-    }
-
-    public Query beginTransaction(){
-        this.beginTransaction(Connection.TRANSACTION_READ_COMMITTED);
-        return this;
-    }
-
-    public void commit(){
-
-        try {
-            this.statement.getStatement().getConnection().commit();
-        } catch (SQLException e) {
-            throw new RuntimeException(e);
-        }
-        finally {
-            try{
-                this.statement.getStatement().getConnection().close();
-                this.statement.close();
-            }
-            catch(SQLException ex){
-                throw new RuntimeException(ex);
-            }
-        }
-    }
-
-    public void rollback(){
-
-        try {
-            this.statement.getStatement().getConnection().rollback();
-        } catch (SQLException e) {
-            throw new RuntimeException(e);
-        }
-        finally {
-            try{
-                this.statement.getStatement().getConnection().close();
-                this.statement.close();
-            }
-            catch(SQLException ex){
-                throw new RuntimeException(ex);
-            }
-        }
-
-    }
+//    public Query beginTransaction(int isolationLevel){
+//        try{
+//            this.statement.getStatement().getConnection().setAutoCommit(false);
+//            this.statement.getStatement().getConnection().setTransactionIsolation(isolationLevel);
+//            this.autoCommit = true;
+//        }
+//        catch(Exception ex){
+//            throw new RuntimeException(ex);
+//        }
+//
+//        return this;
+//    }
+//
+//    public Query beginTransaction(){
+//        this.beginTransaction(Connection.TRANSACTION_READ_COMMITTED);
+//        return this;
+//    }
+//
+//    public void commit(){
+//
+//        try {
+//            this.statement.getStatement().getConnection().commit();
+//        } catch (SQLException e) {
+//            throw new RuntimeException(e);
+//        }
+//        finally {
+//            try{
+//                this.statement.getStatement().getConnection().close();
+//                this.statement.close();
+//            }
+//            catch(SQLException ex){
+//                throw new RuntimeException(ex);
+//            }
+//        }
+//    }
+//
+//    public void rollback(){
+//
+//        try {
+//            this.statement.getStatement().getConnection().rollback();
+//        } catch (SQLException e) {
+//            throw new RuntimeException(e);
+//        }
+//        finally {
+//            try{
+//                this.statement.getStatement().getConnection().close();
+//                this.statement.close();
+//            }
+//            catch(SQLException ex){
+//                throw new RuntimeException(ex);
+//            }
+//        }
+//
+//    }
 }

@@ -1,4 +1,4 @@
-package org.sql2o;
+package org.sql2o.tools;
 
 import java.sql.*;
 import java.util.HashMap;
