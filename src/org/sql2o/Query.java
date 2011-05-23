@@ -226,24 +226,14 @@ public class Query {
         int result;
         try{
             result = statement.executeUpdate();
+            if (this.sql2O.getConnection().getAutoCommit()){
+                this.sql2O.getConnection().close();
+                statement.close();
+            }
         }
         catch(Exception ex){
             this.sql2O.rollback();
             throw new RuntimeException(ex);
-        }
-        finally {
-            try {
-                if (this.sql2O.getConnection().getAutoCommit() && statement != null){
-                    try {
-                        this.sql2O.getConnection().close();
-                        statement.close();
-                    } catch (SQLException ex) {
-                        throw new RuntimeException(ex);
-                    }
-                }
-            } catch (SQLException e) {
-                throw new RuntimeException(e);
-            }
         }
 
         return this.sql2O;

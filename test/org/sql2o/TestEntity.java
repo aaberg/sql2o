@@ -12,11 +12,12 @@ import java.sql.Timestamp;
  */
 public class TestEntity {
 
-    public Long id;
+    public long id;
     public String text;
     public Date time;
     public Timestamp ts;
     public Integer aNumber;
+    public Long aLongNumber;
 
 
     public Date getTime() {
