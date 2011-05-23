@@ -99,6 +99,11 @@ public class Query {
         return this;
     }
 
+    public Query addParameter(String name, java.util.Date value){
+        Date sqlDate = new Date(value.getTime());
+        return addParameter(name, sqlDate);
+    }
+
     private String getSetterName(String fieldName){
         return  "set" + fieldName.substring(0,1).toUpperCase() + fieldName.substring(1);
     }
