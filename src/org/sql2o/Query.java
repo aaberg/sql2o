@@ -104,6 +104,15 @@ public class Query {
         return addParameter(name, sqlDate);
     }
 
+    public Query addParameter(String name, Time value){
+        try {
+            statement.setTime(name,value);
+        } catch (SQLException e) {
+            throw new RuntimeException(e);
+        }
+        return this;
+    }
+
     private String getSetterName(String fieldName){
         return  "set" + fieldName.substring(0,1).toUpperCase() + fieldName.substring(1);
     }

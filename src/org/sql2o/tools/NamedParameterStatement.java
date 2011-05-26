@@ -231,6 +231,13 @@ public class NamedParameterStatement {
         }
     }
 
+    public void setTime(String name, Time value) throws SQLException {
+        int[] indexes = getIndexes(name);
+        for (int index: indexes){
+            statement.setTime(index, value);
+        }
+    }
+
 
     /**
      * Returns the underlying statement.
