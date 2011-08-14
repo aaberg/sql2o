@@ -1,6 +1,5 @@
 package org.sql2o;
 
-import org.sql2o.tools.Helper;
 import org.sql2o.tools.NamedParameterStatement;
 
 import java.lang.reflect.Field;
@@ -260,60 +259,4 @@ public class Query {
         return this;
     }
 
-
-    /*************** Transaction handling **************/
-//    public Query beginTransaction(int isolationLevel){
-//        try{
-//            this.statement.getStatement().getConnection().setAutoCommit(false);
-//            this.statement.getStatement().getConnection().setTransactionIsolation(isolationLevel);
-//            this.autoCommit = true;
-//        }
-//        catch(Exception ex){
-//            throw new RuntimeException(ex);
-//        }
-//
-//        return this;
-//    }
-//
-//    public Query beginTransaction(){
-//        this.beginTransaction(Connection.TRANSACTION_READ_COMMITTED);
-//        return this;
-//    }
-//
-//    public void commit(){
-//
-//        try {
-//            this.statement.getStatement().getConnection().commit();
-//        } catch (SQLException e) {
-//            throw new RuntimeException(e);
-//        }
-//        finally {
-//            try{
-//                this.statement.getStatement().getConnection().close();
-//                this.statement.close();
-//            }
-//            catch(SQLException ex){
-//                throw new RuntimeException(ex);
-//            }
-//        }
-//    }
-//
-//    public void rollback(){
-//
-//        try {
-//            this.statement.getStatement().getConnection().rollback();
-//        } catch (SQLException e) {
-//            throw new RuntimeException(e);
-//        }
-//        finally {
-//            try{
-//                this.statement.getStatement().getConnection().close();
-//                this.statement.close();
-//            }
-//            catch(SQLException ex){
-//                throw new RuntimeException(ex);
-//            }
-//        }
-//
-//    }
 }

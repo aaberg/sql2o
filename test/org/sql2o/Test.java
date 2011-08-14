@@ -1,6 +1,6 @@
 package org.sql2o;
 
-import com.mysql.jdbc.Driver;
+//import com.mysql.jdbc.Driver;
 import junit.framework.TestCase;
 import sun.rmi.log.LogInputStream;
 

@@ -1,8 +1,5 @@
 package org.sql2o;
 
-import org.omg.CORBA.PUBLIC_MEMBER;
-import org.sql2o.tools.Helper;
-
 import java.sql.Connection;
 import java.sql.Driver;
 import java.sql.DriverManager;
