@@ -2,7 +2,6 @@ package org.sql2o;
 
 import junit.framework.TestCase;
 
-import javax.sound.midi.SysexMessage;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
@@ -86,6 +85,39 @@ public class Sql2oTest extends TestCase {
 
         assertNull(fetched.get(2).aLongNumber);
         assertNotNull(fetched.get(3).aLongNumber);
+    }
+
+    public void testBatch(){
+        sql2o.createQuery(
+                "create table User(\n" +
+                "id int identity primary key,\n" +
+                "name varchar(20),\n" +
+                "email varchar(255),\n" +
+                "text varchar(100))").executeUpdate();
+
+        String insQuery = "insert into User(name, email, text) values (:name, :email, :text)";
+
+        sql2o.beginTransaction().createQuery(insQuery).addParameter("name", "test").addParameter("email", "test@test.com").addParameter("text", "something exciting").addToBatch()
+                .addParameter("name", "test2").addParameter("email", "test2@test.com").addParameter("text", "something exciting too").addToBatch()
+                .addParameter("name", "test3").addParameter("email", "test3@test.com").addParameter("text", "blablabla").addToBatch()
+                .executeBatch().commit();
+    }
+
+    public void testBatchNoTransaction(){
+
+        sql2o.createQuery(
+                "create table User(\n" +
+                "id int identity primary key,\n" +
+                "name varchar(20),\n" +
+                "email varchar(255),\n" +
+                "text varchar(100))").executeUpdate();
+
+        String insQuery = "insert into User(name, email, text) values (:name, :email, :text)";
+
+        sql2o.createQuery(insQuery).addParameter("name", "test").addParameter("email", "test@test.com").addParameter("text", "something exciting").addToBatch()
+                .addParameter("name", "test2").addParameter("email", "test2@test.com").addParameter("text", "something exciting too").addToBatch()
+                .addParameter("name", "test3").addParameter("email", "test3@test.com").addParameter("text", "blablabla").addToBatch()
+                .executeBatch();
     }
 
 

@@ -247,6 +247,28 @@ public class Query {
         return this.sql2O;
     }
 
+    /************** batch stuff *******************/
+
+    public Query addToBatch(){
+        try {
+            statement.addBatch();
+        } catch (SQLException e) {
+            e.printStackTrace();  //To change body of catch statement use File | Settings | File Templates.
+        }
+
+        return this;
+    }
+
+    public Sql2o executeBatch(){
+        try {
+            statement.executeBatch();
+        } catch (SQLException e) {
+            throw new RuntimeException(e);
+        }
+
+        return this.sql2O;
+    }
+
     /*********** column mapping ****************/
 
     public Map<String, String> getColumnMappings() {
