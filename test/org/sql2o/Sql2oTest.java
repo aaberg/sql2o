@@ -54,6 +54,7 @@ public class Sql2oTest extends TestCase {
         System.out.println(String.format("Fetched %s user: %s ms", insertIntoUsers, span));
 
         assertTrue(allUsers.size() == insertIntoUsers);
+        deleteUserTable();
     }
 
     public void testExecuteAndFetchWithNulls(){
@@ -101,6 +102,20 @@ public class Sql2oTest extends TestCase {
                 .addParameter("name", "test2").addParameter("email", "test2@test.com").addParameter("text", "something exciting too").addToBatch()
                 .addParameter("name", "test3").addParameter("email", "test3@test.com").addParameter("text", "blablabla").addToBatch()
                 .executeBatch().commit();
+
+        deleteUserTable();
+    }
+
+    public void testExecuteScalar(){
+        createAndFillUserTable();
+
+        Object o = sql2o.createQuery("select text from User where id = 2").executeScalar();
+        assertTrue(o.getClass().equals(String.class));
+
+        Object o2 = sql2o.createQuery("select 10").executeScalar();
+        assertEquals(o2, 10);
+
+        deleteUserTable();
     }
 
     public void testBatchNoTransaction(){
@@ -118,12 +133,16 @@ public class Sql2oTest extends TestCase {
                 .addParameter("name", "test2").addParameter("email", "test2@test.com").addParameter("text", "something exciting too").addToBatch()
                 .addParameter("name", "test3").addParameter("email", "test3@test.com").addParameter("text", "blablabla").addToBatch()
                 .executeBatch();
+
+        deleteUserTable();
     }
 
 
     /************** Helper stuff ******************/
 
     private void createAndFillUserTable(){
+
+        int rowCount = 10000;
         sql2o.createQuery(
                 "create table User(\n" +
                 "id int identity primary key,\n" +
@@ -131,19 +150,23 @@ public class Sql2oTest extends TestCase {
                 "email varchar(255),\n" +
                 "text varchar(100))").executeUpdate();
 
-        Query insQuery = sql2o.beginTransaction().createQuery("insert into User(name, email, text) values (:name, :email, :text)");
+        Query insQuery = sql2o.createQuery("insert into User(name, email, text) values (:name, :email, :text)");
         Date before = new Date();
-        for (int idx = 0; idx < 10000; idx++){
+        for (int idx = 0; idx < rowCount; idx++){
             insQuery.addParameter("name", "a name " + idx)
                     .addParameter("email", String.format("test%s@email.com", idx))
-                    .addParameter("text", "some text").executeUpdate();
+                    .addParameter("text", "some text").addToBatch();
         }
-        sql2o.commit();
+        insQuery.executeBatch().commit();
         Date after = new Date();
         Long span = after.getTime() - before.getTime();
 
-        System.out.println(String.format("inserted 10000 rows into User table. Time used: %s ms", span));
+        System.out.println(String.format("inserted %d rows into User table. Time used: %s ms", rowCount, span));
 
-        insertIntoUsers += 10000;
+        insertIntoUsers += rowCount;
+    }
+
+    private void deleteUserTable(){
+        sql2o.createQuery("drop table User").executeUpdate();
     }
 }
