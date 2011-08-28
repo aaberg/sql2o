@@ -29,6 +29,7 @@ public class Query {
         }
 
         this.columnMappings = sql2O.getDefaultColumnMappings() == null ? new HashMap<String, String>() : sql2O.getDefaultColumnMappings();
+        this.caseSensitive = sql2O.isDefaultCaseSensitive();
     }
 
     private Sql2o sql2O;
@@ -36,6 +37,8 @@ public class Query {
     private Map<String, String> columnMappings;
 
     private NamedParameterStatement statement;
+
+    private boolean caseSensitive;
 
     public Query addParameter(String name, Object value){
         try{
@@ -112,6 +115,15 @@ public class Query {
         return this;
     }
 
+    public boolean isCaseSensitive() {
+        return caseSensitive;
+    }
+
+    public Query setCaseSensitive(boolean caseSensitive) {
+        this.caseSensitive = caseSensitive;
+        return this;
+    }
+
     private String getSetterName(String fieldName){
         return  "set" + fieldName.substring(0,1).toUpperCase() + fieldName.substring(1);
     }
@@ -120,8 +132,21 @@ public class Query {
         return  "get" + fieldName.substring(0,1).toUpperCase() + fieldName.substring(1);
     }
 
+    private void prepareColumnMappings(Class objClass){
+        if (!this.isCaseSensitive()){
+
+            for (Field f : objClass.getFields()){
+                this.columnMappings.put(f.getName().toLowerCase(), f.getName());
+            }
+        }
+    }
+
     private void setField(Object obj, String fieldName, Object value) throws IllegalAccessException, NoSuchMethodException, InvocationTargetException {
         Class objClass = obj.getClass();
+
+        if (!this.isCaseSensitive()){
+            fieldName = fieldName.toLowerCase();
+        }
 
         fieldName = columnMappings.containsKey(fieldName) ? columnMappings.get(fieldName) : fieldName;
         try{
@@ -164,7 +189,7 @@ public class Query {
     public <T> List<T> executeAndFetch(Class returnType){
         List list = new ArrayList();
         try{
-
+            prepareColumnMappings(returnType);
             java.util.Date st = new java.util.Date();
             ResultSet rs = statement.executeQuery();
             System.out.println(String.format("execute query time: %s", new java.util.Date().getTime() - st.getTime()));

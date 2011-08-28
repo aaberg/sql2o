@@ -35,6 +35,8 @@ public class Sql2o {
 
     private Map<String, String> defaultColumnMappings;
 
+    private boolean defaultCaseSensitive = false;
+
     public String getUrl() {
         return url;
     }
@@ -57,6 +59,14 @@ public class Sql2o {
 
     public void setDefaultColumnMappings(Map<String, String> defaultColumnMappings) {
         this.defaultColumnMappings = defaultColumnMappings;
+    }
+
+    public boolean isDefaultCaseSensitive() {
+        return defaultCaseSensitive;
+    }
+
+    public void setDefaultCaseSensitive(boolean defaultCaseSensitive) {
+        this.defaultCaseSensitive = defaultCaseSensitive;
     }
 
     public Connection getConnection() {

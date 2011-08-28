@@ -1,10 +1,12 @@
 package org.sql2o;
 
 import junit.framework.TestCase;
+import sun.text.normalizer.Trie;
 
 import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
+import java.util.ListResourceBundle;
 
 /**
  * Created by IntelliJ IDEA.
@@ -137,6 +139,26 @@ public class Sql2oTest extends TestCase {
         deleteUserTable();
     }
 
+    public void testCaseInsensitive(){
+        sql2o.createQuery("create table testCI(id2 int primary key, value2 varchar(20), sometext varchar(20))").executeUpdate();
+
+        Query query = sql2o.createQuery("insert into testCI(id2, value2, sometext) values(:id, :value, :someText)");
+        for (int i = 0; i < 20; i++){
+            query.addParameter("id", i).addParameter("value", "some text " + i).addParameter("someText", "whatever " + i).addToBatch();
+        }
+        query.executeBatch();
+
+        List<TestCIEntity> ciEntities = sql2o.createQuery("select * from testCI").setCaseSensitive(false).executeAndFetch(TestCIEntity.class);
+
+        assertTrue(ciEntities.size() == 20);
+
+
+        // test defaultCaseSensitive;
+        sql2o.setDefaultCaseSensitive(false);
+        List<TestCIEntity> ciEntities2 = sql2o.createQuery("select * from testCI").executeAndFetch(TestCIEntity.class);
+        assertTrue(ciEntities2.size() == 20);
+    }
+
 
     /************** Helper stuff ******************/
 
@@ -168,5 +190,6 @@ public class Sql2oTest extends TestCase {
 
     private void deleteUserTable(){
         sql2o.createQuery("drop table User").executeUpdate();
+        insertIntoUsers = 0;
     }
 }
