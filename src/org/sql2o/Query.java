@@ -6,8 +6,10 @@ import java.lang.reflect.Field;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.sql.*;
-import java.sql.Date;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 
 /**
  * Created by IntelliJ IDEA.
@@ -30,11 +32,13 @@ public class Query {
 
         this.columnMappings = sql2O.getDefaultColumnMappings() == null ? new HashMap<String, String>() : sql2O.getDefaultColumnMappings();
         this.caseSensitive = sql2O.isDefaultCaseSensitive();
+        this.csMethods = new HashMap<String, String>();
     }
 
     private Sql2o sql2O;
 
     private Map<String, String> columnMappings;
+    private Map<String, String> csMethods;
 
     private NamedParameterStatement statement;
 
@@ -125,11 +129,22 @@ public class Query {
     }
 
     private String getSetterName(String fieldName){
-        return  "set" + fieldName.substring(0,1).toUpperCase() + fieldName.substring(1);
+        String setterName = "set" + fieldName.substring(0,1).toUpperCase() + fieldName.substring(1);
+
+        if (!this.isCaseSensitive() && this.csMethods.containsKey(setterName.toLowerCase())){
+            setterName = csMethods.get(setterName.toLowerCase());
+        }
+
+        return  setterName;
     }
 
     private String getGetterName(String fieldName){
-        return  "get" + fieldName.substring(0,1).toUpperCase() + fieldName.substring(1);
+        String getterName = "get" + fieldName.substring(0,1).toUpperCase() + fieldName.substring(1);
+
+        if (!this.isCaseSensitive() && this.csMethods.containsKey(getterName.toLowerCase())){
+            getterName = this.csMethods.get(getterName.toLowerCase());
+        }
+        return getterName;
     }
 
     private void prepareColumnMappings(Class objClass){
@@ -137,6 +152,10 @@ public class Query {
 
             for (Field f : objClass.getFields()){
                 this.columnMappings.put(f.getName().toLowerCase(), f.getName());
+            }
+
+            for (Method m : objClass.getMethods()){
+                this.csMethods.put(m.getName().toLowerCase(), m.getName());
             }
         }
     }
@@ -231,15 +250,7 @@ public class Query {
             throw new RuntimeException(ex);
         }
         finally {
-            try{
-                if (this.sql2O.getConnection().getAutoCommit() && statement != null){
-                    sql2O.getConnection().close();
-                    statement.close();
-                }
-            }
-            catch (Exception ex){
-                throw new RuntimeException(ex);
-            }
+            closeConnectionIfNecessary();
         }
 
         return list;
@@ -259,14 +270,13 @@ public class Query {
         int result;
         try{
             result = statement.executeUpdate();
-            if (this.sql2O.getConnection().getAutoCommit()){
-                this.sql2O.getConnection().close();
-                statement.close();
-            }
         }
         catch(Exception ex){
             this.sql2O.rollback();
             throw new RuntimeException(ex);
+        }
+        finally {
+            closeConnectionIfNecessary();
         }
 
         return this.sql2O;
@@ -282,10 +292,31 @@ public class Query {
                 return null;
             }
 
-        } catch (SQLException e) {
+        }
+        catch (SQLException e) {
             throw new RuntimeException(e);
         }
+        finally{
+            closeConnectionIfNecessary();
+        }
+    }
 
+    public <T> List<T> executeScalarList(){
+        List<T> list = new ArrayList<T>();
+        try{
+            ResultSet rs = this.statement.executeQuery();
+            while(rs.next()){
+                list.add((T)rs.getObject(1));
+            }
+
+            return list;
+        }
+        catch(SQLException ex){
+            throw new RuntimeException(ex);
+        }
+        finally{
+            closeConnectionIfNecessary();
+        }
     }
 
     /************** batch stuff *******************/
@@ -303,8 +334,12 @@ public class Query {
     public Sql2o executeBatch(){
         try {
             statement.executeBatch();
-        } catch (SQLException e) {
+        }
+        catch (SQLException e) {
             throw new RuntimeException(e);
+        }
+        finally {
+            closeConnectionIfNecessary();
         }
 
         return this.sql2O;
@@ -320,6 +355,19 @@ public class Query {
         this.columnMappings.put(columnName, fieldName);
 
         return this;
+    }
+
+    /************** private stuff ***************/
+    private void closeConnectionIfNecessary(){
+        try{
+            if (this.sql2O.getConnection().getAutoCommit() && statement != null){
+                sql2O.getConnection().close();
+                statement.close();
+            }
+        }
+        catch (Exception ex){
+            throw new RuntimeException(ex);
+        }
     }
 
 }

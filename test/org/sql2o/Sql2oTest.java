@@ -1,12 +1,9 @@
 package org.sql2o;
 
 import junit.framework.TestCase;
-import sun.text.normalizer.Trie;
 
-import java.util.Date;
-import java.util.HashMap;
-import java.util.List;
-import java.util.ListResourceBundle;
+import java.sql.SQLException;
+import java.util.*;
 
 /**
  * Created by IntelliJ IDEA.
@@ -140,11 +137,11 @@ public class Sql2oTest extends TestCase {
     }
 
     public void testCaseInsensitive(){
-        sql2o.createQuery("create table testCI(id2 int primary key, value2 varchar(20), sometext varchar(20))").executeUpdate();
+        sql2o.createQuery("create table testCI(id2 int primary key, value2 varchar(20), sometext varchar(20), valwithgetter varchar(20))").executeUpdate();
 
-        Query query = sql2o.createQuery("insert into testCI(id2, value2, sometext) values(:id, :value, :someText)");
+        Query query = sql2o.createQuery("insert into testCI(id2, value2, sometext, valwithgetter) values(:id, :value, :someText, :valwithgetter)");
         for (int i = 0; i < 20; i++){
-            query.addParameter("id", i).addParameter("value", "some text " + i).addParameter("someText", "whatever " + i).addToBatch();
+            query.addParameter("id", i).addParameter("value", "some text " + i).addParameter("someText", "whatever " + i).addParameter("valwithgetter", "spaz" + i).addToBatch();
         }
         query.executeBatch();
 
@@ -157,6 +154,15 @@ public class Sql2oTest extends TestCase {
         sql2o.setDefaultCaseSensitive(false);
         List<TestCIEntity> ciEntities2 = sql2o.createQuery("select * from testCI").executeAndFetch(TestCIEntity.class);
         assertTrue(ciEntities2.size() == 20);
+    }
+
+    public void testExecuteAndFetchResultSet() throws SQLException {
+        List<Integer> list = sql2o.createQuery("select 1 val union select 2 union select 3").executeScalarList();
+
+        assertEquals((int)list.get(0), 1);
+        assertEquals((int)list.get(1), 2);
+        assertEquals((int)list.get(2), 3);
+
     }
 
 
@@ -179,7 +185,7 @@ public class Sql2oTest extends TestCase {
                     .addParameter("email", String.format("test%s@email.com", idx))
                     .addParameter("text", "some text").addToBatch();
         }
-        insQuery.executeBatch().commit();
+        insQuery.executeBatch();
         Date after = new Date();
         Long span = after.getTime() - before.getTime();
 

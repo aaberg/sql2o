@@ -11,4 +11,14 @@ public class TestCIEntity {
     public int id2;
     public String value2;
     public String someText;
+
+    private String valWithGetter;
+
+    public String getValWithGetter() {
+        return valWithGetter;
+    }
+
+    public void setValWithGetter(String valWithGetter) {
+        this.valWithGetter = valWithGetter;
+    }
 }
