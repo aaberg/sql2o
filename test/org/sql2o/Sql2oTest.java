@@ -1,6 +1,7 @@
 package org.sql2o;
 
 import junit.framework.TestCase;
+import org.joda.time.DateTime;
 
 import java.sql.SQLException;
 import java.util.*;
@@ -162,6 +163,23 @@ public class Sql2oTest extends TestCase {
         assertEquals((int)list.get(0), 1);
         assertEquals((int)list.get(1), 2);
         assertEquals((int)list.get(2), 3);
+
+    }
+
+    public void testJodaTime(){
+
+        sql2o.createQuery("create table testjoda(id int primary key, joda1 datetime, joda2 datetime)").executeUpdate();
+
+        sql2o.createQuery("insert into testjoda(id, joda1, joda2) values(:id, :joda1, :joda2)")
+                .addParameter("id", 1).addParameter("joda1", new DateTime()).addParameter("joda2", new DateTime().plusDays(-1)).addToBatch()
+                .addParameter("id", 2).addParameter("joda1", new DateTime().plusYears(1)).addParameter("joda2", new DateTime().plusDays(-2)).addToBatch()
+                .addParameter("id", 3).addParameter("joda1", new DateTime().plusYears(2)).addParameter("joda2", new DateTime().plusDays(-3)).addToBatch()
+                .executeBatch();
+
+        List<JodaEntity> list = sql2o.createQuery("select * from testjoda").executeAndFetch(JodaEntity.class);
+
+        assertTrue(list.size() == 3);
+        assertTrue(list.get(0).getJoda2().isBeforeNow());
 
     }
 

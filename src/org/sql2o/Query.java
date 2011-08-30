@@ -1,10 +1,12 @@
 package org.sql2o;
 
+import org.joda.time.DateTime;
 import org.sql2o.tools.NamedParameterStatement;
 
 import java.lang.reflect.Field;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
+import java.nio.channels.NonWritableChannelException;
 import java.sql.*;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -119,6 +121,10 @@ public class Query {
         return this;
     }
 
+    public Query addParameter(String name, DateTime value){
+        return addParameter(name, value.toDate());
+    }
+
     public boolean isCaseSensitive() {
         return caseSensitive;
     }
@@ -160,7 +166,7 @@ public class Query {
         }
     }
 
-    private void setField(Object obj, String fieldName, Object value) throws IllegalAccessException, NoSuchMethodException, InvocationTargetException {
+    private void setField(Object obj, String fieldName, Object value) throws IllegalAccessException, InvocationTargetException, NoSuchMethodException {
         Class objClass = obj.getClass();
 
         if (!this.isCaseSensitive()){
@@ -170,13 +176,37 @@ public class Query {
         fieldName = columnMappings.containsKey(fieldName) ? columnMappings.get(fieldName) : fieldName;
         try{
             Field field = objClass.getField(fieldName);
+            value = setterConverter(field.getType(), value);
             field.set(obj, value);
         }
         catch(NoSuchFieldException nsfe){
             String methodName = getSetterName(fieldName);
-            Method method = objClass.getMethod(methodName, value.getClass());
+            Method method;
+            try{
+                method = objClass.getMethod(methodName, value.getClass());
+            }
+            catch(NoSuchMethodException ex){
+                if (java.util.Date.class.isAssignableFrom(value.getClass())){
+                    method = objClass.getMethod(methodName, DateTime.class);
+                }
+                else{
+                    throw ex;
+                }
+            }
+            value = setterConverter(method.getParameterTypes()[0], value);
             method.invoke(obj, value);
         }
+    }
+
+    private Object setterConverter(Class type, Object value){
+        Object returnVal = value;
+
+        // handle jodatime
+        if (type.equals(DateTime.class)){
+            returnVal = new DateTime(value);
+        }
+
+        return returnVal;
     }
 
     private Object instantiateIfNecessary(Object obj, String fieldName) throws IllegalAccessException, InstantiationException, NoSuchMethodException, InvocationTargetException {
