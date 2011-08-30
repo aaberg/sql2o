@@ -165,6 +165,24 @@ public class Query {
         }
     }
 
+    private Map<String, Class> mappedTypes = null;
+    private void prepareColumnMappingsIfNecessary(Class objClass){
+
+        if (this.isCaseSensitive()){
+            return;
+        }
+
+        if (mappedTypes == null){
+            mappedTypes = new HashMap<String, Class>();
+        }
+
+        if (!mappedTypes.containsKey(objClass.getName())){
+            mappedTypes.put(objClass.getName(), objClass);
+            prepareColumnMappings(objClass);
+        }
+
+    }
+
     private void setField(Object obj, String fieldName, Object value) throws IllegalAccessException, InvocationTargetException, NoSuchMethodException {
         Class objClass = obj.getClass();
 
@@ -277,6 +295,7 @@ public class Query {
                         }
 
                         pathObject = instantiateIfNecessary(pathObject, fieldPath[pathIdx]);
+                        prepareColumnMappingsIfNecessary(pathObject.getClass());
 
                     }
                 }

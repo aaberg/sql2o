@@ -4,7 +4,9 @@ import junit.framework.TestCase;
 import org.joda.time.DateTime;
 
 import java.sql.SQLException;
-import java.util.*;
+import java.util.Date;
+import java.util.HashMap;
+import java.util.List;
 
 /**
  * Created by IntelliJ IDEA.
@@ -196,6 +198,13 @@ public class Sql2oTest extends TestCase {
 
         assertTrue(list.size() == 3);
 
+    }
+
+    public void testComplexTypes(){
+        List<ComplexEntity> list = sql2o.createQuery("select 1 id, 'test' val, 'test2' \"obj.val1\", 2 \"obj.valint\" union select 2 id, 'test2' val, 'tessdf' \"obj.val1\", 100 \"obj.valint\"").executeAndFetch(ComplexEntity.class);
+
+        assertTrue(list.size() == 2);
+        //assertEquals(2, list.get(0).obj.valInt);
     }
 
 
