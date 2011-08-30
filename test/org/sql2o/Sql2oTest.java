@@ -183,6 +183,21 @@ public class Sql2oTest extends TestCase {
 
     }
 
+    public void testUtilDate(){
+        sql2o.createQuery("create table testutildate(id int primary key, d1 datetime, d2 timestamp)").executeUpdate();
+
+        sql2o.createQuery("insert into testutildate(id, d1, d2) values(:id, :d1, :d2)")
+                .addParameter("id", 1).addParameter("d1", new Date()).addParameter("d2", new Date()).addToBatch()
+                .addParameter("id", 2).addParameter("d1", new Date()).addParameter("d2", new Date()).addToBatch()
+                .addParameter("id", 3).addParameter("d1", new Date()).addParameter("d2", new Date()).addToBatch()
+                .executeBatch();
+
+        List<UtilDateEntity> list = sql2o.createQuery("select * from testutildate").executeAndFetch(UtilDateEntity.class);
+
+        assertTrue(list.size() == 3);
+
+    }
+
 
     /************** Helper stuff ******************/
 

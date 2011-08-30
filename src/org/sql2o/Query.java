@@ -6,7 +6,6 @@ import org.sql2o.tools.NamedParameterStatement;
 import java.lang.reflect.Field;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
-import java.nio.channels.NonWritableChannelException;
 import java.sql.*;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -182,11 +181,12 @@ public class Query {
         catch(NoSuchFieldException nsfe){
             String methodName = getSetterName(fieldName);
             Method method;
+            Class valueClass = getValueClass(value);
             try{
-                method = objClass.getMethod(methodName, value.getClass());
+                method = objClass.getMethod(methodName, valueClass);
             }
-            catch(NoSuchMethodException ex){
-                if (java.util.Date.class.isAssignableFrom(value.getClass())){
+            catch(NoSuchMethodException ex){ // if error, try using jodatime
+                if (java.util.Date.class.equals(valueClass)){
                     method = objClass.getMethod(methodName, DateTime.class);
                 }
                 else{
@@ -207,6 +207,16 @@ public class Query {
         }
 
         return returnVal;
+    }
+
+    private Class getValueClass(Object value){
+        Class valClass = value.getClass();
+        if (java.util.Date.class.isAssignableFrom(valClass)){
+            return java.util.Date.class;
+        }
+        else{
+            return valClass;
+        }
     }
 
     private Object instantiateIfNecessary(Object obj, String fieldName) throws IllegalAccessException, InstantiationException, NoSuchMethodException, InvocationTargetException {
