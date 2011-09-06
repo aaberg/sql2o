@@ -207,6 +207,14 @@ public class Sql2oTest extends TestCase {
         //assertEquals(2, list.get(0).obj.valInt);
     }
 
+    public void testConversion(){
+
+        String sql = "select cast(1 as smallint) as val1, 2 as val2 union select cast(3 as smallint) as val1, 4 as val2";
+        List<TypeConvertEntity> entities = sql2o.createQuery(sql).executeAndFetch(TypeConvertEntity.class);
+
+        assertTrue(entities.size() == 2);
+    }
+
 
     /************** Helper stuff ******************/
 

@@ -2,6 +2,7 @@ package org.sql2o;
 
 import org.joda.time.DateTime;
 import org.sql2o.tools.NamedParameterStatement;
+import org.sql2o.tools.TypeConverter;
 
 import java.lang.reflect.Field;
 import java.lang.reflect.InvocationTargetException;
@@ -33,13 +34,13 @@ public class Query {
 
         this.columnMappings = sql2O.getDefaultColumnMappings() == null ? new HashMap<String, String>() : sql2O.getDefaultColumnMappings();
         this.caseSensitive = sql2O.isDefaultCaseSensitive();
-        this.csMethods = new HashMap<String, String>();
+        this.methodsMap = new HashMap<String, Method>();
     }
 
     private Sql2o sql2O;
 
     private Map<String, String> columnMappings;
-    private Map<String, String> csMethods;
+    private Map<String, Method> methodsMap;
 
     private NamedParameterStatement statement;
 
@@ -136,20 +137,13 @@ public class Query {
     private String getSetterName(String fieldName){
         String setterName = "set" + fieldName.substring(0,1).toUpperCase() + fieldName.substring(1);
 
-        if (!this.isCaseSensitive() && this.csMethods.containsKey(setterName.toLowerCase())){
-            setterName = csMethods.get(setterName.toLowerCase());
-        }
-
-        return  setterName;
+        return this.isCaseSensitive() ? setterName : setterName.toLowerCase();
     }
 
     private String getGetterName(String fieldName){
         String getterName = "get" + fieldName.substring(0,1).toUpperCase() + fieldName.substring(1);
 
-        if (!this.isCaseSensitive() && this.csMethods.containsKey(getterName.toLowerCase())){
-            getterName = this.csMethods.get(getterName.toLowerCase());
-        }
-        return getterName;
+        return this.isCaseSensitive() ? getterName : getterName.toLowerCase();
     }
 
     private void prepareColumnMappings(Class objClass){
@@ -158,9 +152,13 @@ public class Query {
             for (Field f : objClass.getFields()){
                 this.columnMappings.put(f.getName().toLowerCase(), f.getName());
             }
+        }
 
-            for (Method m : objClass.getMethods()){
-                this.csMethods.put(m.getName().toLowerCase(), m.getName());
+        for (Method m : objClass.getMethods()){
+            String methodName = this.isCaseSensitive() ? m.getName() : m.getName().toLowerCase();
+
+            if (!this.methodsMap.containsKey(methodName)){
+                this.methodsMap.put(methodName, m);
             }
         }
     }
@@ -193,39 +191,19 @@ public class Query {
         fieldName = columnMappings.containsKey(fieldName) ? columnMappings.get(fieldName) : fieldName;
         try{
             Field field = objClass.getField(fieldName);
-            value = setterConverter(field.getType(), value);
+            value = TypeConverter.convert(field.getType(), value);
             field.set(obj, value);
         }
         catch(NoSuchFieldException nsfe){
-            String methodName = getSetterName(fieldName);
-            Method method;
+            Method method = methodsMap.get(getSetterName(fieldName));
             Class valueClass = getValueClass(value);
-            try{
-                method = objClass.getMethod(methodName, valueClass);
-            }
-            catch(NoSuchMethodException ex){ // if error, try using jodatime
-                if (java.util.Date.class.equals(valueClass)){
-                    method = objClass.getMethod(methodName, DateTime.class);
-                }
-                else{
-                    throw ex;
-                }
-            }
-            value = setterConverter(method.getParameterTypes()[0], value);
+
+            value = TypeConverter.convert(method.getParameterTypes()[0], value);
             method.invoke(obj, value);
         }
     }
 
-    private Object setterConverter(Class type, Object value){
-        Object returnVal = value;
 
-        // handle jodatime
-        if (type.equals(DateTime.class)){
-            returnVal = new DateTime(value);
-        }
-
-        return returnVal;
-    }
 
     private Class getValueClass(Object value){
         Class valClass = value.getClass();
