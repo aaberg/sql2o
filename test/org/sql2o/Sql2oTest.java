@@ -69,13 +69,14 @@ public class Sql2oTest extends TestCase {
         sql2o.createQuery(sql).executeUpdate();
 
 
-        Query insQuery = sql2o.beginTransaction().createQuery("insert into testExecWithNullsTbl (text, aNumber, aLongNumber) values(:text, :number, :lnum)");
+        Connection connection = sql2o.beginTransaction();
+        Query insQuery = connection.createQuery("insert into testExecWithNullsTbl (text, aNumber, aLongNumber) values(:text, :number, :lnum)");
         insQuery.addParameter("text", "some text").addParameter("number", 2).addParameter("lnum", 10L).executeUpdate();
         insQuery.addParameter("text", "some text").addParameter("number", (Integer)null).addParameter("lnum", 10L).executeUpdate();
         insQuery.addParameter("text", (String)null).addParameter("number", 21).addParameter("lnum", (Long)null).executeUpdate();
         insQuery.addParameter("text", "some text").addParameter("number", 1221).addParameter("lnum", 10).executeUpdate();
         insQuery.addParameter("text", "some text").addParameter("number", 2311).addParameter("lnum", 12).executeUpdate();
-        sql2o.commit();
+        connection.commit();
 
         List<TestEntity> fetched = sql2o.createQuery("select * from testExecWithNullsTbl").executeAndFetch(TestEntity.class);
 
@@ -213,6 +214,19 @@ public class Sql2oTest extends TestCase {
         List<TypeConvertEntity> entities = sql2o.createQuery(sql).executeAndFetch(TypeConvertEntity.class);
 
         assertTrue(entities.size() == 2);
+    }
+
+    public void testUpdateNoTransaction() throws SQLException {
+        String ddlQuery = "create table testUpdateNoTransaction(id int primary key, value varchar(50))";
+        Connection connection = sql2o.createQuery(ddlQuery).executeUpdate();
+
+        assertTrue(connection.getJdbcConnection().isClosed());
+
+        String insQuery = "insert into testUpdateNoTransaction(id, value) values (:id, :value)";
+        sql2o.createQuery(insQuery).addParameter("id",1).addParameter("value", "test1").executeUpdate()
+                .createQuery(insQuery).addParameter("id", 2).addParameter("value","val2").executeUpdate();
+
+        assertTrue(connection.getJdbcConnection().isClosed());
     }
 
 

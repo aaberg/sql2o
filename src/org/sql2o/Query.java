@@ -22,22 +22,22 @@ import java.util.Map;
  */
 public class Query {
 
-    public Query(Sql2o sql2O, String queryText) {
-        this.sql2O = sql2O;
+    public Query(Connection connection, String queryText) {
+        this.connection = connection;
 
         try{
-            statement = new NamedParameterStatement(sql2O.getConnection(), queryText);
+            statement = new NamedParameterStatement(connection.getJdbcConnection(), queryText);
         }
         catch(Exception ex){
             throw new RuntimeException(ex);
         }
 
-        this.columnMappings = sql2O.getDefaultColumnMappings() == null ? new HashMap<String, String>() : sql2O.getDefaultColumnMappings();
-        this.caseSensitive = sql2O.isDefaultCaseSensitive();
+        this.columnMappings = connection.getSql2o().getDefaultColumnMappings() == null ? new HashMap<String, String>() : connection.getSql2o().getDefaultColumnMappings();
+        this.caseSensitive = connection.getSql2o().isDefaultCaseSensitive();
         this.methodsMap = new HashMap<String, Method>();
     }
 
-    private Sql2o sql2O;
+    private Connection connection;
 
     private Map<String, String> columnMappings;
     private Map<String, Method> methodsMap;
@@ -303,20 +303,20 @@ public class Query {
         }
     }
 
-    public Sql2o executeUpdate(){
+    public Connection executeUpdate(){
         int result;
         try{
             result = statement.executeUpdate();
         }
         catch(Exception ex){
-            this.sql2O.rollback();
+            this.connection.rollback();
             throw new RuntimeException(ex);
         }
         finally {
             closeConnectionIfNecessary();
         }
 
-        return this.sql2O;
+        return this.connection;
     }
 
     public Object executeScalar(){
@@ -368,7 +368,7 @@ public class Query {
         return this;
     }
 
-    public Sql2o executeBatch(){
+    public Connection executeBatch(){
         try {
             statement.executeBatch();
         }
@@ -379,7 +379,7 @@ public class Query {
             closeConnectionIfNecessary();
         }
 
-        return this.sql2O;
+        return this.connection;
     }
 
     /*********** column mapping ****************/
@@ -397,8 +397,8 @@ public class Query {
     /************** private stuff ***************/
     private void closeConnectionIfNecessary(){
         try{
-            if (this.sql2O.getConnection().getAutoCommit() && statement != null){
-                sql2O.getConnection().close();
+            if (this.connection.getJdbcConnection().getAutoCommit() && statement != null){
+                this.connection.getJdbcConnection().close();
                 statement.close();
             }
         }
