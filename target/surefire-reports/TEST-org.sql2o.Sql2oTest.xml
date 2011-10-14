@@ -1,0 +1,73 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<testsuite failures="0" time="4.863" errors="0" skipped="0" tests="13" name="org.sql2o.Sql2oTest">
+  <properties>
+    <property name="java.runtime.name" value="Java(TM) SE Runtime Environment"/>
+    <property name="sun.boot.library.path" value="/usr/lib/jvm/java-6-sun-1.6.0.24/jre/lib/i386"/>
+    <property name="java.vm.version" value="19.1-b02"/>
+    <property name="java.vm.vendor" value="Sun Microsystems Inc."/>
+    <property name="java.vendor.url" value="http://java.sun.com/"/>
+    <property name="path.separator" value=":"/>
+    <property name="java.vm.name" value="Java HotSpot(TM) Server VM"/>
+    <property name="file.encoding.pkg" value="sun.io"/>
+    <property name="user.country" value="NO"/>
+    <property name="sun.java.launcher" value="SUN_STANDARD"/>
+    <property name="sun.os.patch.level" value="unknown"/>
+    <property name="java.vm.specification.name" value="Java Virtual Machine Specification"/>
+    <property name="user.dir" value="/home/lars/Programming/Projects/sql2o"/>
+    <property name="java.runtime.version" value="1.6.0_24-b07"/>
+    <property name="java.awt.graphicsenv" value="sun.awt.X11GraphicsEnvironment"/>
+    <property name="basedir" value="/home/lars/Programming/Projects/sql2o"/>
+    <property name="java.endorsed.dirs" value="/usr/lib/jvm/java-6-sun-1.6.0.24/jre/lib/endorsed"/>
+    <property name="os.arch" value="i386"/>
+    <property name="surefire.real.class.path" value="/tmp/surefirebooter9023429482303000892.jar"/>
+    <property name="java.io.tmpdir" value="/tmp"/>
+    <property name="line.separator" value="
+"/>
+    <property name="java.vm.specification.vendor" value="Sun Microsystems Inc."/>
+    <property name="os.name" value="Linux"/>
+    <property name="sun.jnu.encoding" value="UTF-8"/>
+    <property name="java.library.path" value="/usr/lib/jvm/java-6-sun-1.6.0.24/jre/lib/i386/server:/usr/lib/jvm/java-6-sun-1.6.0.24/jre/lib/i386:/usr/lib/jvm/java-6-sun-1.6.0.24/jre/../lib/i386:.::/usr/java/packages/lib/i386:/lib:/usr/lib"/>
+    <property name="surefire.test.class.path" value="/home/lars/Programming/Projects/sql2o/target/test-classes:/home/lars/Programming/Projects/sql2o/target/classes:/home/lars/.m2/repository/joda-time/joda-time/1.6.2/joda-time-1.6.2.jar:/home/lars/.m2/repository/junit/junit/4.10/junit-4.10.jar:/home/lars/.m2/repository/org/hamcrest/hamcrest-core/1.1/hamcrest-core-1.1.jar:/home/lars/.m2/repository/com/h2database/h2/1.3.160/h2-1.3.160.jar:"/>
+    <property name="java.specification.name" value="Java Platform API Specification"/>
+    <property name="java.class.version" value="50.0"/>
+    <property name="sun.management.compiler" value="HotSpot Tiered Compilers"/>
+    <property name="os.version" value="2.6.38-11-generic-pae"/>
+    <property name="user.home" value="/home/lars"/>
+    <property name="user.timezone" value="Europe/Oslo"/>
+    <property name="java.awt.printerjob" value="sun.print.PSPrinterJob"/>
+    <property name="file.encoding" value="UTF-8"/>
+    <property name="java.specification.version" value="1.6"/>
+    <property name="user.name" value="lars"/>
+    <property name="java.class.path" value="/home/lars/Programming/Projects/sql2o/target/test-classes:/home/lars/Programming/Projects/sql2o/target/classes:/home/lars/.m2/repository/joda-time/joda-time/1.6.2/joda-time-1.6.2.jar:/home/lars/.m2/repository/junit/junit/4.10/junit-4.10.jar:/home/lars/.m2/repository/org/hamcrest/hamcrest-core/1.1/hamcrest-core-1.1.jar:/home/lars/.m2/repository/com/h2database/h2/1.3.160/h2-1.3.160.jar:"/>
+    <property name="java.vm.specification.version" value="1.0"/>
+    <property name="sun.arch.data.model" value="32"/>
+    <property name="java.home" value="/usr/lib/jvm/java-6-sun-1.6.0.24/jre"/>
+    <property name="java.specification.vendor" value="Sun Microsystems Inc."/>
+    <property name="user.language" value="nb"/>
+    <property name="java.vm.info" value="mixed mode"/>
+    <property name="java.version" value="1.6.0_24"/>
+    <property name="java.ext.dirs" value="/usr/lib/jvm/java-6-sun-1.6.0.24/jre/lib/ext:/usr/java/packages/lib/ext"/>
+    <property name="sun.boot.class.path" value="/usr/lib/jvm/java-6-sun-1.6.0.24/jre/lib/resources.jar:/usr/lib/jvm/java-6-sun-1.6.0.24/jre/lib/rt.jar:/usr/lib/jvm/java-6-sun-1.6.0.24/jre/lib/sunrsasign.jar:/usr/lib/jvm/java-6-sun-1.6.0.24/jre/lib/jsse.jar:/usr/lib/jvm/java-6-sun-1.6.0.24/jre/lib/jce.jar:/usr/lib/jvm/java-6-sun-1.6.0.24/jre/lib/charsets.jar:/usr/lib/jvm/java-6-sun-1.6.0.24/jre/lib/modules/jdk.boot.jar:/usr/lib/jvm/java-6-sun-1.6.0.24/jre/classes"/>
+    <property name="java.vendor" value="Sun Microsystems Inc."/>
+    <property name="localRepository" value="/home/lars/.m2/repository"/>
+    <property name="file.separator" value="/"/>
+    <property name="java.vendor.url.bug" value="http://java.sun.com/cgi-bin/bugreport.cgi"/>
+    <property name="sun.cpu.endian" value="little"/>
+    <property name="sun.io.unicode.encoding" value="UnicodeLittle"/>
+    <property name="sun.desktop" value="gnome"/>
+    <property name="sun.cpu.isalist" value=""/>
+  </properties>
+  <testcase time="0.006" classname="org.sql2o.Sql2oTest" name="testExecuteUpdate"/>
+  <testcase time="3.473" classname="org.sql2o.Sql2oTest" name="testExecuteAndFetch"/>
+  <testcase time="0.006" classname="org.sql2o.Sql2oTest" name="testExecuteAndFetchWithNulls"/>
+  <testcase time="0.004" classname="org.sql2o.Sql2oTest" name="testBatch"/>
+  <testcase time="1.026" classname="org.sql2o.Sql2oTest" name="testExecuteScalar"/>
+  <testcase time="0.004" classname="org.sql2o.Sql2oTest" name="testBatchNoTransaction"/>
+  <testcase time="0.012" classname="org.sql2o.Sql2oTest" name="testCaseInsensitive"/>
+  <testcase time="0.003" classname="org.sql2o.Sql2oTest" name="testExecuteAndFetchResultSet"/>
+  <testcase time="0.209" classname="org.sql2o.Sql2oTest" name="testJodaTime"/>
+  <testcase time="0.034" classname="org.sql2o.Sql2oTest" name="testUtilDate"/>
+  <testcase time="0.018" classname="org.sql2o.Sql2oTest" name="testComplexTypes"/>
+  <testcase time="0.004" classname="org.sql2o.Sql2oTest" name="testConversion"/>
+  <testcase time="0.002" classname="org.sql2o.Sql2oTest" name="testUpdateNoTransaction"/>
+</testsuite>

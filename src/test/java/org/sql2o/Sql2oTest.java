@@ -78,7 +78,7 @@ public class Sql2oTest extends TestCase {
         insQuery.addParameter("text", "some text").addParameter("number", 2311).addParameter("lnum", 12).executeUpdate();
         connection.commit();
 
-        List<TestEntity> fetched = sql2o.createQuery("select * from testExecWithNullsTbl").executeAndFetch(TestEntity.class);
+        List<Entity> fetched = sql2o.createQuery("select * from testExecWithNullsTbl").executeAndFetch(Entity.class);
 
         assertTrue(fetched.size() == 5);
         assertNull(fetched.get(2).text);
@@ -149,14 +149,14 @@ public class Sql2oTest extends TestCase {
         }
         query.executeBatch();
 
-        List<TestCIEntity> ciEntities = sql2o.createQuery("select * from testCI").setCaseSensitive(false).executeAndFetch(TestCIEntity.class);
+        List<CIEntity> ciEntities = sql2o.createQuery("select * from testCI").setCaseSensitive(false).executeAndFetch(CIEntity.class);
 
         assertTrue(ciEntities.size() == 20);
 
 
         // test defaultCaseSensitive;
         sql2o.setDefaultCaseSensitive(false);
-        List<TestCIEntity> ciEntities2 = sql2o.createQuery("select * from testCI").executeAndFetch(TestCIEntity.class);
+        List<CIEntity> ciEntities2 = sql2o.createQuery("select * from testCI").executeAndFetch(CIEntity.class);
         assertTrue(ciEntities2.size() == 20);
     }
 

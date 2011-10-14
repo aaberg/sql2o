@@ -2,9 +2,6 @@ package org.sql2o.tools;
 
 import org.joda.time.DateTime;
 
-import java.lang.reflect.Field;
-import java.lang.reflect.Type;
-
 /**
  * Created by IntelliJ IDEA.
  * User: lars

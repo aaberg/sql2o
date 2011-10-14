@@ -10,7 +10,7 @@ import java.sql.Timestamp;
  * Time: 10:15 PM
  * To change this template use File | Settings | File Templates.
  */
-public class TestEntity {
+public class Entity {
 
     public long id;
     public String text;
