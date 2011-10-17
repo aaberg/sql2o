@@ -51,6 +51,13 @@
                 <artifactId>maven-release-plugin</artifactId>
                 <version>2.2.1</version>
             </plugin>
+            <plugin>
+                <artifactId>maven-compiler-plugin</artifactId>
+                <configuration>
+                    <source>1.5</source>
+                    <target>1.5</target>
+	            </configuration>
+	        </plugin>
         </plugins>
     </build>
 </project>

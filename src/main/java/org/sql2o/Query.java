@@ -181,7 +181,7 @@ public class Query {
 
     }
 
-    private void setField(Object obj, String fieldName, Object value) throws IllegalAccessException, InvocationTargetException, NoSuchMethodException {
+    private void setField(Object obj, String fieldName, Object value) throws IllegalAccessException, InvocationTargetException, NoSuchFieldException {
         Class objClass = obj.getClass();
 
         if (!this.isCaseSensitive()){
@@ -189,15 +189,15 @@ public class Query {
         }
 
         fieldName = columnMappings.containsKey(fieldName) ? columnMappings.get(fieldName) : fieldName;
-        try{
+
+        Method method = methodsMap.get(getSetterName(fieldName));
+
+        if (method == null){
             Field field = objClass.getField(fieldName);
             value = TypeConverter.convert(field.getType(), value);
             field.set(obj, value);
         }
-        catch(NoSuchFieldException nsfe){
-            Method method = methodsMap.get(getSetterName(fieldName));
-            Class valueClass = getValueClass(value);
-
+        else{
             value = TypeConverter.convert(method.getParameterTypes()[0], value);
             method.invoke(obj, value);
         }
@@ -215,26 +215,26 @@ public class Query {
         }
     }
 
-    private Object instantiateIfNecessary(Object obj, String fieldName) throws IllegalAccessException, InstantiationException, NoSuchMethodException, InvocationTargetException {
+    private Object instantiateIfNecessary(Object obj, String fieldName) throws IllegalAccessException, InstantiationException, NoSuchFieldException, InvocationTargetException {
 
         Object instantiation;
 
         Class objClass = obj.getClass();
         try{
-            Field field = objClass.getField(fieldName);
-            instantiation = field.get(obj);
-            if (instantiation == null){
-                instantiation = field.getType().newInstance();
-                field.set(obj, instantiation);
-            }
-        }
-        catch(NoSuchFieldException nsfe){
             Method getter = objClass.getMethod(getGetterName(fieldName));
             instantiation = getter.invoke(obj);
             if (instantiation == null){
                 Method setter = objClass.getMethod(getSetterName(fieldName), getter.getReturnType());
                 instantiation = getter.getReturnType().newInstance();
                 setter.invoke(obj, instantiation);
+            }
+        }
+        catch(NoSuchMethodException nsme){
+            Field field = objClass.getField(fieldName);
+            instantiation = field.get(obj);
+            if (instantiation == null){
+                instantiation = field.getType().newInstance();
+                field.set(obj, instantiation);
             }
         }
 
