@@ -1,8 +1,13 @@
 package org.sql2o.issues;
 
 import junit.framework.TestCase;
+import org.junit.Test;
 import org.sql2o.Sql2o;
+import org.sql2o.Sql2oException;
 import org.sql2o.issues.pojos.Issue1Pojo;
+import org.sql2o.issues.pojos.KeyValueEntity;
+
+import java.sql.SQLException;
 
 /**
  * Created by IntelliJ IDEA.
@@ -34,5 +39,23 @@ public class IssuesTest extends TestCase {
 
         assertEquals(2, pojo.val);
 
+    }
+
+    /**
+     *  Tests for issue #2 https://github.com/aaberg/sql2o/issues/2
+     *
+     *  Issue: NPE - should instead tell what the problem is
+     *
+     */
+    public void testForFieldDoesNotExistException(){
+        Sql2o sql2o = new Sql2o(url, user, pass);
+
+
+        try{
+            KeyValueEntity pojo = sql2o.createQuery("select 1 id, 'something' foo").executeAndFetchFirst(KeyValueEntity.class);
+        }
+        catch(Sql2oException ex){
+            assertTrue(ex.getMessage().contains("Cannot find property"));
+        }
     }
 }

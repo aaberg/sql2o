@@ -181,7 +181,7 @@ public class Query {
 
     }
 
-    private void setField(Object obj, String fieldName, Object value) throws IllegalAccessException, InvocationTargetException, NoSuchFieldException {
+    private void setField(Object obj, String fieldName, Object value) throws IllegalAccessException, InvocationTargetException {
         Class objClass = obj.getClass();
 
         if (!this.isCaseSensitive()){
@@ -193,7 +193,13 @@ public class Query {
         Method method = methodsMap.get(getSetterName(fieldName));
 
         if (method == null){
-            Field field = objClass.getField(fieldName);
+            Field field;
+            try{
+                field = objClass.getField(fieldName);
+            }
+            catch(NoSuchFieldException e){
+                throw new Sql2oException("Cannot find property '" + fieldName + "' on " + obj.getClass().toString(), e);
+            }
             value = TypeConverter.convert(field.getType(), value);
             field.set(obj, value);
         }
@@ -215,7 +221,7 @@ public class Query {
         }
     }
 
-    private Object instantiateIfNecessary(Object obj, String fieldName) throws IllegalAccessException, InstantiationException, NoSuchFieldException, InvocationTargetException {
+    private Object instantiateIfNecessary(Object obj, String fieldName) throws IllegalAccessException, InstantiationException, InvocationTargetException {
 
         Object instantiation;
 
@@ -230,7 +236,12 @@ public class Query {
             }
         }
         catch(NoSuchMethodException nsme){
-            Field field = objClass.getField(fieldName);
+            Field field = null;
+            try {
+                field = objClass.getField(fieldName);
+            } catch (NoSuchFieldException e) {
+                throw new Sql2oException("Cannot find property '" + fieldName + "' of " + objClass.toString());
+            }
             instantiation = field.get(obj);
             if (instantiation == null){
                 instantiation = field.getType().newInstance();
@@ -283,7 +294,16 @@ public class Query {
 
             rs.close();
         }
-        catch(Exception ex){
+        catch (InvocationTargetException ex){
+            throw new RuntimeException(ex);
+        }
+        catch(SQLException ex){
+            throw new RuntimeException(ex);
+        }
+        catch (IllegalAccessException ex){
+            throw new RuntimeException(ex);
+        }
+        catch (InstantiationException ex){
             throw new RuntimeException(ex);
         }
         finally {
