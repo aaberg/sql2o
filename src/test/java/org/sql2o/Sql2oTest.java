@@ -229,6 +229,21 @@ public class Sql2oTest extends TestCase {
         assertTrue(connection.getJdbcConnection().isClosed());
     }
 
+    public void testGetResult(){
+
+        sql2o.createQuery("create table get_result_test(id integer primary key, value varchar(20))").executeUpdate();
+
+        String insertSql =
+                "insert into get_result_test(id, value) " +
+                "select 1, 'hello' union " +
+                "select 2, 'hello2' union " +
+                "select 3, 'hello3'";
+
+        int result = sql2o.createQuery(insertSql).executeUpdate().getResult();
+
+        assertEquals(3, result);
+    }
+
 
     /************** Helper stuff ******************/
 

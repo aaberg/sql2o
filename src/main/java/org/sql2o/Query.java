@@ -324,9 +324,8 @@ public class Query {
     }
 
     public Connection executeUpdate(){
-        int result;
         try{
-            result = statement.executeUpdate();
+            this.connection.setResultInternal(statement.executeUpdate());
         }
         catch(Exception ex){
             this.connection.rollback();

@@ -16,6 +16,8 @@ public class Connection {
     private java.sql.Connection jdbcConnection;
     private Sql2o sql2o;
 
+    private Integer result = null;
+
     public Connection(Sql2o sql2o) {
 
         this.sql2o = sql2o;
@@ -99,5 +101,15 @@ public class Connection {
         }
     }
 
+    public int getResult(){
+        if (this.result == null){
+            throw new Sql2oException("It is required to call executeUpdate() method before calling getResult().");
+        }
+        return this.result;
+    }
+
+    public void setResultInternal(int result){
+        this.result = result;
+    }
 
 }
