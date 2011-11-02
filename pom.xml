@@ -3,10 +3,9 @@
     <modelVersion>4.0.0</modelVersion>
     <groupId>org.sql2o</groupId>
     <artifactId>sql2o</artifactId>
-    <packaging>jar</packaging>
+    <packaging>pom</packaging>
     <version>0.3-SNAPSHOT</version>
     <name>Sql2o</name>
-    <description>sql2o is a an open source java library, that allows you to run sql queries and parse the result into your POJO's, using only a few lines of code.</description>
     <url>http://sql2o.aabergs.net</url>
     <licenses>
         <license>
@@ -18,9 +17,9 @@
 
     <scm>
         <url>scm:git:git@github.com:aaberg/sql2o.git</url>
-        <connection>scm:git:git@github.com:aaberg/sql2o.git</connection>
-        <developerConnection>scm:git:git@github.com:aaberg/sql2o.git</developerConnection>
+        <connection>scm:git:file//localhost/users/lars/Programming/Projects/sql2o</connection>
     </scm>
+
     <dependencies>
         <dependency>
             <groupId>joda-time</groupId>
@@ -60,4 +59,13 @@
 	        </plugin>
         </plugins>
     </build>
+
+    <distributionManagement>
+        <repository>
+            <id>aaberg_mvn_repo</id>
+            <layout>default</layout>
+            <name>aaberg_mvn_repo</name>
+            <url>file://localhost/users/lars/Programming/Projects/aaberg_mvn_repo</url>
+        </repository>
+    </distributionManagement>
 </project>
