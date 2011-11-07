@@ -17,7 +17,7 @@
 
     <scm>
         <url>scm:git:git@github.com:aaberg/sql2o.git</url>
-        <connection>scm:git:file//localhost/users/lars/Programming/Projects/sql2o</connection>
+        <connection>scm:git:file///home/lars/Programming/Repositories/sql2o.git</connection>
     </scm>
 
     <dependencies>
