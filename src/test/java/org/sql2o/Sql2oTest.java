@@ -2,6 +2,7 @@ package org.sql2o;
 
 import junit.framework.TestCase;
 import org.joda.time.DateTime;
+import org.junit.Test;
 
 import java.sql.SQLException;
 import java.util.Date;
@@ -227,6 +228,17 @@ public class Sql2oTest extends TestCase {
                 .createQuery(insQuery).addParameter("id", 2).addParameter("value","val2").executeUpdate();
 
         assertTrue(connection.getJdbcConnection().isClosed());
+    }
+
+    public void testNullDate(){
+        sql2o.createQuery("create table nullDateTest(id integer primary key, somedate datetime)").executeUpdate();
+
+        sql2o.createQuery("insert into nullDateTest(id, somedate) values(:id, :date)")
+                .addParameter("id", 1)
+                .addParameter("date", (Date)null).executeUpdate();
+
+        Date d = (Date)sql2o.createQuery("select somedate from nullDateTest where id = 1").executeScalar();
+        assertNull(d);
     }
 
     public void testGetResult(){

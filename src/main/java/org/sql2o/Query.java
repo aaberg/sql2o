@@ -108,7 +108,7 @@ public class Query {
     }
 
     public Query addParameter(String name, java.util.Date value){
-        Date sqlDate = new Date(value.getTime());
+        Date sqlDate = value == null ? null : new Date(value.getTime());
         return addParameter(name, sqlDate);
     }
 
