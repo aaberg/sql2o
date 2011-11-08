@@ -209,18 +209,6 @@ public class Query {
         }
     }
 
-
-
-    private Class getValueClass(Object value){
-        Class valClass = value.getClass();
-        if (java.util.Date.class.isAssignableFrom(valClass)){
-            return java.util.Date.class;
-        }
-        else{
-            return valClass;
-        }
-    }
-
     private Object instantiateIfNecessary(Object obj, String fieldName) throws IllegalAccessException, InstantiationException, InvocationTargetException {
 
         Object instantiation;
@@ -324,10 +312,18 @@ public class Query {
     }
 
     public Connection executeUpdate(){
+        return executeUpdate(false);
+    }
+
+    public Connection executeUpdate(boolean getKeys){
         try{
-            this.connection.setResultInternal(statement.executeUpdate());
+            this.connection.setResult(statement.executeUpdate());
+            if (getKeys){
+                this.connection.setKeys(statement.getStatement().getGeneratedKeys());
+            }
+            connection.setCanGetKeys(getKeys);
         }
-        catch(Exception ex){
+        catch(SQLException ex){
             this.connection.rollback();
             throw new RuntimeException(ex);
         }

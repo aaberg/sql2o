@@ -67,25 +67,25 @@ public class Sql2o {
         return connection.createQuery(query);
     }
 
-    public static void registerDriver(String driverName){
-
-        try{
-            Driver driver = (Driver) Class.forName(driverName).newInstance();
-            DriverManager.registerDriver(driver);
-        }
-        catch(Exception ex){
-            throw new RuntimeException(ex);
-        }
-
-    }
-
-    public static void registerDriver(Driver driver){
-        try {
-            DriverManager.registerDriver(driver);
-        } catch (SQLException e) {
-            throw new RuntimeException(e);
-        }
-    }
+//    public static void registerDriver(String driverName){
+//
+//        try{
+//            Driver driver = (Driver) Class.forName(driverName).newInstance();
+//            DriverManager.registerDriver(driver);
+//        }
+//        catch(Exception ex){
+//            throw new RuntimeException(ex);
+//        }
+//
+//    }
+//
+//    public static void registerDriver(Driver driver){
+//        try {
+//            DriverManager.registerDriver(driver);
+//        } catch (SQLException e) {
+//            throw new RuntimeException(e);
+//        }
+//    }
 
     public Connection beginTransaction(int isolationLevel){
 

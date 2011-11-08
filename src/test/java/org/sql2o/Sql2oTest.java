@@ -256,6 +256,58 @@ public class Sql2oTest extends TestCase {
         assertEquals(3, result);
     }
 
+    public void testGetKeys(){
+
+        sql2o.createQuery("create table get_keys_test(id integer identity primary key, value varchar(20))").executeUpdate();
+
+        String insertSql = "insert into get_keys_test(value) values(:val)";
+        try{
+            Integer key = (Integer)sql2o.createQuery(insertSql).addParameter("val", "something").executeUpdate().getKey();
+            throw new RuntimeException("Sql2oException expected in code line above");
+        }
+        catch(Sql2oException ex){
+            assertTrue(ex.getMessage().contains("executeUpdate(true)"));
+        }
+
+        Integer key = (Integer)sql2o.createQuery(insertSql).addParameter("val", "something").executeUpdate(true).getKey();
+
+        assertNotNull(key);
+        assertTrue(key > 0);
+
+        String multiInsertSql = "insert into get_keys_test(value) select 'a val' col1 union select 'another val' col1";
+        Object[] keys = sql2o.createQuery(multiInsertSql).executeUpdate(true).getKeys();
+
+        assertNotNull(keys);
+        assertTrue(keys.length > 0);
+
+        //The test below fails. H2 will always just return the identity of the last generated column.
+        //todo: test with another database.
+        //assertTrue(keys.length == 2);
+    }
+
+    public void testRollback(){
+
+        sql2o.createQuery("create table test_rollback_table(id integer identity primary key, value varchar(25))").executeUpdate();
+
+        sql2o
+                //first insert something, and commit it.
+                .beginTransaction()
+                .createQuery("insert into test_rollback_table(value) values (:val)")
+                .addParameter("val", "something")
+                .executeUpdate()
+                .commit()
+
+                // insert something else, and roll it back.
+                .beginTransaction()
+                .createQuery("insert into test_rollback_table(value) values (:val)")
+                .addParameter("val", "something to rollback")
+                .executeUpdate()
+                .rollback();
+        long rowCount = (Long)sql2o.createQuery("select count(*) from test_rollback_table").executeScalar();
+
+        assertEquals(1, rowCount);
+    }
+
 
     /************** Helper stuff ******************/
 

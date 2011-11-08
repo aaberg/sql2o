@@ -1,7 +1,10 @@
 package org.sql2o;
 
 import java.sql.DriverManager;
+import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Properties;
 
 /**
@@ -17,6 +20,8 @@ public class Connection {
     private Sql2o sql2o;
 
     private Integer result = null;
+    private List<Object> keys;
+    private boolean canGetKeys;
 
     public Connection(Sql2o sql2o) {
 
@@ -108,8 +113,42 @@ public class Connection {
         return this.result;
     }
 
-    public void setResultInternal(int result){
+    void setResult(int result){
         this.result = result;
     }
 
+    void setKeys(ResultSet rs) throws SQLException {
+        this.keys = new ArrayList<Object>();
+        while(rs.next()){
+            this.keys.add(rs.getObject(1));
+        }
+    }
+
+    public Object getKey(){
+        if (!isCanGetKeys()){
+            throw new Sql2oException("Keys where not fetched from database. Please call executeUpdate(true) to fetch keys");
+        }
+        if (this.keys != null && this.keys.size() > 0){
+            return  keys.get(0);
+        }
+        return null;
+    }
+
+    public Object[] getKeys(){
+        if (!isCanGetKeys()){
+            throw new Sql2oException("Keys where not fetched from database. Please call executeUpdate(true) to fetch keys");
+        }
+        if (this.keys != null){
+            return this.keys.toArray();
+        }
+        return null;
+    }
+
+    public boolean isCanGetKeys() {
+        return canGetKeys;
+    }
+
+    void setCanGetKeys(boolean canGetKeys) {
+        this.canGetKeys = canGetKeys;
+    }
 }
