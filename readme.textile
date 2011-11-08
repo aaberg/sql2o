@@ -3,16 +3,4 @@ h1. sql2o
 p. Sql2o is a small java library, with the purpose of making database interaction easy. When fetching data from the
 database, the resultset will automatically be filled into you POJO objects. Kind of like an ORM, but without the sql generation capabilities.
 
-p. Here is a basic example.
-
-bc. Sql2o.registerDriver(new com.mysql.jdbc.Driver());
-
-bc. Sql2o sql2o = new Sql2o("dbc:mysql://127.0.0.1/testDB", "username", "password");
-
-bc. User user = sql2o.createQuery("select id, firstName, lastName, email from Users where email = :email")
-   .addParameter("email", "test@domain.com")
-   .executeAndFetchFirst(User.class);
-
-p. Lets pretend you want to get a list of all users.
-
-bc. List<User> allUsers = sql2o.createQuery("select id, firstName, lastName, email from Users).executeAndFetch(User.class);
+p. Check out the "sql2o website(sql2o website)":http://sql2o.aabergs.net for examples.
