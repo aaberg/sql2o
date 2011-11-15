@@ -1,8 +1,10 @@
 package org.sql2o;
 
 import org.joda.time.DateTime;
+import org.sql2o.converters.Convert;
+import org.sql2o.converters.Converter;
+import org.sql2o.converters.ConverterException;
 import org.sql2o.tools.NamedParameterStatement;
-import org.sql2o.tools.TypeConverter;
 
 import java.lang.reflect.Field;
 import java.lang.reflect.InvocationTargetException;
@@ -200,11 +202,31 @@ public class Query {
             catch(NoSuchFieldException e){
                 throw new Sql2oException("Cannot find property '" + fieldName + "' on " + obj.getClass().toString(), e);
             }
-            value = TypeConverter.convert(field.getType(), value);
+            Converter converter = null;
+            try {
+                converter = Convert.getConverter(field.getType());
+            } catch (ConverterException e) {
+                throw new Sql2oException("Cannot convert to type " + field.getType().toString(), e);
+            }
+            try {
+                value = converter.convert(value);// TypeConverter.convert(field.getType(), value);
+            } catch (ConverterException e) {
+                throw new Sql2oException("Conversion failed when setting property: " + field.getName(), e);
+            }
             field.set(obj, value);
         }
         else{
-            value = TypeConverter.convert(method.getParameterTypes()[0], value);
+            Converter converter = null;
+            try {
+                converter = Convert.getConverter(method.getParameterTypes()[0]);
+            } catch (ConverterException e) {
+                throw new Sql2oException("Cannot convert to type " + method.getParameterTypes()[0].toString(), e);
+            }
+            try {
+                value = converter.convert(value); //TypeConverter.convert(method.getParameterTypes()[0], value);
+            } catch (ConverterException e) {
+                throw new Sql2oException("Conversion failed when calling setter: " + method.getName());
+            }
             method.invoke(obj, value);
         }
     }
