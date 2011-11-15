@@ -3,7 +3,9 @@ package org.sql2o;
 import junit.framework.TestCase;
 import org.joda.time.DateTime;
 import org.junit.Test;
+import org.sql2o.pojos.BigDecimalPojo;
 
+import java.math.BigDecimal;
 import java.sql.SQLException;
 import java.util.Date;
 import java.util.HashMap;
@@ -306,6 +308,18 @@ public class Sql2oTest extends TestCase {
         long rowCount = (Long)sql2o.createQuery("select count(*) from test_rollback_table").executeScalar();
 
         assertEquals(1, rowCount);
+    }
+
+    public void testBigDecimals(){
+
+        sql2o.createQuery("create table bigdectesttable (id integer identity primary key, val1 numeric, val2 integer)").executeUpdate();
+        
+        sql2o.createQuery("insert into bigdectesttable(val1, val2) values(:val1, :val2)").addParameter("val1",1.256).addParameter("val2", 4).executeUpdate();
+
+        BigDecimalPojo pojo = sql2o.createQuery("select * from bigdectesttable").executeAndFetchFirst(BigDecimalPojo.class);
+
+        assertEquals(new BigDecimal("1.256"), pojo.val1);
+        assertEquals(new BigDecimal("4.0"), pojo.val2);
     }
 
 

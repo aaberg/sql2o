@@ -1,5 +1,6 @@
 package org.sql2o.converters;
 
+import java.math.BigDecimal;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -38,6 +39,8 @@ public class Convert {
         Converter byteConverter = new ByteConverter();
         registerConverter(Byte.class, byteConverter);
         registerConverter(byte.class, byteConverter);
+
+        registerConverter(BigDecimal.class, new BigDecimalConverter());
         
         registerConverter(String.class, new StringConverter());
         
