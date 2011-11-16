@@ -4,6 +4,7 @@ import org.joda.time.DateTime;
 import org.sql2o.converters.Convert;
 import org.sql2o.converters.Converter;
 import org.sql2o.converters.ConverterException;
+import org.sql2o.reflection.Pojo;
 import org.sql2o.tools.NamedParameterStatement;
 
 import java.lang.reflect.Field;
@@ -136,136 +137,9 @@ public class Query {
         return this;
     }
 
-    private String getSetterName(String fieldName){
-        String setterName = "set" + fieldName.substring(0,1).toUpperCase() + fieldName.substring(1);
-
-        return this.isCaseSensitive() ? setterName : setterName.toLowerCase();
-    }
-
-    private String getGetterName(String fieldName){
-        String getterName = "get" + fieldName.substring(0,1).toUpperCase() + fieldName.substring(1);
-
-        return this.isCaseSensitive() ? getterName : getterName.toLowerCase();
-    }
-
-    private void prepareColumnMappings(Class objClass){
-        if (!this.isCaseSensitive()){
-
-            for (Field f : objClass.getFields()){
-                this.columnMappings.put(f.getName().toLowerCase(), f.getName());
-            }
-        }
-
-        for (Method m : objClass.getMethods()){
-            String methodName = this.isCaseSensitive() ? m.getName() : m.getName().toLowerCase();
-
-            if (!this.methodsMap.containsKey(methodName)){
-                this.methodsMap.put(methodName, m);
-            }
-        }
-    }
-
-    private Map<String, Class> mappedTypes = null;
-    private void prepareColumnMappingsIfNecessary(Class objClass){
-
-        if (this.isCaseSensitive()){
-            return;
-        }
-
-        if (mappedTypes == null){
-            mappedTypes = new HashMap<String, Class>();
-        }
-
-        if (!mappedTypes.containsKey(objClass.getName())){
-            mappedTypes.put(objClass.getName(), objClass);
-            prepareColumnMappings(objClass);
-        }
-
-    }
-
-    private void setField(Object obj, String fieldName, Object value) throws IllegalAccessException, InvocationTargetException {
-        Class objClass = obj.getClass();
-
-        if (!this.isCaseSensitive()){
-            fieldName = fieldName.toLowerCase();
-        }
-
-        fieldName = columnMappings.containsKey(fieldName) ? columnMappings.get(fieldName) : fieldName;
-
-        Method method = methodsMap.get(getSetterName(fieldName));
-
-        if (method == null){
-            Field field;
-            try{
-                field = objClass.getField(fieldName);
-            }
-            catch(NoSuchFieldException e){
-                throw new Sql2oException("Cannot find property '" + fieldName + "' on " + obj.getClass().toString(), e);
-            }
-            Converter converter = null;
-            try {
-                converter = Convert.getConverter(field.getType());
-            } catch (ConverterException e) {
-                throw new Sql2oException("Cannot convert to type " + field.getType().toString(), e);
-            }
-            try {
-                value = converter.convert(value);// TypeConverter.convert(field.getType(), value);
-            } catch (ConverterException e) {
-                throw new Sql2oException("Conversion failed when setting property: " + field.getName(), e);
-            }
-            field.set(obj, value);
-        }
-        else{
-            Converter converter = null;
-            try {
-                converter = Convert.getConverter(method.getParameterTypes()[0]);
-            } catch (ConverterException e) {
-                throw new Sql2oException("Cannot convert to type " + method.getParameterTypes()[0].toString(), e);
-            }
-            try {
-                value = converter.convert(value); //TypeConverter.convert(method.getParameterTypes()[0], value);
-            } catch (ConverterException e) {
-                throw new Sql2oException("Conversion failed when calling setter: " + method.getName());
-            }
-            method.invoke(obj, value);
-        }
-    }
-
-    private Object instantiateIfNecessary(Object obj, String fieldName) throws IllegalAccessException, InstantiationException, InvocationTargetException {
-
-        Object instantiation;
-
-        Class objClass = obj.getClass();
-        try{
-            Method getter = objClass.getMethod(getGetterName(fieldName));
-            instantiation = getter.invoke(obj);
-            if (instantiation == null){
-                Method setter = objClass.getMethod(getSetterName(fieldName), getter.getReturnType());
-                instantiation = getter.getReturnType().newInstance();
-                setter.invoke(obj, instantiation);
-            }
-        }
-        catch(NoSuchMethodException nsme){
-            Field field = null;
-            try {
-                field = objClass.getField(fieldName);
-            } catch (NoSuchFieldException e) {
-                throw new Sql2oException("Cannot find property '" + fieldName + "' of " + objClass.toString());
-            }
-            instantiation = field.get(obj);
-            if (instantiation == null){
-                instantiation = field.getType().newInstance();
-                field.set(obj, instantiation);
-            }
-        }
-
-        return instantiation;
-    }
-
     public <T> List<T> executeAndFetch(Class returnType){
         List list = new ArrayList();
         try{
-            prepareColumnMappings(returnType);
             java.util.Date st = new java.util.Date();
             ResultSet rs = statement.executeQuery();
             System.out.println(String.format("execute query time: %s", new java.util.Date().getTime() - st.getTime()));
@@ -274,46 +148,20 @@ public class Query {
 
             while(rs.next()){
 
-                Object obj = returnType.newInstance();
+                Pojo pojo = new Pojo(returnType, this.isCaseSensitive());
+
+                //Object obj = returnType.newInstance();
                 for(int colIdx = 1; colIdx <= meta.getColumnCount(); colIdx++){
                     String colName = meta.getColumnName(colIdx);
-                    //int colType = meta.getColumnType(colIdx);
-
-                    String[] fieldPath = colName.split("\\.");
-                    if (fieldPath.length == 0){
-                        fieldPath = new String[]{colName};
-                    }
-
-                    Object value = rs.getObject(colName);
-
-                    Object pathObject = obj;
-                    for (int pathIdx = 0; pathIdx < fieldPath.length; pathIdx++){
-                        if (pathIdx == fieldPath.length - 1){
-                            setField(pathObject, fieldPath[pathIdx], value);
-                            break;
-                        }
-
-                        pathObject = instantiateIfNecessary(pathObject, fieldPath[pathIdx]);
-                        prepareColumnMappingsIfNecessary(pathObject.getClass());
-
-                    }
+                    pojo.setProperty(colName, rs.getObject(colIdx));
                 }
 
-                list.add(obj);
+                list.add(pojo.getObject());
             }
 
             rs.close();
         }
-        catch (InvocationTargetException ex){
-            throw new RuntimeException(ex);
-        }
         catch(SQLException ex){
-            throw new RuntimeException(ex);
-        }
-        catch (IllegalAccessException ex){
-            throw new RuntimeException(ex);
-        }
-        catch (InstantiationException ex){
             throw new RuntimeException(ex);
         }
         finally {

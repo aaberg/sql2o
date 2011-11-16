@@ -55,7 +55,7 @@ public class IssuesTest extends TestCase {
             KeyValueEntity pojo = sql2o.createQuery("select 1 id, 'something' foo").executeAndFetchFirst(KeyValueEntity.class);
         }
         catch(Sql2oException ex){
-            assertTrue(ex.getMessage().contains("Cannot find property"));
+            assertTrue(ex.getMessage().contains("not found"));
         }
     }
 }
