@@ -159,7 +159,7 @@ public class Query {
             rs.close();
         }
         catch(SQLException ex){
-            throw new RuntimeException(ex);
+            throw new Sql2oException("Database error", ex);
         }
         finally {
             closeConnectionIfNecessary();
@@ -285,7 +285,7 @@ public class Query {
             }
         }
         catch (Exception ex){
-            throw new RuntimeException(ex);
+            throw new Sql2oException("Error while attempting to close connection", ex);
         }
     }
 
