@@ -1,14 +1,10 @@
 package org.sql2o;
 
 import org.joda.time.DateTime;
-import org.sql2o.converters.Convert;
-import org.sql2o.converters.Converter;
-import org.sql2o.converters.ConverterException;
 import org.sql2o.reflection.Pojo;
+import org.sql2o.reflection.PojoMetadata;
 import org.sql2o.tools.NamedParameterStatement;
 
-import java.lang.reflect.Field;
-import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.sql.*;
 import java.util.ArrayList;
@@ -139,6 +135,7 @@ public class Query {
 
     public <T> List<T> executeAndFetch(Class returnType){
         List list = new ArrayList();
+        PojoMetadata metadata = new PojoMetadata(returnType, this.isCaseSensitive());
         try{
             java.util.Date st = new java.util.Date();
             ResultSet rs = statement.executeQuery();
@@ -148,7 +145,7 @@ public class Query {
 
             while(rs.next()){
 
-                Pojo pojo = new Pojo(returnType, this.isCaseSensitive());
+                Pojo pojo = new Pojo(metadata, this.isCaseSensitive());
 
                 //Object obj = returnType.newInstance();
                 for(int colIdx = 1; colIdx <= meta.getColumnCount(); colIdx++){

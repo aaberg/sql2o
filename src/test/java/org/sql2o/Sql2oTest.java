@@ -2,7 +2,6 @@ package org.sql2o;
 
 import junit.framework.TestCase;
 import org.joda.time.DateTime;
-import org.junit.Test;
 import org.sql2o.pojos.BigDecimalPojo;
 
 import java.math.BigDecimal;
@@ -57,6 +56,13 @@ public class Sql2oTest extends TestCase {
         Date after = new Date();
         long span = after.getTime() - before.getTime();
         System.out.println(String.format("Fetched %s user: %s ms", insertIntoUsers, span));
+
+        // repeat this
+        before = new Date();
+        allUsers = sql2o.createQuery("select * from User").executeAndFetch(User.class);
+        after = new Date();
+        span = after.getTime() - before.getTime();
+        System.out.println(String.format("Again Fetched %s user: %s ms", insertIntoUsers, span));
 
         assertTrue(allUsers.size() == insertIntoUsers);
         deleteUserTable();
@@ -202,13 +208,6 @@ public class Sql2oTest extends TestCase {
 
         assertTrue(list.size() == 3);
 
-    }
-
-    public void testComplexTypes(){
-        List<ComplexEntity> list = sql2o.createQuery("select 1 id, 'test' val, 'test2' \"obj.val1\", 2 \"obj.valint\" union select 2 id, 'test2' val, 'tessdf' \"obj.val1\", 100 \"obj.valint\"").executeAndFetch(ComplexEntity.class);
-
-        assertTrue(list.size() == 2);
-        //assertEquals(2, list.get(0).obj.valInt);
     }
 
     public void testConversion(){

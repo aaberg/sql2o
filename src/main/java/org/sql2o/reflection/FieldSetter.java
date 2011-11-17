@@ -3,7 +3,6 @@ package org.sql2o.reflection;
 import org.sql2o.Sql2oException;
 
 import java.lang.reflect.Field;
-import java.lang.reflect.InvocationTargetException;
 
 /**
  * Created by IntelliJ IDEA.

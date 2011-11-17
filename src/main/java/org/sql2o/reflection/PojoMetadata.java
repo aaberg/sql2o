@@ -1,8 +1,6 @@
 package org.sql2o.reflection;
 
 import org.sql2o.Sql2oException;
-import org.sql2o.converters.Convert;
-import org.sql2o.converters.Converter;
 
 import java.lang.reflect.Field;
 import java.lang.reflect.Method;
@@ -67,5 +65,20 @@ public class PojoMetadata {
             throw new Sql2oException(errorMsg);
         }
     }
+    
+    public Class getType(){
+        return this.clazz;
+    }
+    
+    // Caching
+//    public static Map<Class, PojoMetadata> cachedMetadata = new HashMap<Class, PojoMetadata>();
+//
+//    public static PojoMetadata getForType(Class clazz, boolean caseSensitive){
+//        if (!cachedMetadata.containsKey(clazz)){
+//            cachedMetadata.put(clazz, new PojoMetadata(clazz, caseSensitive));
+//        }
+//
+//        return cachedMetadata.get(clazz);
+//    }
 }
 

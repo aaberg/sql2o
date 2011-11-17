@@ -23,9 +23,10 @@ public class Pojo {
     private boolean caseSensitive;
     private Object object;
     
-    public Pojo(Class clazz, boolean caseSensitive){
+    public Pojo(PojoMetadata metadata, boolean caseSensitive){
         this.caseSensitive = caseSensitive;
-        this.metadata = new PojoMetadata(clazz, caseSensitive);
+        this.metadata = metadata;
+        Class clazz = metadata.getType();
 
         try {
             object = clazz.newInstance();
