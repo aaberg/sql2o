@@ -1,6 +1,6 @@
 package org.sql2o;
 
-import java.sql.SQLException;
+    import java.sql.SQLException;
 import java.util.HashMap;
 import java.util.Map;
 

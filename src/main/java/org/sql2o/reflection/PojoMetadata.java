@@ -20,11 +20,14 @@ public class PojoMetadata {
     private boolean caseSensitive;
     private Class clazz;
     
-    public PojoMetadata(Class clazz, boolean caseSensitive){
+    private Map<String,String> columnMappings;
+    
+    public PojoMetadata(Class clazz, boolean caseSensitive, Map<String,String> columnMappings){
         
         this.caseSensitive = caseSensitive;
         this.clazz = clazz;
-        
+        this.columnMappings = columnMappings == null ? new HashMap<String, String>() : columnMappings;
+
         propertySetters = new HashMap<String, Setter>();
 
         // prepare fields
@@ -53,6 +56,10 @@ public class PojoMetadata {
     public Setter getPropertySetter(String propertyName){
         
         String name = this.caseSensitive ? propertyName : propertyName.toLowerCase();
+
+        if (this.columnMappings.containsKey(name)){
+            name = this.columnMappings.get(name);
+        }
         
         if (propertySetters.containsKey(name)){
             return propertySetters.get(name);

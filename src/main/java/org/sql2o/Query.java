@@ -31,13 +31,14 @@ public class Query {
             throw new RuntimeException(ex);
         }
 
-        this.columnMappings = connection.getSql2o().getDefaultColumnMappings() == null ? new HashMap<String, String>() : connection.getSql2o().getDefaultColumnMappings();
+        this.setColumnMappings(connection.getSql2o().getDefaultColumnMappings());
         this.caseSensitive = connection.getSql2o().isDefaultCaseSensitive();
         this.methodsMap = new HashMap<String, Method>();
     }
 
     private Connection connection;
 
+    private Map<String, String> caseSensitiveColumnMappings;
     private Map<String, String> columnMappings;
     private Map<String, Method> methodsMap;
 
@@ -135,7 +136,7 @@ public class Query {
 
     public <T> List<T> executeAndFetch(Class returnType){
         List list = new ArrayList();
-        PojoMetadata metadata = new PojoMetadata(returnType, this.isCaseSensitive());
+        PojoMetadata metadata = new PojoMetadata(returnType, this.isCaseSensitive(), this.getColumnMappings());
         try{
             java.util.Date st = new java.util.Date();
             ResultSet rs = statement.executeQuery();
@@ -267,11 +268,28 @@ public class Query {
     /*********** column mapping ****************/
 
     public Map<String, String> getColumnMappings() {
-        return columnMappings;
+        if (this.isCaseSensitive()){
+            return this.caseSensitiveColumnMappings;
+        }
+        else{
+            return this.columnMappings;
+        }
+    }
+    
+    void setColumnMappings(Map<String, String> mappings){
+
+        this.caseSensitiveColumnMappings = new HashMap<String, String>();
+        this.columnMappings = new HashMap<String, String>();
+        
+        for (Map.Entry<String,String> entry : mappings.entrySet()){
+            this.caseSensitiveColumnMappings.put(entry.getKey(), entry.getValue());
+            this.columnMappings.put(entry.getKey().toLowerCase(), entry.getValue().toLowerCase());
+        }
     }
 
-    public Query addColumnMapping(String columnName, String fieldName){
-        this.columnMappings.put(columnName, fieldName);
+    public Query addColumnMapping(String columnName, String propertyName){
+        this.caseSensitiveColumnMappings.put(columnName, propertyName);
+        this.columnMappings.put(columnName.toLowerCase(), propertyName.toLowerCase());
 
         return this;
     }

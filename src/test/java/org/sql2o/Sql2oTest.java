@@ -9,6 +9,7 @@ import java.sql.SQLException;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 /**
  * Created by IntelliJ IDEA.
@@ -319,6 +320,33 @@ public class Sql2oTest extends TestCase {
 
         assertEquals(new BigDecimal("1.256"), pojo.val1);
         assertEquals(new BigDecimal("4.0"), pojo.val2);
+    }
+
+    public void testQueryDbMappings(){
+        Entity entity = sql2o.createQuery("select 1 as id, 'something' as caption, cast('2011-01-01' as date) as theTime")
+                .addColumnMapping("caption", "text")
+                .addColumnMapping("theTime", "time").executeAndFetchFirst(Entity.class);
+
+        assertEquals(1, entity.id);
+        assertEquals("something", entity.text);
+        assertEquals(new DateTime(2011,1,1,0,0,0,0).toDate(), entity.time);
+    }
+
+    public void testGlobalDbMappings(){
+        Sql2o sql2o1 = new Sql2o(url, user, pass);
+
+        Map<String,String> defaultColMaps = new HashMap<String, String>();
+        defaultColMaps.put("caption", "text");
+        defaultColMaps.put("theTime", "time");
+
+        sql2o1.setDefaultColumnMappings(defaultColMaps);
+
+        Entity entity = sql2o1.createQuery("select 1 as id, 'something' as caption, cast('2011-01-01' as date) as theTime").executeAndFetchFirst(Entity.class);
+
+        assertEquals(1, entity.id);
+        assertEquals("something", entity.text);
+        assertEquals(new DateTime(2011,1,1,0,0,0,0).toDate(), entity.time);
+
     }
 
 
