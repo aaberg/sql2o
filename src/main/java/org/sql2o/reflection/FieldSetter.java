@@ -17,6 +17,7 @@ public class FieldSetter implements Setter{
 
     public FieldSetter(Field field) {
         this.field = field;
+        this.field.setAccessible(true);
     }
 
     public void setProperty(Object obj, Object value) {

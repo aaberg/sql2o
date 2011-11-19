@@ -18,6 +18,7 @@ public class MethodSetter implements  Setter{
 
     public MethodSetter(Method method) {
         this.method = method;
+        this.method.setAccessible(true);
     }
 
     public void setProperty(Object obj, Object value) {

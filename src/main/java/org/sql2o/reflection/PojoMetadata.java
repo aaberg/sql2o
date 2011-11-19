@@ -31,14 +31,14 @@ public class PojoMetadata {
         propertySetters = new HashMap<String, Setter>();
 
         // prepare fields
-        for (Field f : clazz.getFields()){
+        for (Field f : clazz.getDeclaredFields()){
             String propertyName = f.getName();
             propertyName = caseSensitive ? propertyName : propertyName.toLowerCase();
             propertySetters.put(propertyName, new FieldSetter(f));
         }
         
         // prepare methods. Methods will override fields, if both exists.
-        for (Method m : clazz.getMethods()){
+        for (Method m : clazz.getDeclaredMethods()){
             if (m.getName().startsWith("set")){
                 String propertyName = m.getName().substring(3);
                 if (caseSensitive){

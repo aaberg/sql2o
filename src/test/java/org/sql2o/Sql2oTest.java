@@ -3,6 +3,7 @@ package org.sql2o;
 import junit.framework.TestCase;
 import org.joda.time.DateTime;
 import org.sql2o.pojos.BigDecimalPojo;
+import org.sql2o.pojos.EntityWithPrivateFields;
 
 import java.math.BigDecimal;
 import java.sql.SQLException;
@@ -347,6 +348,13 @@ public class Sql2oTest extends TestCase {
         assertEquals("something", entity.text);
         assertEquals(new DateTime(2011,1,1,0,0,0,0).toDate(), entity.time);
 
+    }
+
+    public void testSetPrivateFields(){
+        EntityWithPrivateFields entity = sql2o.createQuery("select 1 id, 'hello' value").executeAndFetchFirst(EntityWithPrivateFields.class);
+
+        assertEquals(1, entity.getId());
+        assertEquals("hello1", entity.getValue());
     }
 
 
