@@ -1,6 +1,8 @@
 package org.sql2o;
 
 import org.joda.time.DateTime;
+import org.sql2o.data.Table;
+import org.sql2o.data.TableFactory;
 import org.sql2o.reflection.Pojo;
 import org.sql2o.reflection.PojoMetadata;
 import org.sql2o.tools.NamedParameterStatement;
@@ -177,6 +179,19 @@ public class Query {
         else{
             return (T)l.get(0);
         }
+    }
+    
+    public Table executeAndFetchTable(){
+        ResultSet rs;
+        try {
+            rs = statement.executeQuery();
+        } catch (SQLException e) {
+            throw new Sql2oException("Error while executing query", e);
+        }
+        
+        Table table = TableFactory.createTable(rs);
+        
+        return table;
     }
 
     public Connection executeUpdate(){

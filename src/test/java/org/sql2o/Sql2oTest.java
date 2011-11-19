@@ -2,6 +2,8 @@ package org.sql2o;
 
 import junit.framework.TestCase;
 import org.joda.time.DateTime;
+import org.sql2o.data.Row;
+import org.sql2o.data.Table;
 import org.sql2o.pojos.BigDecimalPojo;
 import org.sql2o.pojos.EntityWithPrivateFields;
 
@@ -355,6 +357,34 @@ public class Sql2oTest extends TestCase {
 
         assertEquals(1, entity.getId());
         assertEquals("hello1", entity.getValue());
+    }
+
+    public void testFetchTable(){
+        sql2o.createQuery("create table tabletest(id integer identity primary key, value varchar(20), value2 decimal)").executeUpdate();
+        sql2o.createQuery("insert into tabletest(value,value2) values (:value, :value2)")
+                .addParameter("value", "something").addParameter("value2", new BigDecimal("3.4")).addToBatch()
+                .addParameter("value", "bla").addParameter("value2", new BigDecimal("5.5")).addToBatch().executeBatch();
+
+
+        Table table = sql2o.createQuery("select * from tabletest order by id").executeAndFetchTable();
+
+        assertEquals(3, table.columns().size());
+        assertEquals("ID", table.columns().get(0).getName());
+        assertEquals("VALUE", table.columns().get(1).getName());
+        assertEquals("VALUE2", table.columns().get(2).getName());
+
+        assertEquals(2, table.rows().size());
+        
+        Row row0 = table.rows().get(0);
+        Row row1 = table.rows().get(1);
+
+        assertEquals(1, row0.getInteger("ID").intValue());
+        assertEquals("something", row0.getString(1));
+        assertEquals(new BigDecimal("3.4"), row0.getBigDecimal("VALUE2"));
+        
+        assertEquals(2, row1.getInteger(0).intValue());
+        assertEquals("bla", row1.getString("VALUE"));
+        assertEquals(5.5D, row1.getDouble(2));
     }
 
 
