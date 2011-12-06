@@ -9,6 +9,10 @@ package org.sql2o.converters;
  */
 public class ShortConverter extends NumberConverter<Short> {
 
+    public ShortConverter(boolean primitive) {
+        super(primitive);
+    }
+
     @Override
     protected Short convertNumberValue(Number val) {
         return val.shortValue();

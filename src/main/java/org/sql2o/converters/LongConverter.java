@@ -9,6 +9,10 @@ package org.sql2o.converters;
  */
 public class LongConverter extends NumberConverter<Long>{
 
+    public LongConverter(boolean primitive) {
+        super(primitive);
+    }
+
     @Override
     protected Long convertNumberValue(Number val) {
         return val.longValue();

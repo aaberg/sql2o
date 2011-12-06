@@ -9,6 +9,10 @@ package org.sql2o.converters;
  */
 public class FloatConverter extends NumberConverter<Float> {
 
+    public FloatConverter(boolean primitive) {
+        super(primitive);
+    }
+
     @Override
     protected Float convertNumberValue(Number val) {
         return val.floatValue();

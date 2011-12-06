@@ -4,8 +4,7 @@ import junit.framework.TestCase;
 import org.joda.time.DateTime;
 import org.sql2o.data.Row;
 import org.sql2o.data.Table;
-import org.sql2o.pojos.BigDecimalPojo;
-import org.sql2o.pojos.EntityWithPrivateFields;
+import org.sql2o.pojos.*;
 
 import java.math.BigDecimal;
 import java.sql.SQLException;
@@ -386,6 +385,45 @@ public class Sql2oTest extends TestCase {
         assertEquals("bla", row1.getString("VALUE"));
         assertEquals(5.5D, row1.getDouble(2));
     }
+    
+    public void testStringConversion(){
+        StringConversionPojo pojo = sql2o.createQuery("select '1' val1, '2  ' val2, '' val3, '' val4, null val5").executeAndFetchFirst(StringConversionPojo.class);
+
+        assertEquals((Integer)1, pojo.val1);
+        assertEquals(2l, pojo.val2);
+        assertNull(pojo.val3);
+        assertEquals(0, pojo.val4);
+        assertNull(pojo.val5);
+
+
+    }
+    
+//    public void testMultiResult(){
+//        sql2o.createQuery("create table multi1(id integer identity primary key, value varchar(20))").executeUpdate();
+//        sql2o.createQuery("create table multi2(id integer identity primary key, value2 varchar(20))").executeUpdate();
+//
+//        sql2o.createQuery("insert into multi1(value) values (:val)")
+//                .addParameter("val", "test1").addToBatch()
+//                .addParameter("val", "test2").addToBatch()
+//                .executeBatch();
+//
+//        sql2o.createQuery("insert into multi2(value2) values (:val)")
+//                .addParameter("val", "test3").addToBatch()
+//                .addParameter("val", "test4").addToBatch()
+//                .executeBatch();
+//
+//        List[] results = sql2o.createQuery("select * from multi1 order by id; select * from multi2 order by id").executeAndFetchMultiple(Multi1.class, Multi2.class);
+//        //List<Multi1> results = sql2o.createQuery("select * from multi1 order by id; select * from multi2 order by id").executeAndFetch(Multi1.class);
+//
+//        List<Multi1> res1 = results[0];
+//        List<Multi2> res2 = results[1];
+//
+//        assertEquals((Long)1L, res1.get(0).getId());
+//        assertEquals("test2", res1.get(1).getValue());
+//
+//        assertEquals("test3", res2.get(0).getValue2());
+//        assertEquals(4, res2.get(1).getId());
+//    }
 
 
     /************** Helper stuff ******************/

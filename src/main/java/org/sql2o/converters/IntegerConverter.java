@@ -14,6 +14,10 @@ import java.math.BigInteger;
  */
 public class IntegerConverter extends NumberConverter<Integer>{
 
+    public IntegerConverter(boolean primitive) {
+        super(primitive);
+    }
+
     @Override
     protected Integer convertNumberValue(Number val) {
         return val.intValue();

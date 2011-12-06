@@ -10,6 +10,11 @@ import java.math.BigDecimal;
  * To change this template use File | Settings | File Templates.
  */
 public class BigDecimalConverter extends NumberConverter<BigDecimal>{
+
+    public BigDecimalConverter() {
+        super(false);
+    }
+
     @Override
     protected BigDecimal convertNumberValue(Number val) {
         if (val.getClass().equals(BigDecimal.class)){

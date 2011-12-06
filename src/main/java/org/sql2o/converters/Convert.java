@@ -16,29 +16,23 @@ public class Convert {
     private static Map<Class, Converter> registeredConverters = new HashMap<Class, Converter>();
 
     static{
-        Converter integerConverter = new IntegerConverter();
-        registerConverter(Integer.class, integerConverter);
-        registerConverter(int.class, integerConverter);
-        
-        Converter doubleConverter = new DoubleConverter();
-        registerConverter(Double.class, doubleConverter);
-        registerConverter(double.class, doubleConverter);
-        
-        Converter floatConverter = new FloatConverter();
-        registerConverter(Float.class, floatConverter);
-        registerConverter(float.class, floatConverter);
-        
-        Converter longConverter = new LongConverter();
-        registerConverter(Long.class, longConverter);
-        registerConverter(long.class, longConverter);
-        
-        Converter shortConverter = new ShortConverter();
-        registerConverter(Short.class, shortConverter);
-        registerConverter(short.class, shortConverter);
+        registerConverter(Integer.class, new IntegerConverter(false));
+        registerConverter(int.class, new IntegerConverter(true));
 
-        Converter byteConverter = new ByteConverter();
-        registerConverter(Byte.class, byteConverter);
-        registerConverter(byte.class, byteConverter);
+        registerConverter(Double.class, new DoubleConverter(false));
+        registerConverter(double.class, new DoubleConverter(true));
+
+        registerConverter(Float.class, new FloatConverter(false));
+        registerConverter(float.class, new FloatConverter(true));
+
+        registerConverter(Long.class, new LongConverter(false));
+        registerConverter(long.class, new LongConverter(true));
+
+        registerConverter(Short.class, new ShortConverter(false));
+        registerConverter(short.class, new ShortConverter(true));
+
+        registerConverter(Byte.class, new ByteConverter(false));
+        registerConverter(byte.class, new ByteConverter(true));
 
         registerConverter(BigDecimal.class, new BigDecimalConverter());
         

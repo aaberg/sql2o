@@ -136,6 +136,48 @@ public class Query {
         return this;
     }
 
+//    public List[] executeAndFetchMultiple(Class ... returnTypes){
+//        List<List> listOfLists = new ArrayList<List>();
+//
+//        try {
+//            boolean hasResult = statement.getStatement().execute();
+//
+//
+//            for (Class clazz : returnTypes){
+//                List objList = new ArrayList();
+//                PojoMetadata metadata = new PojoMetadata(clazz, this.isCaseSensitive(), this.getColumnMappings());
+//
+//                ResultSet rs = statement.getStatement().getResultSet();
+//                ResultSetMetaData meta = rs.getMetaData();
+//
+//                while (rs.next()){
+//                    Pojo pojo = new Pojo(metadata, this.isCaseSensitive());
+//
+//                    for (int colIdx = 1; colIdx <= meta.getColumnCount(); colIdx++){
+//                        String colName = meta.getColumnName(colIdx);
+//                        pojo.setProperty(colName, rs.getObject(colIdx));
+//                    }
+//
+//                    objList.add(pojo.getObject());
+//                }
+//
+//                rs.close();
+//
+//                listOfLists.add(objList);
+//
+//                hasResult = statement.getStatement().getMoreResults();
+//            }
+//
+//        } catch (SQLException e) {
+//            throw new Sql2oException("Database error", e);
+//        }
+//        finally {
+//            closeConnectionIfNecessary();
+//        }
+//
+//        return listOfLists.toArray(new ArrayList[listOfLists.size()]);
+//    }
+
     public <T> List<T> executeAndFetch(Class returnType){
         List list = new ArrayList();
         PojoMetadata metadata = new PojoMetadata(returnType, this.isCaseSensitive(), this.getColumnMappings());

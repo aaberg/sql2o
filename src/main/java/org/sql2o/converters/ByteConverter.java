@@ -9,6 +9,10 @@ package org.sql2o.converters;
  */
 public class ByteConverter extends NumberConverter<Byte> {
 
+    public ByteConverter(boolean primitive) {
+        super(primitive);
+    }
+
     @Override
     protected Byte convertNumberValue(Number val) {
         return val.byteValue();

@@ -8,7 +8,11 @@ package org.sql2o.converters;
  * To change this template use File | Settings | File Templates.
  */
 public abstract class NumberConverter<V extends Number> implements Converter<V>{
-    
+
+    public NumberConverter(boolean primitive) {
+        isPrimitive = primitive;
+    }
+
     public V convert(Object val) {
         if (val == null){
             return null;
@@ -17,7 +21,17 @@ public abstract class NumberConverter<V extends Number> implements Converter<V>{
             return convertNumberValue((Number)val);
         }
         else if (val.getClass().equals(String.class)){
-            return convertStringValue((String)val);
+            String stringVal = ((String)val).trim();
+            stringVal = stringVal.isEmpty() ? null : stringVal;
+
+            if (stringVal == null && isPrimitive){
+                return convertNumberValue(0);
+            }
+            else if (stringVal == null){
+                return null;
+            }
+
+            return convertStringValue(stringVal);
         }
         else{
             throw new IllegalArgumentException("Cannot convert type " + val.getClass().toString() + " to " + getTypeDescription());
@@ -29,4 +43,6 @@ public abstract class NumberConverter<V extends Number> implements Converter<V>{
     protected abstract V convertStringValue(String val);
     
     protected abstract String getTypeDescription();
+    
+    private boolean isPrimitive;
 }

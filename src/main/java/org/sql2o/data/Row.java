@@ -48,51 +48,51 @@ public class Row {
     }
     
     public Double getDouble(int columnIndex){
-        return new DoubleConverter().convert(getObject(columnIndex));
+        return new DoubleConverter(false).convert(getObject(columnIndex));
     }
     
     public Double getDouble(String columnName){
-        return new DoubleConverter().convert(getObject(columnName));
+        return new DoubleConverter(false).convert(getObject(columnName));
     }
     
     public Float getFloat(int columnIndex){
-        return new FloatConverter().convert(getObject(columnIndex));
+        return new FloatConverter(false).convert(getObject(columnIndex));
     }
     
     public Float getFloat(String columnName){
-        return new FloatConverter().convert(getObject(columnName));
+        return new FloatConverter(false).convert(getObject(columnName));
     }
     
     public Long getLong(int columnIndex){
-        return new LongConverter().convert(getObject(columnIndex));
+        return new LongConverter(false).convert(getObject(columnIndex));
     }
     
     public Long getLong(String columnName){
-        return new LongConverter().convert(getObject(columnName));
+        return new LongConverter(false).convert(getObject(columnName));
     }
     
     public Integer getInteger(int columnIndex){
-        return new IntegerConverter().convert(getObject(columnIndex));
+        return new IntegerConverter(false).convert(getObject(columnIndex));
     }
     
     public Integer getInteger(String columnName){
-        return new IntegerConverter().convert(getObject(columnName));
+        return new IntegerConverter(false).convert(getObject(columnName));
     }
     
     public Short getShort(int columnIndex){
-        return new ShortConverter().convert(getObject(columnIndex));
+        return new ShortConverter(false).convert(getObject(columnIndex));
     }
     
     public Short getShort(String columnName){
-        return new ShortConverter().convert(getObject(columnName));
+        return new ShortConverter(false).convert(getObject(columnName));
     }
     
     public Byte getByte(int columnIndex){
-        return new ByteConverter().convert(getObject(columnIndex));
+        return new ByteConverter(false).convert(getObject(columnIndex));
     }
     
     public Byte getByte(String columnName){
-        return new ByteConverter().convert(getObject(columnName));
+        return new ByteConverter(false).convert(getObject(columnName));
     }
     
     public Date getDate(int columnIndex){

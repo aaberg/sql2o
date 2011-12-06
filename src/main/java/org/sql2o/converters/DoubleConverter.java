@@ -9,6 +9,10 @@ package org.sql2o.converters;
  */
 public class DoubleConverter extends NumberConverter<Double> {
 
+    public DoubleConverter(boolean primitive) {
+        super(primitive);
+    }
+
     @Override
     protected Double convertNumberValue(Number val) {
         return  val.doubleValue();
