@@ -31,26 +31,30 @@ public class PojoMetadata {
         propertySetters = new HashMap<String, Setter>();
 
         // prepare fields
-        for (Field f : clazz.getDeclaredFields()){
-            String propertyName = f.getName();
-            propertyName = caseSensitive ? propertyName : propertyName.toLowerCase();
-            propertySetters.put(propertyName, new FieldSetter(f));
-        }
-        
-        // prepare methods. Methods will override fields, if both exists.
-        for (Method m : clazz.getDeclaredMethods()){
-            if (m.getName().startsWith("set")){
-                String propertyName = m.getName().substring(3);
-                if (caseSensitive){
-                    propertyName = propertyName.substring(0,1).toLowerCase() + propertyName.substring(1);
-                }
-                else{
-                    propertyName = propertyName.toLowerCase();
-                }
-                
-                propertySetters.put(propertyName, new MethodSetter(m));
+        Class theClass = clazz;
+        do{
+            for (Field f : theClass.getDeclaredFields()){
+                String propertyName = f.getName();
+                propertyName = caseSensitive ? propertyName : propertyName.toLowerCase();
+                propertySetters.put(propertyName, new FieldSetter(f));
             }
-        }
+            
+            // prepare methods. Methods will override fields, if both exists.
+            for (Method m : theClass.getDeclaredMethods()){
+                if (m.getName().startsWith("set")){
+                    String propertyName = m.getName().substring(3);
+                    if (caseSensitive){
+                        propertyName = propertyName.substring(0,1).toLowerCase() + propertyName.substring(1);
+                    }
+                    else{
+                        propertyName = propertyName.toLowerCase();
+                    }
+                    
+                    propertySetters.put(propertyName, new MethodSetter(m));
+                }
+            }
+            theClass = theClass.getSuperclass();
+        }while(!theClass.equals(Object.class));
     }
     
     public Setter getPropertySetter(String propertyName){

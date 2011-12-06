@@ -397,6 +397,13 @@ public class Sql2oTest extends TestCase {
 
 
     }
+
+    public void testSuperPojo(){
+        SuperPojo pojo = sql2o.createQuery("select 1 id, 'something' value").executeAndFetchFirst(SuperPojo.class);
+
+        assertEquals(1, pojo.getId());
+        assertEquals("something1", pojo.getValue());
+    }
     
 //    public void testMultiResult(){
 //        sql2o.createQuery("create table multi1(id integer identity primary key, value varchar(20))").executeUpdate();
