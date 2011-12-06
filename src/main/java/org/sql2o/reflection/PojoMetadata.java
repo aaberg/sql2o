@@ -91,7 +91,7 @@ public class PojoMetadata {
     public Object getValueOfProperty(String propertyName, Object object){
         String name = this.caseSensitive ? propertyName : propertyName.toLowerCase();
         
-        Field field = this.fields.get(propertyName);
+        Field field = this.fields.get(name);
         try {
             return field.get(object);
         } catch (IllegalAccessException e) {
