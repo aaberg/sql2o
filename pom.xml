@@ -3,7 +3,7 @@
     <groupId>org.sql2o</groupId>
     <artifactId>sql2o</artifactId>
     <packaging>jar</packaging>
-    <version>0.2.13</version>
+    <version>0.2.14-SNAPSHOT</version>
     <name>Sql2o</name>
     <url>http://sql2o.aabergs.net</url>
     <licenses>
