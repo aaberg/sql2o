@@ -17,11 +17,16 @@ import java.util.Map;
 public class PojoMetadata {
     
     private Map<String, Setter> propertySetters;
+    private Map<String, Field> fields;
     private boolean caseSensitive;
     private Class clazz;
     
     private Map<String,String> columnMappings;
-    
+
+    public Map<String, String> getColumnMappings() {
+        return columnMappings;
+    }
+
     public PojoMetadata(Class clazz, boolean caseSensitive, Map<String,String> columnMappings){
         
         this.caseSensitive = caseSensitive;
@@ -29,6 +34,7 @@ public class PojoMetadata {
         this.columnMappings = columnMappings == null ? new HashMap<String, String>() : columnMappings;
 
         propertySetters = new HashMap<String, Setter>();
+        fields = new HashMap<String, Field>();
 
         // prepare fields
         Class theClass = clazz;
@@ -37,6 +43,7 @@ public class PojoMetadata {
                 String propertyName = f.getName();
                 propertyName = caseSensitive ? propertyName : propertyName.toLowerCase();
                 propertySetters.put(propertyName, new FieldSetter(f));
+                fields.put(propertyName, f);
             }
             
             // prepare methods. Methods will override fields, if both exists.
@@ -79,6 +86,17 @@ public class PojoMetadata {
     
     public Class getType(){
         return this.clazz;
+    }
+    
+    public Object getValueOfProperty(String propertyName, Object object){
+        String name = this.caseSensitive ? propertyName : propertyName.toLowerCase();
+        
+        Field field = this.fields.get(propertyName);
+        try {
+            return field.get(object);
+        } catch (IllegalAccessException e) {
+            throw new Sql2oException("could not read value of field " + field.getName() + " on class "+ object.getClass().toString(), e);
+        }
     }
     
     // Caching

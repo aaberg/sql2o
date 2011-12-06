@@ -404,6 +404,14 @@ public class Sql2oTest extends TestCase {
         assertEquals(1, pojo.getId());
         assertEquals("something1", pojo.getValue());
     }
+
+    public void testComplexTypes(){
+        ComplexEntity pojo = sql2o.createQuery("select 1 id, 1 \"entity.id\", 'something' \"entity.value\"").executeAndFetchFirst(ComplexEntity.class);
+
+        assertEquals(1, pojo.id);
+        assertEquals(1, pojo.entity.getId());
+        assertEquals("something1", pojo.entity.getValue());
+    }
     
 //    public void testMultiResult(){
 //        sql2o.createQuery("create table multi1(id integer identity primary key, value varchar(20))").executeUpdate();
