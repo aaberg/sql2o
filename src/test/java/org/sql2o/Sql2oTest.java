@@ -440,6 +440,55 @@ public class Sql2oTest extends TestCase {
 //        assertEquals(4, res2.get(1).getId());
 //    }
 
+    public void testRunInsideTransaction(){
+
+        sql2o.createQuery("create table runinsidetransactiontable(id integer identity primary key, value varchar(50))").executeUpdate();
+        boolean failed = false;
+
+        try{
+            sql2o.runInTransaction(new Runnable() {
+                public void run(Connection connection) throws Throwable {
+                    connection.createQuery("insert into runinsidetransactiontable(value) values(:value)")
+                        .addParameter("value", "test").executeUpdate();
+                    
+                    throw new RuntimeException("ouch!");
+    
+    
+                }
+            });
+        }
+        catch(Sql2oException ex){
+            failed = true;
+        }
+        
+        assertTrue(failed);
+        long rowCount = (Long)sql2o.createQuery("select count(*) from runinsidetransactiontable").executeScalar();
+        assertEquals(0, rowCount);
+
+        sql2o.runInTransaction(new Runnable() {
+            public void run(Connection connection) throws Throwable {
+                connection.createQuery("insert into runinsidetransactiontable(value) values(:value)")
+                    .addParameter("value", "test").executeUpdate();
+            }
+        });
+
+        rowCount = (Long)sql2o.createQuery("select count(*) from runinsidetransactiontable").executeScalar();
+        assertEquals(1, rowCount);
+    }
+    
+    public void testDynamicExecuteScalar(){
+        Object origVal = sql2o.createQuery("select 1").executeScalar();
+        assertTrue(Integer.class.equals(origVal.getClass()));
+        assertEquals((Integer)1, origVal);
+        
+        Long intVal = sql2o.createQuery("select 1").executeScalar(Long.class);
+        assertEquals((Long)1l, intVal);
+
+        Short shortVal = sql2o.createQuery("select 2").executeScalar(Short.class);
+        Short expected = 2;
+        assertEquals(expected, shortVal);
+    }
+
 
     /************** Helper stuff ******************/
 

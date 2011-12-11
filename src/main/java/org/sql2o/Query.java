@@ -1,6 +1,9 @@
 package org.sql2o;
 
 import org.joda.time.DateTime;
+import org.sql2o.converters.Convert;
+import org.sql2o.converters.Converter;
+import org.sql2o.converters.ConverterException;
 import org.sql2o.data.Table;
 import org.sql2o.data.TableFactory;
 import org.sql2o.reflection.Pojo;
@@ -276,6 +279,18 @@ public class Query {
         finally{
             closeConnectionIfNecessary();
         }
+    }
+    
+    public <V> V executeScalar(Class returnType){
+        Object value = executeScalar();
+        Converter converter = null;
+        try {
+            converter = Convert.getConverter(returnType);
+            return (V)converter.convert(value);
+        } catch (ConverterException e) {
+            throw new Sql2oException("Error occured while converting value from database to type " + returnType.toString(), e);
+        }
+
     }
 
     public <T> List<T> executeScalarList(){

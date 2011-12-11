@@ -25,8 +25,6 @@ public class Sql2o {
     private final String user;
     private final String pass;
 
-    //private Connection connection;
-
     private Map<String, String> defaultColumnMappings;
 
     private boolean defaultCaseSensitive = false;
@@ -65,26 +63,6 @@ public class Sql2o {
         return connection.createQuery(query);
     }
 
-//    public static void registerDriver(String driverName){
-//
-//        try{
-//            Driver driver = (Driver) Class.forName(driverName).newInstance();
-//            DriverManager.registerDriver(driver);
-//        }
-//        catch(Exception ex){
-//            throw new RuntimeException(ex);
-//        }
-//
-//    }
-//
-//    public static void registerDriver(Driver driver){
-//        try {
-//            DriverManager.registerDriver(driver);
-//        } catch (SQLException e) {
-//            throw new RuntimeException(e);
-//        }
-//    }
-
     public Connection beginTransaction(int isolationLevel){
 
         Connection connection = new Connection(this);
@@ -101,6 +79,23 @@ public class Sql2o {
 
     public Connection beginTransaction(){
         return this.beginTransaction(java.sql.Connection.TRANSACTION_READ_COMMITTED);
+    }
+
+    public void runInTransaction(Runnable runnable){
+        runInTransaction(runnable, java.sql.Connection.TRANSACTION_READ_COMMITTED);
+    }
+
+    public void runInTransaction(Runnable runnable, int transactionLevel){
+
+        Connection connection = this.beginTransaction(transactionLevel);
+
+        try {
+            runnable.run(connection);
+        } catch (Throwable throwable) {
+            connection.rollback();
+            throw new Sql2oException("An error occured while executing runnable. Transaction is rolled back.", throwable);
+        }
+        connection.commit();
     }
 
 
