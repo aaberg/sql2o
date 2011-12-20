@@ -15,8 +15,8 @@ import java.sql.SQLException;
  */
 public class TableFactory {
     
-    public static Table createTable(ResultSet rs){
-        Table table = new Table();
+    public static Table createTable(ResultSet rs, boolean isCaseSensitive){
+        Table table = new Table(isCaseSensitive);
         try {
             applyMetadata(table, rs.getMetaData());
 
@@ -47,7 +47,9 @@ public class TableFactory {
             String colName = metadata.getColumnName(colIdx);
             String colType = metadata.getColumnTypeName(colIdx);
             table.columns().add(new Column(colName, colIdx - 1, colType));
-            table.getColumnNameToIdxMap().put(colName, colIdx - 1);
+
+            String colMapName = table.isCaseSensitive() ? colName : colName.toLowerCase();
+            table.getColumnNameToIdxMap().put(colMapName, colIdx - 1);
         }
     }
 }

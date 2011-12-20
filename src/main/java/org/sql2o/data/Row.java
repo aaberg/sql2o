@@ -36,7 +36,17 @@ public class Row {
     }
     
     public Object getObject(String columnName){
-        return getObject(table.getColumnNameToIdxMap().get(columnName));
+        String col = table.isCaseSensitive() ? columnName : columnName.toLowerCase();
+
+        Object obj;
+        try{
+            obj = getObject(table.getColumnNameToIdxMap().get(col));
+        }
+        catch (NullPointerException ex){
+            throw new Sql2oException(String.format("Column with name '%s' does not exist", columnName), ex);
+        }
+        
+        return obj;
     }
     
     public BigDecimal getBigDecimal(int columnIndex){

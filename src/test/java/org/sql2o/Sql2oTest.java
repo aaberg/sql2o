@@ -370,7 +370,7 @@ public class Sql2oTest extends TestCase {
         assertEquals("VALUE2", table.columns().get(2).getName());
 
         assertEquals(2, table.rows().size());
-        
+
         Row row0 = table.rows().get(0);
         Row row1 = table.rows().get(1);
 

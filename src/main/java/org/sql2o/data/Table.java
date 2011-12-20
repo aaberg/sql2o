@@ -21,11 +21,14 @@ public class Table {
     private List<Column> columns;
     
     private Map<String, Integer> columnNameToIdxMap;
+    
+    private boolean caseSensitive;
 
-    Table() {
+    Table(boolean isCaseSensitive) {
         this.rows = new ArrayList<Row>();
         this.columns = new ArrayList<Column>();
         this.columnNameToIdxMap = new HashMap<String, Integer>();
+        this.caseSensitive = isCaseSensitive;
     }
 
     public String getName() {
@@ -46,5 +49,9 @@ public class Table {
 
     Map<String, Integer> getColumnNameToIdxMap() {
         return columnNameToIdxMap;
+    }
+
+    public boolean isCaseSensitive() {
+        return caseSensitive;
     }
 }

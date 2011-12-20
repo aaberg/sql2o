@@ -6,6 +6,8 @@ import org.sql2o.Connection;
 import org.sql2o.Query;
 import org.sql2o.Sql2o;
 import org.sql2o.Sql2oException;
+import org.sql2o.data.Row;
+import org.sql2o.data.Table;
 import org.sql2o.issues.pojos.Issue1Pojo;
 import org.sql2o.issues.pojos.KeyValueEntity;
 
@@ -116,5 +118,43 @@ public class IssuesTest extends TestCase {
 
         assertTrue("Assert that connection is correctly closed (no transaction)", query.getConnection().getJdbcConnection().isClosed());
             
+    }
+
+    /**
+     *  Tests for issue #4 https://github.com/aaberg/sql2o/issues/4
+     *
+     *  NPE when typing wrong column name in row.get(...)
+     *  Also, column name should not be case sensitive, if sql2o not is in casesensitive property is false.
+     */
+    public void testForNpeInRowGet(){
+        sql2o.createQuery("create table issue4table(id integer identity primary key, val varchar(20))").executeUpdate();
+        
+        sql2o.createQuery("insert into issue4table (val) values (:val)")
+            .addParameter("val", "something").addToBatch()
+            .addParameter("val", "something else").addToBatch()
+            .addParameter("val", "hello").addToBatch()
+            .executeBatch();
+        
+        Table table = sql2o.createQuery("select * from issue4table").executeAndFetchTable();
+
+        Row row0 = table.rows().get(0);
+        String row0Val = row0.getString("vAl");
+        
+        assertEquals("something", row0Val);
+        
+        Row row1 = table.rows().get(1);
+        boolean failed = false;
+        
+        try{
+            String row1Value = row1.getString("ahsHashah"); // Should fail with an sql2o exception
+        }
+        catch(Sql2oException ex){
+            failed = true;
+
+            assertTrue(ex.getMessage().startsWith("Column with name 'ahsHashah' does not exist"));
+        }
+
+        assertTrue("assert that exception occurred", failed);
+                
     }
 }

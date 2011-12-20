@@ -238,7 +238,7 @@ public class Query {
             throw new Sql2oException("Error while executing query", e);
         }
         
-        Table table = TableFactory.createTable(rs);
+        Table table = TableFactory.createTable(rs, this.isCaseSensitive());
         
         return table;
     }
