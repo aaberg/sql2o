@@ -122,6 +122,9 @@ public class Connection {
     }
 
     void setKeys(ResultSet rs) throws SQLException {
+        if (rs == null){
+            return;
+        }
         this.keys = new ArrayList<Object>();
         while(rs.next()){
             this.keys.add(rs.getObject(1));
