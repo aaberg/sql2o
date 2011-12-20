@@ -7,7 +7,7 @@ package org.sql2o;
  * Time: 12:00 AM
  * To change this template use File | Settings | File Templates.
  */
-public interface Runnable {
+public interface StatementRunnable {
 
-    void run(Connection connection) throws Throwable;
+    void run(Connection connection, Object argument) throws Throwable;
 }

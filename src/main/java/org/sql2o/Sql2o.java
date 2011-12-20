@@ -81,22 +81,49 @@ public class Sql2o {
         return this.beginTransaction(java.sql.Connection.TRANSACTION_READ_COMMITTED);
     }
 
-    public void runInTransaction(Runnable runnable){
-        runInTransaction(runnable, java.sql.Connection.TRANSACTION_READ_COMMITTED);
+    public void runInTransaction(StatementRunnable runnable){
+        runInTransaction(runnable, null);
     }
 
-    public void runInTransaction(Runnable runnable, int transactionLevel){
+    public void runInTransaction(StatementRunnable runnable, Object argument){
+        runInTransaction(runnable, argument, java.sql.Connection.TRANSACTION_READ_COMMITTED);
+    }
 
-        Connection connection = this.beginTransaction(transactionLevel);
+    public void runInTransaction(StatementRunnable runnable, Object argument, int isolationLevel){
+
+        Connection connection = this.beginTransaction(isolationLevel);
 
         try {
-            runnable.run(connection);
+            runnable.run(connection, argument);
         } catch (Throwable throwable) {
             connection.rollback();
-            throw new Sql2oException("An error occured while executing runnable. Transaction is rolled back.", throwable);
+            throw new Sql2oException("An error occurred while executing StatementRunnable. Transaction is rolled back.", throwable);
         }
         connection.commit();
     }
 
+    public <V> V runInTransaction(StatementRunnableWithResult runnableWithResult){
+        return runInTransaction(runnableWithResult, null);
+    }
+    
+    public <V> V runInTransaction(StatementRunnableWithResult runnableWithResult, Object argument){
+        return runInTransaction(runnableWithResult, argument, java.sql.Connection.TRANSACTION_READ_COMMITTED);
+    }
+    
+    public <V> V runInTransaction(StatementRunnableWithResult runnableWithResult, Object argument, int isolationLevel){
+        Connection connection = this.beginTransaction(isolationLevel);
+        Object result;
+        
+        try{
+            result = runnableWithResult.run(connection, argument);
+        } catch (Throwable throwable) {
+            connection.rollback();
+            throw new Sql2oException("An error occurred while executing StatementRunnableWithResult. Transaction rolled back.");
+        }
+        
+        connection.commit();
+        return (V)result;
+
+    }
 
 }

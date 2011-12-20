@@ -54,7 +54,7 @@ public class NamedParameterStatement {
     public NamedParameterStatement(Connection connection, String query) throws SQLException {
         indexMap=new HashMap();
         String parsedQuery=parse(query, indexMap);
-        statement=connection.prepareStatement(parsedQuery);
+        statement=connection.prepareStatement(parsedQuery, Statement.RETURN_GENERATED_KEYS);
     }
 
 

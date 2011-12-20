@@ -1,5 +1,9 @@
 package org.sql2o;
 
+import org.sql2o.converters.Convert;
+import org.sql2o.converters.Converter;
+import org.sql2o.converters.ConverterException;
+
 import java.sql.DriverManager;
 import java.sql.ResultSet;
 import java.sql.SQLException;
@@ -133,10 +137,20 @@ public class Connection {
         }
         return null;
     }
+    
+    public <V> V getKey(Class returnType){
+        Object key = getKey();
+        try {
+            Converter converter = Convert.getConverter(returnType);
+            return (V)converter.convert(key);
+        } catch (ConverterException e) {
+            throw new Sql2oException("Exception occurred while converting value from database to type " + returnType.toString(), e);
+        }
+    }
 
     public Object[] getKeys(){
         if (!isCanGetKeys()){
-            throw new Sql2oException("Keys where not fetched from database. Please call executeUpdate(true) to fetch keys");
+            throw new Sql2oException("Keys where not fetched from database. Please call executeUpdate() to fetch keys");
         }
         if (this.keys != null){
             return this.keys.toArray();

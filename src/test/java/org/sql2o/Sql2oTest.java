@@ -8,10 +8,7 @@ import org.sql2o.pojos.*;
 
 import java.math.BigDecimal;
 import java.sql.SQLException;
-import java.util.Date;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 /**
  * Created by IntelliJ IDEA.
@@ -265,21 +262,21 @@ public class Sql2oTest extends TestCase {
         sql2o.createQuery("create table get_keys_test(id integer identity primary key, value varchar(20))").executeUpdate();
 
         String insertSql = "insert into get_keys_test(value) values(:val)";
-        try{
-            Integer key = (Integer)sql2o.createQuery(insertSql).addParameter("val", "something").executeUpdate().getKey();
-            throw new RuntimeException("Sql2oException expected in code line above");
-        }
-        catch(Sql2oException ex){
-            assertTrue(ex.getMessage().contains("executeUpdate(true)"));
-        }
+//        try{
+//            Integer key = (Integer)sql2o.createQuery(insertSql).addParameter("val", "something").executeUpdate().getKey();
+//            throw new RuntimeException("Sql2oException expected in code line above");
+//        }
+//        catch(Sql2oException ex){
+//            assertTrue(ex.getMessage().contains("executeUpdate(true)"));
+//        }
 
-        Integer key = (Integer)sql2o.createQuery(insertSql).addParameter("val", "something").executeUpdate(true).getKey();
+        Integer key = (Integer)sql2o.createQuery(insertSql).addParameter("val", "something").executeUpdate().getKey();
 
         assertNotNull(key);
         assertTrue(key > 0);
 
         String multiInsertSql = "insert into get_keys_test(value) select 'a val' col1 union select 'another val' col1";
-        Object[] keys = sql2o.createQuery(multiInsertSql).executeUpdate(true).getKeys();
+        Object[] keys = sql2o.createQuery(multiInsertSql).executeUpdate().getKeys();
 
         assertNotNull(keys);
         assertTrue(keys.length > 0);
@@ -446,8 +443,8 @@ public class Sql2oTest extends TestCase {
         boolean failed = false;
 
         try{
-            sql2o.runInTransaction(new Runnable() {
-                public void run(Connection connection) throws Throwable {
+            sql2o.runInTransaction(new StatementRunnable() {
+                public void run(Connection connection, Object argument) throws Throwable {
                     connection.createQuery("insert into runinsidetransactiontable(value) values(:value)")
                         .addParameter("value", "test").executeUpdate();
                     
@@ -465,8 +462,8 @@ public class Sql2oTest extends TestCase {
         long rowCount = (Long)sql2o.createQuery("select count(*) from runinsidetransactiontable").executeScalar();
         assertEquals(0, rowCount);
 
-        sql2o.runInTransaction(new Runnable() {
-            public void run(Connection connection) throws Throwable {
+        sql2o.runInTransaction(new StatementRunnable() {
+            public void run(Connection connection, Object argument) throws Throwable {
                 connection.createQuery("insert into runinsidetransactiontable(value) values(:value)")
                     .addParameter("value", "test").executeUpdate();
             }
@@ -474,8 +471,45 @@ public class Sql2oTest extends TestCase {
 
         rowCount = (Long)sql2o.createQuery("select count(*) from runinsidetransactiontable").executeScalar();
         assertEquals(1, rowCount);
+
+
+        String argument = "argument test";
+        
+        sql2o.runInTransaction(new StatementRunnable() {
+            public void run(Connection connection, Object argument) throws Throwable {
+                Integer id = connection.createQuery("insert into runinsidetransactiontable(value) values(:value)")
+                    .addParameter("value", argument).executeUpdate().getKey(Integer.class);
+                
+                String insertedValue = connection.createQuery("select value from runinsidetransactiontable where id = :id").addParameter("id", id).executeScalar(String.class);
+                assertEquals("argument test", insertedValue);
+            }
+        }, argument);
+    
+        rowCount = (Long)sql2o.createQuery("select count(*) from runinsidetransactiontable").executeScalar();
+        assertEquals(2, rowCount);
+    }
+
+    public void testRunInsideTransactionWithResult(){
+        sql2o.createQuery("create table testRunInsideTransactionWithResultTable(id integer identity primary key, value varchar(50))").executeUpdate();
+        
     }
     
+    private static class runnerWithResultTester implements StatementRunnableWithResult{
+
+        public Object run(Connection connection, Object argument) throws Throwable {
+            String[] vals = (String[])argument;
+            List<Integer> keys = new ArrayList<Integer>();
+            for (String val : vals){
+                Integer key = connection.createQuery("insert into testRunInsideTransactionWithResultTable(value) values(:val)")
+                    .addParameter("val", val)
+                    .executeUpdate().getKey(Integer.class);
+                keys.add(key);
+            }
+
+            return keys;
+        }
+    }
+
     public void testDynamicExecuteScalar(){
         Object origVal = sql2o.createQuery("select 1").executeScalar();
         assertTrue(Integer.class.equals(origVal.getClass()));

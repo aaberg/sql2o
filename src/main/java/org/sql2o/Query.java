@@ -138,6 +138,10 @@ public class Query {
         this.caseSensitive = caseSensitive;
         return this;
     }
+    
+    public Connection getConnection(){
+        return this.connection;
+    }
 
 //    public List[] executeAndFetchMultiple(Class ... returnTypes){
 //        List<List> listOfLists = new ArrayList<List>();
@@ -240,16 +244,10 @@ public class Query {
     }
 
     public Connection executeUpdate(){
-        return executeUpdate(false);
-    }
-
-    public Connection executeUpdate(boolean getKeys){
         try{
             this.connection.setResult(statement.executeUpdate());
-            if (getKeys){
-                this.connection.setKeys(statement.getStatement().getGeneratedKeys());
-            }
-            connection.setCanGetKeys(getKeys);
+            this.connection.setKeys(statement.getStatement().getGeneratedKeys());
+            connection.setCanGetKeys(true);
         }
         catch(SQLException ex){
             this.connection.rollback();
@@ -274,7 +272,8 @@ public class Query {
 
         }
         catch (SQLException e) {
-            throw new RuntimeException(e);
+            this.connection.rollback();
+            throw new Sql2oException("Database error occurred while running executeScalar", e);
         }
         finally{
             closeConnectionIfNecessary();
@@ -304,7 +303,8 @@ public class Query {
             return list;
         }
         catch(SQLException ex){
-            throw new RuntimeException(ex);
+            this.connection.rollback();
+            throw new Sql2oException("Error occurred while executing scalar list", ex);
         }
         finally{
             closeConnectionIfNecessary();
@@ -317,18 +317,19 @@ public class Query {
         try {
             statement.addBatch();
         } catch (SQLException e) {
-            throw new RuntimeException(e);
+            throw new Sql2oException("Error while adding statement to batch", e);
         }
 
         return this;
     }
 
-    public Connection executeBatch(){
+    public Connection executeBatch() throws Sql2oException {
         try {
             statement.executeBatch();
         }
-        catch (SQLException e) {
-            throw new RuntimeException(e);
+        catch (Throwable e) {
+            this.connection.rollback();
+            throw new Sql2oException("Error while executing batch operation", e);
         }
         finally {
             closeConnectionIfNecessary();
@@ -375,8 +376,18 @@ public class Query {
             }
         }
         catch (Exception ex){
-            throw new Sql2oException("Error while attempting to close connection", ex);
+            throw new RuntimeException("Error while attempting to close connection", ex);
         }
     }
+
+//    private void onErrorCleanup(){
+//        try {
+//            if (this.connection.getJdbcConnection().isClosed()){
+//                this.connection.getJdbcConnection().close();
+//            }
+//        } catch (SQLException ex) {
+//            throw new RuntimeException("Error while attempting to close connection", ex);
+//        }
+//    }
 
 }
