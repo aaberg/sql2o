@@ -234,13 +234,12 @@ public class Query {
         ResultSet rs;
         try {
             rs = statement.executeQuery();
+            return TableFactory.createTable(rs, this.isCaseSensitive());
         } catch (SQLException e) {
             throw new Sql2oException("Error while executing query", e);
+        } finally {
+            closeConnectionIfNecessary();
         }
-        
-        Table table = TableFactory.createTable(rs, this.isCaseSensitive());
-        
-        return table;
     }
 
     public Connection executeUpdate(){
@@ -371,8 +370,8 @@ public class Query {
     private void closeConnectionIfNecessary(){
         try{
             if (!this.connection.getJdbcConnection().isClosed() && this.connection.getJdbcConnection().getAutoCommit() && statement != null){
-                this.connection.getJdbcConnection().close();
                 statement.close();
+                this.connection.getJdbcConnection().close();
             }
         }
         catch (Exception ex){
