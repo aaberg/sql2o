@@ -118,7 +118,7 @@ public class Sql2o {
             result = runnableWithResult.run(connection, argument);
         } catch (Throwable throwable) {
             connection.rollback();
-            throw new Sql2oException("An error occurred while executing StatementRunnableWithResult. Transaction rolled back.");
+            throw new Sql2oException("An error occurred while executing StatementRunnableWithResult. Transaction rolled back.", throwable);
         }
         
         connection.commit();
