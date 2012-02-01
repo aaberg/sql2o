@@ -41,7 +41,7 @@ public class Connection {
         return sql2o;
     }
 
-    public Query createQuery(String queryText){
+    public Query createQuery(String queryText, String name){
 
         try {
             if (this.getJdbcConnection().isClosed()){
@@ -51,8 +51,12 @@ public class Connection {
             throw new RuntimeException(e);
         }
 
-        Query q = new Query(this, queryText);
+        Query q = new Query(this, queryText, name);
         return q;
+    }
+    
+    public Query createQuery(String queryText){
+        return createQuery(queryText, null);
     }
 
 
@@ -61,14 +65,17 @@ public class Connection {
             this.getJdbcConnection().rollback();
         }
         catch (SQLException e) {
-            throw new RuntimeException(e);
+            System.out.println("Could not role back transaction.");
+            e.printStackTrace();
         }
         finally {
             try {
-                this.getJdbcConnection().close();
+                if (!this.getJdbcConnection().isClosed()){
+                    this.getJdbcConnection().close();
+                }
             }
             catch (SQLException e) {
-                throw new RuntimeException(e);
+                e.printStackTrace();
             }
         }
         return this.getSql2o();

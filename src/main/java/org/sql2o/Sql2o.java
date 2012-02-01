@@ -57,10 +57,14 @@ public class Sql2o {
         this.defaultCaseSensitive = defaultCaseSensitive;
     }
 
-    public Query createQuery(String query){
+    public Query createQuery(String query, String name){
 
         Connection connection = new Connection(this);
-        return connection.createQuery(query);
+        return connection.createQuery(query, name);
+    }
+    
+    public Query createQuery(String query){
+        return createQuery(query, null);
     }
 
     public Connection beginTransaction(int isolationLevel){

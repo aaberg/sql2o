@@ -159,6 +159,13 @@ public class NamedParameterStatement {
             statement.setObject(indexes[i], value);
         }
     }
+    
+    public void setNull(String name, int sqlType) throws SQLException {
+        int[] indexes=getIndexes(name);
+        for (int i = 0; i < indexes.length; i++){
+            statement.setNull(indexes[i], sqlType);
+        }
+    }
 
 
     /**

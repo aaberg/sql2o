@@ -75,7 +75,7 @@ public class Sql2oTest extends TestCase {
                         "text varchar(255), " +
                         "aNumber int, " +
                         "aLongNumber bigint)";
-        sql2o.createQuery(sql).executeUpdate();
+        sql2o.createQuery(sql, "testExecuteAndFetchWithNulls").executeUpdate();
 
 
         Connection connection = sql2o.beginTransaction();
@@ -403,7 +403,7 @@ public class Sql2oTest extends TestCase {
     }
 
     public void testComplexTypes(){
-        ComplexEntity pojo = sql2o.createQuery("select 1 id, 1 \"entity.id\", 'something' \"entity.value\"").executeAndFetchFirst(ComplexEntity.class);
+        ComplexEntity pojo = sql2o.createQuery("select 1 id, 1 \"entity.id\", 'something' \"entity.value\"", "testComplexTypes").executeAndFetchFirst(ComplexEntity.class);
 
         assertEquals(1, pojo.id);
         assertEquals(1, pojo.entity.getId());
@@ -500,7 +500,7 @@ public class Sql2oTest extends TestCase {
             String[] vals = (String[])argument;
             List<Integer> keys = new ArrayList<Integer>();
             for (String val : vals){
-                Integer key = connection.createQuery("insert into testRunInsideTransactionWithResultTable(value) values(:val)")
+                Integer key = connection.createQuery("insert into testRunInsideTransactionWithResultTable(value) values(:val)", "runnerWithResultTester")
                     .addParameter("val", val)
                     .executeUpdate().getKey(Integer.class);
                 keys.add(key);
@@ -521,6 +521,14 @@ public class Sql2oTest extends TestCase {
         Short shortVal = sql2o.createQuery("select 2").executeScalar(Short.class);
         Short expected = 2;
         assertEquals(expected, shortVal);
+    }
+    
+    public void testUpdateWithNulls() {
+        sql2o.createQuery("create table testUpdateWithNulls_2(id integer identity primary key, value integer)").executeUpdate();
+        
+        Integer nullInt = null;
+        
+        sql2o.createQuery("insert into testUpdateWithNulls_2(value) values(:val)").addParameter("val", 2).addToBatch().addParameter("val", nullInt).addToBatch().executeBatch();
     }
 
 
