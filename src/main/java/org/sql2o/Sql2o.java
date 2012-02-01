@@ -13,10 +13,16 @@ import java.util.Map;
  */
 public class Sql2o {
 
-    public Sql2o(String url, String user, String pass) {
+    
+    public Sql2o(String url, String user, String pass){
+        this(url,user,pass,QuirksMode.None);
+    }
+    
+    public Sql2o(String url, String user, String pass, QuirksMode quirksMode) {
         this.url = url;
         this.user = user;
         this.pass = pass;
+        this.quirksMode = quirksMode;
 
         this.defaultColumnMappings = new HashMap<String, String>();
     }
@@ -24,6 +30,7 @@ public class Sql2o {
     private final String url;
     private final String user;
     private final String pass;
+    QuirksMode quirksMode;
 
     private Map<String, String> defaultColumnMappings;
 
