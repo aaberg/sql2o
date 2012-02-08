@@ -320,8 +320,8 @@ public class Query {
             connection.setCanGetKeys(true);
         }
         catch(SQLException ex){
-            this.connection.rollback();
-            throw new RuntimeException(ex);
+            this.connection.onException();
+            throw new Sql2oException("Error in executeUpdate, " + ex.getMessage(), ex);
         }
         finally {
             closeConnectionIfNecessary();
@@ -349,8 +349,8 @@ public class Query {
 
         }
         catch (SQLException e) {
-            this.connection.rollback();
-            throw new Sql2oException("Database error occurred while running executeScalar", e);
+            this.connection.onException();
+            throw new Sql2oException("Database error occurred while running executeScalar: " + e.getMessage(), e);
         }
         finally{
             closeConnectionIfNecessary();
@@ -385,8 +385,8 @@ public class Query {
             return list;
         }
         catch(SQLException ex){
-            this.connection.rollback();
-            throw new Sql2oException("Error occurred while executing scalar list", ex);
+            this.connection.onException();
+            throw new Sql2oException("Error occurred while executing scalar list: " + ex.getMessage(), ex);
         }
         finally{
             closeConnectionIfNecessary();
@@ -411,8 +411,8 @@ public class Query {
             statement.executeBatch();
         }
         catch (Throwable e) {
-            this.connection.rollback();
-            throw new Sql2oException("Error while executing batch operation", e);
+            this.connection.onException();
+            throw new Sql2oException("Error while executing batch operation: " + e.getMessage(), e);
         }
         finally {
             closeConnectionIfNecessary();

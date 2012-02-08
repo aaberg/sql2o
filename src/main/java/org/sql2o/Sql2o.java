@@ -103,6 +103,7 @@ public class Sql2o {
     public void runInTransaction(StatementRunnable runnable, Object argument, int isolationLevel){
 
         Connection connection = this.beginTransaction(isolationLevel);
+        connection.setRollbackOnException(false);
 
         try {
             runnable.run(connection, argument);

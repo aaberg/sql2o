@@ -26,11 +26,28 @@ public class Connection {
     private Integer result = null;
     private List<Object> keys;
     private boolean canGetKeys;
+    
+    private boolean rollbackOnException = true;
+
+    public boolean isRollbackOnException() {
+        return rollbackOnException;
+    }
+
+    public Connection setRollbackOnException(boolean rollbackOnException) {
+        this.rollbackOnException = rollbackOnException;
+        return this;
+    }
 
     public Connection(Sql2o sql2o) {
 
         this.sql2o = sql2o;
         createConnection();
+    }
+
+    void onException() {
+        if (isRollbackOnException()) {
+            rollback();
+        }
     }
 
     public java.sql.Connection getJdbcConnection() {

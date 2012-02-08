@@ -23,12 +23,11 @@ public class Sql2oTest extends TestCase {
     private String user = "sa";
     private String pass = "";
 
-    private Sql2o sql2o;
+    private final Sql2o sql2o = new Sql2o(this.url, this.user, this.pass);
 
     private int insertIntoUsers = 0;
 
-    public void setUp() throws Exception {
-        this.sql2o = new Sql2o(this.url, this.user, this.pass);
+    public void setUp() throws Exception { 
 
         HashMap<String, String> defaultColumnMap = new HashMap<String,String>();
         defaultColumnMap.put("ID", "id");
@@ -529,6 +528,50 @@ public class Sql2oTest extends TestCase {
         Integer nullInt = null;
         
         sql2o.createQuery("insert into testUpdateWithNulls_2(value) values(:val)").addParameter("val", 2).addToBatch().addParameter("val", nullInt).addToBatch().executeBatch();
+    }
+    
+    public void testExceptionInRunnable() {
+        sql2o.createQuery("create table testExceptionInRunnable(id integer primary key, value varchar(20))").executeUpdate();
+        
+        try{
+            sql2o.runInTransaction(new StatementRunnable() {
+                public void run(Connection connection, Object argument) throws Throwable {
+                    connection.createQuery("insert into testExceptionInRunnable(id, value) values(:id, :val)")
+                        .addParameter("id", 1)
+                        .addParameter("val", "something").executeUpdate();
+                    
+                    connection.createQuery("insert into testExceptionInRunnable(id, value) values(:id, :val)")
+                        .addParameter("id", 1)
+                        .addParameter("val", "something").executeUpdate();
+                }
+            });
+        } catch(Throwable t) {
+            
+        }
+        
+        int c = (Integer)sql2o.createQuery("select count(*) from testExceptionInRunnable").executeScalar(Integer.class);
+        assertEquals(0, c);
+
+
+        sql2o.runInTransaction(new StatementRunnable() {
+            public void run(Connection connection, Object argument) throws Throwable {
+                connection.createQuery("insert into testExceptionInRunnable(id, value) values(:id, :val)")
+                    .addParameter("id", 1)
+                    .addParameter("val", "something").executeUpdate();
+
+                try{
+                    connection.createQuery("insert into testExceptionInRunnable(id, value) values(:id, :val)")
+                        .addParameter("id", 1)
+                        .addParameter("val", "something").executeUpdate();
+                } catch(Sql2oException ex){
+
+                }
+            }
+        });
+
+        c = (Integer)sql2o.createQuery("select count(*) from testExceptionInRunnable").executeScalar(Integer.class);
+        assertEquals(1, c);
+
     }
 
 
