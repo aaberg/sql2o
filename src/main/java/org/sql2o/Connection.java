@@ -1,5 +1,7 @@
 package org.sql2o;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.sql2o.converters.Convert;
 import org.sql2o.converters.Converter;
 import org.sql2o.converters.ConverterException;
@@ -19,6 +21,8 @@ import java.util.Properties;
  * To change this template use File | Settings | File Templates.
  */
 public class Connection {
+    
+    private final Logger logger = LoggerFactory.getLogger(Connection.class);
 
     private java.sql.Connection jdbcConnection;
     private Sql2o sql2o;
@@ -82,8 +86,7 @@ public class Connection {
             this.getJdbcConnection().rollback();
         }
         catch (SQLException e) {
-            System.out.println("Could not role back transaction.");
-            e.printStackTrace();
+            logger.warn("Could not role back transaction. message: {}", e.getMessage());
         }
         finally {
             try {

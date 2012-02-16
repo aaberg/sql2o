@@ -1,6 +1,8 @@
 package org.sql2o;
 
 import org.joda.time.DateTime;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.sql2o.converters.Convert;
 import org.sql2o.converters.Converter;
 import org.sql2o.converters.ConverterException;
@@ -25,6 +27,8 @@ import java.util.Map;
  * To change this template use File | Settings | File Templates.
  */
 public class Query {
+
+    private final Logger logger = LoggerFactory.getLogger(Query.class);
 
     public Query(Connection connection, String queryText, String name) {
         this.connection = connection;
@@ -271,7 +275,12 @@ public class Query {
             rs.close();
             long afterClose = System.currentTimeMillis();
 
-            System.out.println(String.format("total: %d ms, execution: %d ms, reading and parsing: %d ms; executed [%s]", afterClose - start, afterExecQuery-start, afterClose - afterExecQuery, this.getName() == null ? "No name" : this.getName()));
+            logger.info("total: {} ms, execution: {} ms, reading and parsing: {} ms; executed [{}]", new Object[]{
+                    afterClose - start, 
+                    afterExecQuery-start, 
+                    afterClose - afterExecQuery, 
+                    this.getName() == null ? "No name" : this.getName()
+                });
         }
         catch(SQLException ex){
             throw new Sql2oException("Database error", ex);
@@ -302,7 +311,12 @@ public class Query {
             Table table = TableFactory.createTable(rs, this.isCaseSensitive());
             long afterClose = System.currentTimeMillis();
             
-            System.out.println(String.format("total: %d ms, execution: %d ms, reading and parsing: %d ms; executed fetch table [%s]", afterClose - start, afterExecute-start, afterClose - afterExecute, this.getName() == null ? "No name" : this.getName()));
+            logger.info("total: {} ms, execution: {} ms, reading and parsing: {} ms; executed fetch table [{}]", new Object[]{
+                afterClose - start, 
+                afterExecute-start, 
+                afterClose - afterExecute, 
+                this.getName() == null ? "No name" : this.getName()
+            });
             
             return table;
         } catch (SQLException e) {
@@ -328,7 +342,10 @@ public class Query {
         }
 
         long end = System.currentTimeMillis();
-        System.out.println(String.format("total: %d ms; executed update [%s] ", end - start, this.getName() == null ? "No name" : this.getName()));
+        logger.info("total: {} ms; executed update [{}]", new Object[]{
+            end - start, 
+            this.getName() == null ? "No name" : this.getName()
+        });
 
         return this.connection;
     }
@@ -340,7 +357,10 @@ public class Query {
             if (rs.next()){
                 Object o = rs.getObject(1);
                 long end = System.currentTimeMillis();
-                System.out.println(String.format("total: %d ms; executed scalar [%s] ",end - start, this.getName() == null ? "No name" : this.getName()));
+                logger.info("total: {} ms; executed scalar [{}]", new Object[]{
+                    end - start, 
+                    this.getName() == null ? "No name" : this.getName()
+                });
                 return o;
             }
             else{
@@ -380,7 +400,10 @@ public class Query {
             }
 
             long end = System.currentTimeMillis();
-            System.out.println(String.format("total: %d ms; executed scalar list [%s] ", end - start, this.getName() == null ? "No name" : this.getName()));
+            logger.info("total: {} ms; executed scalar list [{}]", new Object[]{
+                end - start,
+                this.getName() == null ? "No name" : this.getName()
+            });
 
             return list;
         }
@@ -419,7 +442,10 @@ public class Query {
         }
 
         long end = System.currentTimeMillis();
-        System.out.println(String.format("total: %d ms; executed batch [%s]", end - start, this.getName() == null ? "No name" : this.getName()));
+        logger.info("total: {} ms; executed batch [{}]", new Object[]{
+            end - start,
+            this.getName() == null ? "No name" : this.getName()
+        });
 
         return this.connection;
     }

@@ -1,5 +1,8 @@
 package org.sql2o.converters;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import java.math.BigDecimal;
 import java.util.HashMap;
 import java.util.Map;
@@ -13,6 +16,8 @@ import java.util.Map;
  */
 public class Convert {
 
+    private static final Logger logger = LoggerFactory.getLogger(Convert.class);
+    
     private static Map<Class, Converter> registeredConverters = new HashMap<Class, Converter>();
 
     static{
@@ -48,7 +53,7 @@ public class Convert {
             Class jodaTimeClass = Class.forName("org.joda.time.DateTime");
             registerConverter(jodaTimeClass, new JodaTimeConverter());
         } catch (ClassNotFoundException e) {
-            System.out.print("Failed to initialize Jodatime. Jodatime converter not registered");
+            logger.warn("Failed to initialize Jodatime. Jodatime converter not registered");
         }
     }
     
