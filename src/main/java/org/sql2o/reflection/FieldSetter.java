@@ -21,6 +21,10 @@ public class FieldSetter implements Setter{
     }
 
     public void setProperty(Object obj, Object value) {
+        if (value == null && this.field.getType().isPrimitive()){
+            return; // dont try set null to a primitive field
+        }
+
         try {
             this.field.set(obj, value);
         } catch (IllegalAccessException e) {

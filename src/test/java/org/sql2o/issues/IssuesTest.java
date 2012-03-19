@@ -12,6 +12,7 @@ import org.sql2o.issues.pojos.Issue1Pojo;
 import org.sql2o.issues.pojos.KeyValueEntity;
 
 import java.sql.SQLException;
+import java.util.List;
 
 /**
  * Created by IntelliJ IDEA.
@@ -156,5 +157,42 @@ public class IssuesTest extends TestCase {
 
         assertTrue("assert that exception occurred", failed);
                 
+    }
+    
+    public static class Issue5POJO{
+        public int id;
+        public int val;
+    }
+    
+    public static class Issue5POJO2{
+        public int id;
+        public int val;
+
+        public int getVal() {
+            return val;
+        }
+
+        public void setVal(int val) {
+            this.val = val;
+        }
+    }
+
+    /**
+     *  Tests for issue #5 https://github.com/aaberg/sql2o/issues/5
+     *  crashes if the POJO has a int field where we try to set a null value
+     */
+    public void testForNullToSimpeType(){
+        sql2o.createQuery("create table issue5table(id integer identity primary key, val integer)").executeUpdate();
+
+        sql2o.createQuery("insert into issue5table(val) values (:val)").addParameter("val", (Object)null).executeUpdate();
+
+        List<Issue5POJO> list1 = sql2o.createQuery("select * from issue5table").executeAndFetch(Issue5POJO.class);
+        
+        List<Issue5POJO2> list2 = sql2o.createQuery("select * from issue5table").executeAndFetch(Issue5POJO2.class);
+        
+        assertEquals(1, list1.size());
+        assertEquals(1, list2.size());
+        assertEquals(0, list1.get(0).val);
+        assertEquals(0, list2.get(0).getVal());
     }
 }

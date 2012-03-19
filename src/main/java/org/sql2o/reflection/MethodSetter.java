@@ -22,6 +22,9 @@ public class MethodSetter implements  Setter{
     }
 
     public void setProperty(Object obj, Object value) {
+        if (value == null && this.method.getParameterTypes().length == 1 && this.method.getParameterTypes()[0].isPrimitive()){
+            return; // dont try to set null to a setter to a primitive type.
+        }
         try {
             this.method.invoke(obj, value);
         } catch (IllegalAccessException e) {
