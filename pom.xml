@@ -91,7 +91,7 @@
             <id>aaberg_mvn_repo</id>
             <layout>default</layout>
             <name>aaberg_mvn_repo</name>
-            <url>file:///home/lars/Programming/Repositories/aaberg_mvn_repo/</url>
+            <url>file:///Users/lars/Programming/Repositories/aaberg_mvn_repo/</url>
         </repository>
     </distributionManagement>
 </project>

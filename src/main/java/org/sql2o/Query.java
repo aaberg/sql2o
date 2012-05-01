@@ -161,7 +161,7 @@ public class Query {
 
     public Query addParameter(String name, java.util.Date value){
         Date sqlDate = value == null ? null : new Date(value.getTime());
-        if (this.connection.getSql2o().quirksMode == QuirksMode.DB2){
+        if (sqlDate != null && this.connection.getSql2o().quirksMode == QuirksMode.DB2){
             // With the DB2 driver you can get an error if trying to put a date value into a timestamp column,
             // but of some reason it works if using setObject().
             return addParameter(name, (Object)sqlDate);
