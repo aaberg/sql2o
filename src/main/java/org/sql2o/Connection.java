@@ -28,6 +28,7 @@ public class Connection {
     private Sql2o sql2o;
 
     private Integer result = null;
+    private int[] batchResult = null;
     private List<Object> keys;
     private boolean canGetKeys;
     
@@ -146,6 +147,17 @@ public class Connection {
 
     void setResult(int result){
         this.result = result;
+    }
+
+    public int[] getBatchResult() {
+        if (this.batchResult == null){
+            throw new Sql2oException("It is required to call executeBatch() method before calling getBatchResult().");
+        }
+        return this.batchResult;
+    }
+
+    void setBatchResult(int[] value) {
+        this.batchResult = value;
     }
 
     void setKeys(ResultSet rs) throws SQLException {

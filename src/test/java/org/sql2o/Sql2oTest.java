@@ -109,10 +109,17 @@ public class Sql2oTest extends TestCase {
 
         String insQuery = "insert into User(name, email, text) values (:name, :email, :text)";
 
-        sql2o.beginTransaction().createQuery(insQuery).addParameter("name", "test").addParameter("email", "test@test.com").addParameter("text", "something exciting").addToBatch()
+        Connection con = sql2o.beginTransaction();
+        int[] inserted = con.createQuery(insQuery).addParameter("name", "test").addParameter("email", "test@test.com").addParameter("text", "something exciting").addToBatch()
                 .addParameter("name", "test2").addParameter("email", "test2@test.com").addParameter("text", "something exciting too").addToBatch()
                 .addParameter("name", "test3").addParameter("email", "test3@test.com").addParameter("text", "blablabla").addToBatch()
-                .executeBatch().commit();
+                .executeBatch().getBatchResult();
+        con.commit();
+
+        assertEquals(3, inserted.length);
+        for (int i : inserted){
+            assertEquals(1, i);
+        }
 
         deleteUserTable();
     }

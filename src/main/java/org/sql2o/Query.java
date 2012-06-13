@@ -431,7 +431,7 @@ public class Query {
     public Connection executeBatch() throws Sql2oException {
         long start = System.currentTimeMillis();
         try {
-            statement.executeBatch();
+            connection.setBatchResult( statement.executeBatch() );
         }
         catch (Throwable e) {
             this.connection.onException();
