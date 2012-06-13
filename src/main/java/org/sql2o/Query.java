@@ -283,7 +283,7 @@ public class Query {
                 });
         }
         catch(SQLException ex){
-            throw new Sql2oException("Database error", ex);
+            throw new Sql2oException("Database error: " + ex.getMessage(), ex);
         }
         finally {
             closeConnectionIfNecessary();
