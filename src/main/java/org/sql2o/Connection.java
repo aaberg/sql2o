@@ -82,7 +82,11 @@ public class Connection {
     }
 
 
-    public Sql2o rollback(){
+    /**
+     * @deprecated - use on of the Sql2o.runInTransaction overloads instead. If an Exception is thrown within transaction scope,
+     * the transaction will automatically be rolled back. It should never be necessary to call this method.
+     */
+    @Deprecated public Sql2o rollback(){
         try {
             this.getJdbcConnection().rollback();
         }
@@ -102,7 +106,11 @@ public class Connection {
         return this.getSql2o();
     }
 
-    public Sql2o commit(){
+    /**
+     * @deprecated - use on of the Sql2o.runInTransaction overloads instead. If no exception is thrown within transaction scope,
+     * the transaction will automatically be committed.
+     */
+    @Deprecated public Sql2o commit(){
         try {
             this.getJdbcConnection().commit();
         }
