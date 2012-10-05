@@ -129,20 +129,11 @@ public class Connection {
     }
 
     private void createConnection(){
-        Properties conProps = new Properties();
-        conProps.put("user", sql2o.getUser());
-        conProps.put("password", sql2o.getPass());
-
-        String url = this.sql2o.getUrl();
         try{
-
-            if (!url.startsWith("jdbc")){
-                url = "jdbc:" + url;
-            }
-            this.jdbcConnection = DriverManager.getConnection(url, conProps);
+            this.jdbcConnection = this.getSql2o().getDataSource().getConnection();
         }
         catch(Exception ex){
-            throw new RuntimeException(ex);
+            throw new RuntimeException(String.format("Could not aquire a connection from DataSource - ", ex.getMessage()), ex);
         }
     }
 

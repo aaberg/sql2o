@@ -1,5 +1,6 @@
 package org.sql2o;
 
+    import javax.sql.DataSource;
     import java.sql.SQLException;
 import java.util.HashMap;
 import java.util.Map;
@@ -19,33 +20,29 @@ public class Sql2o {
     }
     
     public Sql2o(String url, String user, String pass, QuirksMode quirksMode) {
-        this.url = url;
-        this.user = user;
-        this.pass = pass;
+        this(new GenericDatasource(url, user, pass), quirksMode);
+    }
+
+    public Sql2o(DataSource dataSource) {
+        this(dataSource, QuirksMode.None);
+    }
+
+    public Sql2o(DataSource dataSource, QuirksMode quirksMode){
+        this.dataSource = dataSource;
         this.quirksMode = quirksMode;
 
         this.defaultColumnMappings = new HashMap<String, String>();
     }
 
-    private final String url;
-    private final String user;
-    private final String pass;
+    private final DataSource dataSource;
     QuirksMode quirksMode;
 
     private Map<String, String> defaultColumnMappings;
 
     private boolean defaultCaseSensitive = false;
 
-    public String getUrl() {
-        return url;
-    }
-
-    public String getUser() {
-        return user;
-    }
-
-    public String getPass() {
-        return pass;
+    public DataSource getDataSource() {
+        return dataSource;
     }
 
     public Map<String, String> getDefaultColumnMappings() {
