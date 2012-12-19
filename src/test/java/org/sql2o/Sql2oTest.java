@@ -1,33 +1,59 @@
 package org.sql2o;
 
 import junit.framework.TestCase;
+import org.hsqldb.jdbcDriver;
 import org.joda.time.DateTime;
+import org.junit.Test;
+import org.junit.runner.RunWith;
+import org.junit.runners.Parameterized;
 import org.sql2o.data.Row;
 import org.sql2o.data.Table;
 import org.sql2o.pojos.*;
 
 import java.math.BigDecimal;
+import java.sql.Driver;
+import java.sql.DriverManager;
 import java.sql.SQLException;
 import java.util.*;
+
+import static org.junit.Assert.*;
 
 /**
  * Created by IntelliJ IDEA.
  * User: lars
  * Date: 5/21/11
  * Time: 9:25 PM
- * To change this template use File | Settings | File Templates.
+ * Most sql2o tests are in this class.
  */
-public class Sql2oTest extends TestCase {
+@RunWith(Parameterized.class)
+public class Sql2oTest {
 
-    private String url = "jdbc:h2:mem:test;DB_CLOSE_DELAY=-1";
-    private String user = "sa";
-    private String pass = "";
+    @Parameterized.Parameters(name = "{index} - {4}")
+    public static Collection<Object[]> getData(){
+        return Arrays.asList(new Object[][]{
+                {null, "jdbc:h2:mem:test;DB_CLOSE_DELAY=-1","sa", "", "H2 test" },
+                {new jdbcDriver(), "jdbc:hsqldb:mem:testmemdb", "SA", "", "HyperSQL DB test"}
+        });
+    }
 
-    private final Sql2o sql2o = new Sql2o(this.url, this.user, this.pass);
 
-    private int insertIntoUsers = 0;
 
-    public void setUp() throws Exception { 
+    private final Sql2o sql2o;// = new Sql2o(this.url, this.user, this.pass);
+    private String url;
+    private String user;
+    private String pass;
+
+    public Sql2oTest(Driver driverToRegister, String url, String user, String pass, String testName){
+
+        if (driverToRegister != null) {
+            try {
+                DriverManager.registerDriver(driverToRegister);
+            } catch (SQLException e) {
+                throw new RuntimeException("could not register driver '" + driverToRegister.getClass().getName() + "'", e);
+            }
+        }
+
+        this.sql2o = new Sql2o(url, user, pass);
 
         HashMap<String, String> defaultColumnMap = new HashMap<String,String>();
         defaultColumnMap.put("ID", "id");
@@ -37,16 +63,32 @@ public class Sql2oTest extends TestCase {
         defaultColumnMap.put("ANUMBER", "aNumber");
         defaultColumnMap.put("ALONGNUMBER", "aLongNumber");
         sql2o.setDefaultColumnMappings(defaultColumnMap);
+
+            this.url = url;
+            this.user = user;
+            this.pass = pass;
+
+            if ("HyperSQL DB test".equals( testName )) {
+                sql2o.createQuery("set database sql syntax MSS true").executeUpdate();
+            }
     }
 
-    public void tearDown() throws Exception {
+    private int insertIntoUsers = 0;
 
-    }
-    
-    public void testExecuteUpdate(){
+//    public void setUp() throws Exception {
+//
+//
+//    }
+//
+//    public void tearDown() throws Exception {
+//
+//    }
+//
+//    public void testExecuteUpdate(){
+//
+//    }
 
-    }
-
+    @Test
     public void testExecuteAndFetch(){
         createAndFillUserTable();
 
@@ -67,6 +109,7 @@ public class Sql2oTest extends TestCase {
         deleteUserTable();
     }
 
+    @Test
     public void testExecuteAndFetchWithNulls(){
         String sql =
                 "create table testExecWithNullsTbl (" +
@@ -99,6 +142,7 @@ public class Sql2oTest extends TestCase {
         assertNotNull(fetched.get(3).aLongNumber);
     }
 
+    @Test
     public void testBatch(){
         sql2o.createQuery(
                 "create table User(\n" +
@@ -124,6 +168,7 @@ public class Sql2oTest extends TestCase {
         deleteUserTable();
     }
 
+    @Test
     public void testExecuteScalar(){
         createAndFillUserTable();
 
@@ -136,6 +181,7 @@ public class Sql2oTest extends TestCase {
         deleteUserTable();
     }
 
+    @Test
     public void testBatchNoTransaction(){
 
         sql2o.createQuery(
@@ -155,6 +201,7 @@ public class Sql2oTest extends TestCase {
         deleteUserTable();
     }
 
+    @Test
     public void testCaseInsensitive(){
         sql2o.createQuery("create table testCI(id2 int primary key, value2 varchar(20), sometext varchar(20), valwithgetter varchar(20))").executeUpdate();
 
@@ -175,8 +222,9 @@ public class Sql2oTest extends TestCase {
         assertTrue(ciEntities2.size() == 20);
     }
 
+    @Test
     public void testExecuteAndFetchResultSet() throws SQLException {
-        List<Integer> list = sql2o.createQuery("select 1 val union select 2 union select 3").executeScalarList();
+        List<Integer> list = sql2o.createQuery("select 1 val from (values(0)) union select 2 from (values(0)) union select 3 from (values(0))").executeScalarList();
 
         assertEquals((int)list.get(0), 1);
         assertEquals((int)list.get(1), 2);
@@ -184,6 +232,7 @@ public class Sql2oTest extends TestCase {
 
     }
 
+    @Test
     public void testJodaTime(){
 
         sql2o.createQuery("create table testjoda(id int primary key, joda1 datetime, joda2 datetime)").executeUpdate();
@@ -201,6 +250,7 @@ public class Sql2oTest extends TestCase {
 
     }
 
+    @Test
     public void testUtilDate(){
         sql2o.createQuery("create table testutildate(id int primary key, d1 datetime, d2 timestamp)").executeUpdate();
 
@@ -216,14 +266,16 @@ public class Sql2oTest extends TestCase {
 
     }
 
+    @Test
     public void testConversion(){
 
-        String sql = "select cast(1 as smallint) as val1, 2 as val2 union select cast(3 as smallint) as val1, 4 as val2";
+        String sql = "select cast(1 as smallint) as val1, 2 as val2 from (values(0)) union select cast(3 as smallint) as val1, 4 as val2 from (values(0))";
         List<TypeConvertEntity> entities = sql2o.createQuery(sql).executeAndFetch(TypeConvertEntity.class);
 
         assertTrue(entities.size() == 2);
     }
 
+    @Test
     public void testUpdateNoTransaction() throws SQLException {
         String ddlQuery = "create table testUpdateNoTransaction(id int primary key, value varchar(50))";
         Connection connection = sql2o.createQuery(ddlQuery).executeUpdate();
@@ -237,6 +289,7 @@ public class Sql2oTest extends TestCase {
         assertTrue(connection.getJdbcConnection().isClosed());
     }
 
+    @Test
     public void testNullDate(){
         sql2o.createQuery("create table nullDateTest(id integer primary key, somedate datetime)").executeUpdate();
 
@@ -248,21 +301,23 @@ public class Sql2oTest extends TestCase {
         assertNull(d);
     }
 
+    @Test
     public void testGetResult(){
 
         sql2o.createQuery("create table get_result_test(id integer primary key, value varchar(20))").executeUpdate();
 
         String insertSql =
                 "insert into get_result_test(id, value) " +
-                "select 1, 'hello' union " +
-                "select 2, 'hello2' union " +
-                "select 3, 'hello3'";
+                "select 1, 'hello' from (values(0)) union " +
+                "select 2, 'hello2' from (values(0)) union " +
+                "select 3, 'hello3' from (values(0))";
 
         int result = sql2o.createQuery(insertSql).executeUpdate().getResult();
 
         assertEquals(3, result);
     }
 
+    @Test
     public void testGetKeys(){
 
         sql2o.createQuery("create table get_keys_test(id integer identity primary key, value varchar(20))").executeUpdate();
@@ -279,9 +334,9 @@ public class Sql2oTest extends TestCase {
         Integer key = (Integer)sql2o.createQuery(insertSql).addParameter("val", "something").executeUpdate().getKey();
 
         assertNotNull(key);
-        assertTrue(key > 0);
+        assertTrue(key >= 0);
 
-        String multiInsertSql = "insert into get_keys_test(value) select 'a val' col1 union select 'another val' col1";
+        String multiInsertSql = "insert into get_keys_test(value) select 'a val' col1 from (values(0)) union select 'another val' col1 from (values(0))";
         Object[] keys = sql2o.createQuery(multiInsertSql).executeUpdate().getKeys();
 
         assertNotNull(keys);
@@ -292,6 +347,7 @@ public class Sql2oTest extends TestCase {
         //assertTrue(keys.length == 2);
     }
 
+    @Test
     public void testRollback(){
 
         sql2o.createQuery("create table test_rollback_table(id integer identity primary key, value varchar(25))").executeUpdate();
@@ -315,9 +371,10 @@ public class Sql2oTest extends TestCase {
         assertEquals(1, rowCount);
     }
 
+    @Test
     public void testBigDecimals(){
 
-        sql2o.createQuery("create table bigdectesttable (id integer identity primary key, val1 numeric, val2 integer)").executeUpdate();
+        sql2o.createQuery("create table bigdectesttable (id integer identity primary key, val1 numeric(5,3), val2 integer)").executeUpdate();
         
         sql2o.createQuery("insert into bigdectesttable(val1, val2) values(:val1, :val2)").addParameter("val1",1.256).addParameter("val2", 4).executeUpdate();
 
@@ -327,8 +384,9 @@ public class Sql2oTest extends TestCase {
         assertEquals(new BigDecimal("4.0"), pojo.val2);
     }
 
+    @Test
     public void testQueryDbMappings(){
-        Entity entity = sql2o.createQuery("select 1 as id, 'something' as caption, cast('2011-01-01' as date) as theTime")
+        Entity entity = sql2o.createQuery("select 1 as id, 'something' as caption, cast('2011-01-01' as date) as theTime from (values(0))")
                 .addColumnMapping("caption", "text")
                 .addColumnMapping("theTime", "time").executeAndFetchFirst(Entity.class);
 
@@ -337,6 +395,7 @@ public class Sql2oTest extends TestCase {
         assertEquals(new DateTime(2011,1,1,0,0,0,0).toDate(), entity.time);
     }
 
+    @Test
     public void testGlobalDbMappings(){
         Sql2o sql2o1 = new Sql2o(url, user, pass);
 
@@ -346,7 +405,7 @@ public class Sql2oTest extends TestCase {
 
         sql2o1.setDefaultColumnMappings(defaultColMaps);
 
-        Entity entity = sql2o1.createQuery("select 1 as id, 'something' as caption, cast('2011-01-01' as date) as theTime").executeAndFetchFirst(Entity.class);
+        Entity entity = sql2o1.createQuery("select 1 as id, 'something' as caption, cast('2011-01-01' as date) as theTime from (values(0))").executeAndFetchFirst(Entity.class);
 
         assertEquals(1, entity.id);
         assertEquals("something", entity.text);
@@ -354,15 +413,17 @@ public class Sql2oTest extends TestCase {
 
     }
 
+    @Test
     public void testSetPrivateFields(){
-        EntityWithPrivateFields entity = sql2o.createQuery("select 1 id, 'hello' value").executeAndFetchFirst(EntityWithPrivateFields.class);
+        EntityWithPrivateFields entity = sql2o.createQuery("select 1 id, 'hello' value from (values(0))").executeAndFetchFirst(EntityWithPrivateFields.class);
 
         assertEquals(1, entity.getId());
         assertEquals("hello1", entity.getValue());
     }
 
+    @Test
     public void testFetchTable(){
-        sql2o.createQuery("create table tabletest(id integer identity primary key, value varchar(20), value2 decimal)").executeUpdate();
+        sql2o.createQuery("create table tabletest(id integer identity primary key, value varchar(20), value2 decimal(5,1))").executeUpdate();
         sql2o.createQuery("insert into tabletest(value,value2) values (:value, :value2)")
                 .addParameter("value", "something").addParameter("value2", new BigDecimal("3.4")).addToBatch()
                 .addParameter("value", "bla").addParameter("value2", new BigDecimal("5.5")).addToBatch().executeBatch();
@@ -380,17 +441,18 @@ public class Sql2oTest extends TestCase {
         Row row0 = table.rows().get(0);
         Row row1 = table.rows().get(1);
 
-        assertEquals(1, row0.getInteger("ID").intValue());
+        assertTrue(0 <= row0.getInteger("ID"));
         assertEquals("something", row0.getString(1));
         assertEquals(new BigDecimal("3.4"), row0.getBigDecimal("VALUE2"));
         
-        assertEquals(2, row1.getInteger(0).intValue());
+        assertTrue(1 <= row1.getInteger(0));
         assertEquals("bla", row1.getString("VALUE"));
-        assertEquals(5.5D, row1.getDouble(2));
+        assertEquals(5.5D, row1.getDouble(2), 0.00001);
     }
-    
+
+    @Test
     public void testStringConversion(){
-        StringConversionPojo pojo = sql2o.createQuery("select '1' val1, '2  ' val2, '' val3, '' val4, null val5").executeAndFetchFirst(StringConversionPojo.class);
+        StringConversionPojo pojo = sql2o.createQuery("select '1' val1, '2  ' val2, '' val3, '' val4, null val5 from (values(0))").executeAndFetchFirst(StringConversionPojo.class);
 
         assertEquals((Integer)1, pojo.val1);
         assertEquals(2l, pojo.val2);
@@ -401,15 +463,17 @@ public class Sql2oTest extends TestCase {
 
     }
 
+    @Test
     public void testSuperPojo(){
-        SuperPojo pojo = sql2o.createQuery("select 1 id, 'something' value").executeAndFetchFirst(SuperPojo.class);
+        SuperPojo pojo = sql2o.createQuery("select 1 id, 'something' value from (values(0))").executeAndFetchFirst(SuperPojo.class);
 
         assertEquals(1, pojo.getId());
         assertEquals("something1", pojo.getValue());
     }
 
+    @Test
     public void testComplexTypes(){
-        ComplexEntity pojo = sql2o.createQuery("select 1 id, 1 \"entity.id\", 'something' \"entity.value\"", "testComplexTypes").executeAndFetchFirst(ComplexEntity.class);
+        ComplexEntity pojo = sql2o.createQuery("select 1 id, 1 \"entity.id\", 'something' \"entity.value\" from (values(0))", "testComplexTypes").executeAndFetchFirst(ComplexEntity.class);
 
         assertEquals(1, pojo.id);
         assertEquals(1, pojo.entity.getId());
@@ -443,6 +507,7 @@ public class Sql2oTest extends TestCase {
 //        assertEquals(4, res2.get(1).getId());
 //    }
 
+    @Test
     public void testRunInsideTransaction(){
 
         sql2o.createQuery("create table runinsidetransactiontable(id integer identity primary key, value varchar(50))").executeUpdate();
@@ -495,6 +560,7 @@ public class Sql2oTest extends TestCase {
         assertEquals(2, rowCount);
     }
 
+    @Test
     public void testRunInsideTransactionWithResult(){
         sql2o.createQuery("create table testRunInsideTransactionWithResultTable(id integer identity primary key, value varchar(50))").executeUpdate();
         
@@ -516,6 +582,7 @@ public class Sql2oTest extends TestCase {
         }
     }
 
+    @Test
     public void testDynamicExecuteScalar(){
         Object origVal = sql2o.createQuery("select 1").executeScalar();
         assertTrue(Integer.class.equals(origVal.getClass()));
@@ -528,7 +595,8 @@ public class Sql2oTest extends TestCase {
         Short expected = 2;
         assertEquals(expected, shortVal);
     }
-    
+
+    @Test
     public void testUpdateWithNulls() {
         sql2o.createQuery("create table testUpdateWithNulls_2(id integer identity primary key, value integer)").executeUpdate();
         
@@ -536,7 +604,8 @@ public class Sql2oTest extends TestCase {
         
         sql2o.createQuery("insert into testUpdateWithNulls_2(value) values(:val)").addParameter("val", 2).addToBatch().addParameter("val", nullInt).addToBatch().executeBatch();
     }
-    
+
+    @Test
     public void testExceptionInRunnable() {
         sql2o.createQuery("create table testExceptionInRunnable(id integer primary key, value varchar(20))").executeUpdate();
         

@@ -44,7 +44,7 @@ public class TableFactory {
         table.setName( metadata.getTableName(1) );
 
         for (int colIdx = 1; colIdx <= metadata.getColumnCount(); colIdx++){
-            String colName = metadata.getColumnName(colIdx);
+            String colName = metadata.getColumnLabel(colIdx);
             String colType = metadata.getColumnTypeName(colIdx);
             table.columns().add(new Column(colName, colIdx - 1, colType));
 

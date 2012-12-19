@@ -71,10 +71,7 @@ public class Sql2o {
         return createQuery(query, null);
     }
 
-    /**
-     * @Deprecated as of release 1.1.0, use runInTransaction method instead.
-     */
-    @Deprecated public Connection beginTransaction(int isolationLevel){
+    public Connection beginTransaction(int isolationLevel){
 
         Connection connection = new Connection(this);
 
@@ -88,10 +85,7 @@ public class Sql2o {
         return connection;
     }
 
-    /**
-     * @Deprecated as of release 1.1.0, use runInTransaction method instead.
-     */
-    @Deprecated public Connection beginTransaction(){
+    public Connection beginTransaction(){
         return this.beginTransaction(java.sql.Connection.TRANSACTION_READ_COMMITTED);
     }
 
