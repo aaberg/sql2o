@@ -48,6 +48,7 @@
         </dependency>
 
         <dependency>
+            <scope>test</scope>
             <groupId>org.hsqldb</groupId>
             <artifactId>hsqldb</artifactId>
             <version>2.2.8</version>
