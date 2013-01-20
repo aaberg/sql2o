@@ -9,5 +9,5 @@ package org.sql2o;
  */
 public enum QuirksMode {
 
-    None, DB2
+    None, DB2, PostgreSQL
 }

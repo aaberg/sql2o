@@ -30,12 +30,12 @@ public class Query {
 
     private final Logger logger = LoggerFactory.getLogger(Query.class);
 
-    public Query(Connection connection, String queryText, String name) {
+    public Query(Connection connection, String queryText, String name, boolean returnGeneratedKeys) {
         this.connection = connection;
         this.name = name;
 
         try{
-            statement = new NamedParameterStatement(connection.getJdbcConnection(), queryText);
+            statement = new NamedParameterStatement(connection.getJdbcConnection(), queryText, returnGeneratedKeys);
         }
         catch(Exception ex){
             throw new RuntimeException(ex);

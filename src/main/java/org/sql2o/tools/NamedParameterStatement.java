@@ -51,10 +51,10 @@ public class NamedParameterStatement {
      * @param query      the parameterized query
      * @throws SQLException if the statement could not be created
      */
-    public NamedParameterStatement(Connection connection, String query) throws SQLException {
+    public NamedParameterStatement(Connection connection, String query, boolean returnGeneratedKeys) throws SQLException {
         indexMap=new HashMap();
         String parsedQuery=parse(query, indexMap);
-        statement=connection.prepareStatement(parsedQuery, Statement.RETURN_GENERATED_KEYS);
+        statement=connection.prepareStatement(parsedQuery, returnGeneratedKeys ? Statement.RETURN_GENERATED_KEYS : Statement.NO_GENERATED_KEYS);
     }
 
 

@@ -61,6 +61,14 @@ public class Sql2o {
         this.defaultCaseSensitive = defaultCaseSensitive;
     }
 
+    public Query createQuery(String query, String name, boolean returnGeneratedKeys) {
+        return new Connection(this).createQuery(query, name, returnGeneratedKeys);
+    }
+
+    public Query createQuery(String query, boolean returnGeneratedKeys) {
+        return createQuery(query, null, returnGeneratedKeys);
+    }
+
     public Query createQuery(String query, String name){
 
         Connection connection = new Connection(this);

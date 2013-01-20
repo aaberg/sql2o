@@ -64,6 +64,13 @@ public class Connection {
     }
 
     public Query createQuery(String queryText, String name){
+        // If postgresql, the default behaviour should be not to retur generated keys, as this will throw an exception on
+        // every query that does not create any new keys.
+        boolean returnGeneratedKeys = !(this.sql2o.quirksMode == QuirksMode.PostgreSQL);
+        return createQuery(queryText, name, returnGeneratedKeys);
+    }
+
+    public Query createQuery(String queryText, String name, boolean returnGeneratedKeys){
 
         try {
             if (this.getJdbcConnection().isClosed()){
@@ -73,7 +80,7 @@ public class Connection {
             throw new RuntimeException(e);
         }
 
-        Query q = new Query(this, queryText, name);
+        Query q = new Query(this, queryText, name, returnGeneratedKeys);
         return q;
     }
     
@@ -81,12 +88,11 @@ public class Connection {
         return createQuery(queryText, null);
     }
 
+    public Query createQuery(String queryText, boolean returnGeneratedKeys) {
+        return createQuery(queryText, null, returnGeneratedKeys);
+    }
 
-    /**
-     * @deprecated - use on of the Sql2o.runInTransaction overloads instead. If an Exception is thrown within transaction scope,
-     * the transaction will automatically be rolled back. It should never be necessary to call this method.
-     */
-    @Deprecated public Sql2o rollback(){
+    public Sql2o rollback(){
         try {
             this.getJdbcConnection().rollback();
         }
@@ -106,11 +112,7 @@ public class Connection {
         return this.getSql2o();
     }
 
-    /**
-     * @deprecated - use on of the Sql2o.runInTransaction overloads instead. If no exception is thrown within transaction scope,
-     * the transaction will automatically be committed.
-     */
-    @Deprecated public Sql2o commit(){
+    public Sql2o commit(){
         try {
             this.getJdbcConnection().commit();
         }
