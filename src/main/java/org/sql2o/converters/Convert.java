@@ -60,8 +60,9 @@ public class Convert {
     public static Converter getConverter(Class clazz) throws ConverterException {
         if (registeredConverters.containsKey(clazz)){
             return registeredConverters.get(clazz);
-        }
-        else{
+        } else if (clazz.isEnum()) {
+            return new EnumConverter(clazz);
+        } else{
             throw new ConverterException("No converter registered for class: " + clazz.toString());
         }
 

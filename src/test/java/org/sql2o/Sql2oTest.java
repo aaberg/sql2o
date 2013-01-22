@@ -17,6 +17,7 @@ import java.sql.SQLException;
 import java.util.*;
 
 import static org.junit.Assert.*;
+import static org.hamcrest.CoreMatchers.*;
 
 /**
  * Created by IntelliJ IDEA.
@@ -75,18 +76,6 @@ public class Sql2oTest {
 
     private int insertIntoUsers = 0;
 
-//    public void setUp() throws Exception {
-//
-//
-//    }
-//
-//    public void tearDown() throws Exception {
-//
-//    }
-//
-//    public void testExecuteUpdate(){
-//
-//    }
 
     @Test
     public void testExecuteAndFetch(){
@@ -648,6 +637,35 @@ public class Sql2oTest {
         c = (Integer)sql2o.createQuery("select count(*) from testExceptionInRunnable").executeScalar(Integer.class);
         assertEquals(1, c);
 
+    }
+
+    public static enum TestEnum{
+        HELLO, WORLD;
+    }
+
+    public static class EntityWithEnum{
+        public int id;
+        public TestEnum val;
+        public TestEnum val2;
+    }
+
+    @Test
+    public void testEnums() {
+        sql2o.createQuery( "create table EnumTest(id int identity primary key, enum_val varchar(10), enum_val2 int) ").executeUpdate();
+
+        sql2o.createQuery("insert into EnumTest(enum_val, enum_val2) values (:val, :val2)")
+                .addParameter("val", TestEnum.HELLO).addParameter("val2", TestEnum.HELLO.ordinal()).addToBatch()
+                .addParameter("val", TestEnum.WORLD).addParameter("val2", TestEnum.WORLD.ordinal()).addToBatch().executeBatch();
+
+        List<EntityWithEnum> list = sql2o.createQuery("select id, enum_val val, enum_val2 val2 from EnumTest").executeAndFetch(EntityWithEnum.class);
+
+        assertThat(list.get(0).val, is(TestEnum.HELLO));
+        assertThat(list.get(0).val2, is(TestEnum.HELLO));
+        assertThat(list.get(1).val, is(TestEnum.WORLD));
+        assertThat(list.get(1).val2, is(TestEnum.WORLD));
+
+        TestEnum testEnum = sql2o.createQuery("select 'HELLO' from (values(0))").executeScalar(TestEnum.class);
+        assertThat(testEnum, is(TestEnum.HELLO));
     }
 
 

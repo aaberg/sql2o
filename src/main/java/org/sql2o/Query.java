@@ -188,6 +188,10 @@ public class Query {
         return addParameter(name, value.toDate());
     }
 
+    public Query addParameter(String name, Enum value) {
+        return addParameter(name, value.toString());
+    }
+
     public boolean isCaseSensitive() {
         return caseSensitive;
     }
