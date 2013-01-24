@@ -16,6 +16,7 @@ public class EnumConverter implements Converter<Enum> {
     }
 
     public Enum convert(Object val) throws ConverterException {
+        if (val == null) return null;
         try{
             if (String.class.isAssignableFrom(val.getClass())){
                 return Enum.valueOf(enumType, val.toString());

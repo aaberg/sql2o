@@ -666,6 +666,9 @@ public class Sql2oTest {
 
         TestEnum testEnum = sql2o.createQuery("select 'HELLO' from (values(0))").executeScalar(TestEnum.class);
         assertThat(testEnum, is(TestEnum.HELLO));
+
+        TestEnum testEnum2 = sql2o.createQuery("select NULL from (values(0))").executeScalar(TestEnum.class);
+        assertThat(testEnum2, is(nullValue()));
     }
 
 
