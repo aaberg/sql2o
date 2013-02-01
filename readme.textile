@@ -3,4 +3,4 @@ h1. sql2o
 p. Sql2o is a small java library, with the purpose of making database interaction easy. When fetching data from the
 database, the resultset will automatically be filled into you POJO objects. Kind of like an ORM, but without the sql generation capabilities.
 
-p. Check out the "sql2o website(sql2o website)":http://sql2o.aabergs.net for examples.
+p. Check out the "sql2o website(sql2o website)":http://sql2o.org for examples.
