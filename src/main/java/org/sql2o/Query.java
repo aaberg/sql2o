@@ -14,10 +14,8 @@ import org.sql2o.tools.NamedParameterStatement;
 
 import java.lang.reflect.Method;
 import java.sql.*;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.sql.Date;
+import java.util.*;
 
 /**
  * Represents a sql2o statement. With sql2o, all statements are instances of the Query class.
@@ -181,11 +179,13 @@ public class Query {
     }
 
     public Query addParameter(String name, DateTime value){
-        return addParameter(name, value.toDate());
+        java.util.Date dtVal = value == null ? null : value.toDate();
+        return addParameter(name, dtVal);
     }
 
     public Query addParameter(String name, Enum value) {
-        return addParameter(name, value.toString());
+        String strVal = value == null ? null : value.toString();
+        return addParameter(name, strVal);
     }
 
     public boolean isCaseSensitive() {

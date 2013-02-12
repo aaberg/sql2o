@@ -2,6 +2,7 @@ package org.sql2o.issues;
 
 import junit.framework.TestCase;
 import org.hsqldb.jdbcDriver;
+import org.joda.time.DateTime;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.Parameterized;
@@ -249,6 +250,21 @@ public class IssuesTest {
         assertEquals(3, pojos.size());
         assertEquals("something", pojos.get(0).theVal);
 
+    }
+
+    public static enum WhatEverEnum{
+        VAL, ANOTHER_VAL;
+    }
+
+    @Test public void testForNullPointerExceptionInAddParameterMethod() {
+        sql2o.createQuery("create table issue11test (id integer identity primary key, val varchar(50), adate datetime)").executeUpdate();
+
+        String insertSql = "insert into issue11test (val, adate) values (:val, :date)";
+        sql2o.createQuery(insertSql).addParameter("val", WhatEverEnum.VAL).addParameter("date", new DateTime()).executeUpdate();
+        DateTime dtNull = null;
+        WhatEverEnum enumNull = null;
+
+        sql2o.createQuery(insertSql).addParameter("val", enumNull).addParameter("date", dtNull).executeUpdate();
     }
 
     public static class Issue9Pojo {
