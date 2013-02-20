@@ -68,12 +68,12 @@
         	<version>1.6.4</version>
         </dependency>
 
-        <dependency>
-            <scope>test</scope>
-            <groupId>oracle</groupId>
-            <artifactId>oracle-jdbc</artifactId>
-            <version>10.1.0.2.0</version>
-        </dependency>
+        <!--<dependency>-->
+            <!--<scope>test</scope>-->
+            <!--<groupId>oracle</groupId>-->
+            <!--<artifactId>oracle-jdbc</artifactId>-->
+            <!--<version>10.1.0.2.0</version>-->
+        <!--</dependency>-->
 
     </dependencies>
 
