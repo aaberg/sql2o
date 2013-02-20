@@ -1,10 +1,8 @@
 package org.sql2o.issues;
 
-import oracle.jdbc.driver.OracleDriver;
-import oracle.sql.Datum;
-import oracle.sql.TIMESTAMPTZ;
 import org.joda.time.DateTime;
 import org.joda.time.LocalDate;
+import org.junit.Ignore;
 import org.junit.Test;
 import org.sql2o.Sql2o;
 
@@ -22,18 +20,22 @@ import static org.junit.Assert.assertThat;
  * Time: 14:27
  * To change this template use File | Settings | File Templates.
  */
+@Ignore // Ignored by default, see below.
 public class OracleTest {
 
     private Sql2o sql2o;
 
-    public OracleTest() {
-        try {
-            DriverManager.registerDriver(new OracleDriver());
-        } catch (SQLException e) {
-            throw new RuntimeException(e);
-        }
-        this.sql2o = new Sql2o("jdbc:oracle:thin:@Unix0628:1521:ORA03T", "nlivca", "nordea");
-    }
+    // uncomment this block to test the Oracle issues. Commented out by default, as I have no Oracle server to test
+    // with on my normal development setup.
+
+//    public OracleTest() {
+//        try {
+//            DriverManager.registerDriver(new OracleDriver());
+//        } catch (SQLException e) {
+//            throw new RuntimeException(e);
+//        }
+//        this.sql2o = new Sql2o("jdbc:oracle:thin:@Unix0628:1521:ORA03T", "nlivca", "nordea");
+//    }
 
     /**
      * Issue #8
