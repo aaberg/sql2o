@@ -232,7 +232,7 @@ public class Query {
                     } else {
                         colName = meta.getColumnLabel(colIdx);
                     }
-                    pojo.setProperty(colName, rs.getObject(colIdx));
+                    pojo.setProperty(colName, getRSVal(rs, colIdx));
                 }
 
                 list.add(pojo.getObject());
@@ -322,7 +322,7 @@ public class Query {
         try {
             ResultSet rs = this.statement.executeQuery();
             if (rs.next()){
-                Object o = rs.getObject(1);
+                Object o = getRSVal(rs, 1);
                 long end = System.currentTimeMillis();
                 logger.info("total: {} ms; executed scalar [{}]", new Object[]{
                     end - start, 
@@ -363,7 +363,7 @@ public class Query {
         try{
             ResultSet rs = this.statement.executeQuery();
             while(rs.next()){
-                list.add((T)rs.getObject(1));
+                list.add((T)getRSVal(rs,1));
             }
 
             long end = System.currentTimeMillis();
@@ -459,14 +459,15 @@ public class Query {
         }
     }
 
-//    private void onErrorCleanup(){
-//        try {
-//            if (this.connection.getJdbcConnection().isClosed()){
-//                this.connection.getJdbcConnection().close();
-//            }
-//        } catch (SQLException ex) {
-//            throw new RuntimeException("Error while attempting to close connection", ex);
-//        }
-//    }
+    private Object getRSVal(ResultSet rs, int idx) throws SQLException {
+        Object o = rs.getObject(idx);
+        // oracle timestamps are not always convertible to a java Date. If ResultSet.getTimestamp is used instead of
+        // ResultSet.getObject, a normal java.sql.Timestamp instance is returnd.
+        if (o != null && o.getClass().getCanonicalName().startsWith("oracle.sql.TIMESTAMP")){
+            o = rs.getTimestamp(idx);
+        }
+
+        return o;
+    }
 
 }
