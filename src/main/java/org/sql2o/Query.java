@@ -222,7 +222,12 @@ public class Query {
 
                 //Object obj = returnType.newInstance();
                 for(int colIdx = 1; colIdx <= meta.getColumnCount(); colIdx++){
-                    String colName = meta.getColumnLabel(colIdx);
+                    String colName;
+                    if (this.connection.getSql2o().quirksMode == QuirksMode.DB2){
+                        colName = meta.getColumnName(colIdx);
+                    } else {
+                        colName = meta.getColumnLabel(colIdx);
+                    }
                     pojo.setProperty(colName, rs.getObject(colIdx));
                 }
 
@@ -266,7 +271,7 @@ public class Query {
         try {
             rs = statement.executeQuery();
             long afterExecute = System.currentTimeMillis();
-            Table table = TableFactory.createTable(rs, this.isCaseSensitive());
+            Table table = TableFactory.createTable(rs, this.isCaseSensitive(), this.connection.getSql2o().quirksMode);
             long afterClose = System.currentTimeMillis();
             
             logger.info("total: {} ms, execution: {} ms, reading and parsing: {} ms; executed fetch table [{}]", new Object[]{
