@@ -1,13 +1,7 @@
 package org.sql2o.converters;
 
-import java.math.BigDecimal;
-
 /**
- * Created by IntelliJ IDEA.
- * User: lars
- * Date: 11/14/11
- * Time: 12:46 PM
- * To change this template use File | Settings | File Templates.
+ * Represents a converter.
  */
 public interface Converter<T> {
     

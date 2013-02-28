@@ -1,11 +1,9 @@
 package org.sql2o;
 
 /**
- * Created by IntelliJ IDEA.
- * User: lars
- * Date: 12/11/11
- * Time: 12:00 AM
- * To change this template use File | Settings | File Templates.
+ * Represents a method with a {@link Connection} and an optional argument. Implementations of this interface be used as
+ * a parameter to one of the {@link Sql2o#runInTransaction(StatementRunnable) Sql2o.runInTransaction} overloads, to run
+ * code safely in a transaction.
  */
 public interface StatementRunnable {
 

@@ -5,11 +5,7 @@ import org.sql2o.Sql2oException;
 import java.lang.reflect.Field;
 
 /**
- * Created by IntelliJ IDEA.
- * User: lars
- * Date: 11/15/11
- * Time: 8:48 PM
- * To change this template use File | Settings | File Templates.
+ * used internally to set property values directly into the field. Only used if no setter method is found.
  */
 public class FieldSetter implements Setter{
 

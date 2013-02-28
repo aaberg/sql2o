@@ -3,11 +3,7 @@ package org.sql2o.converters;
 import org.joda.time.DateTime;
 
 /**
- * Created by IntelliJ IDEA.
- * User: lars
- * Date: 11/14/11
- * Time: 4:05 PM
- * To change this template use File | Settings | File Templates.
+ * Used by sql2o to convert a value from the database into a {@link DateTime} instance.
  */
 public class JodaTimeConverter implements Converter<DateTime> {
     public DateTime convert(Object val) throws ConverterException {

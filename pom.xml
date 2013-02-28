@@ -110,6 +110,9 @@
                         </goals>
                     </execution>
                 </executions>
+                <configuration>
+                    <stylesheet>java</stylesheet>
+                </configuration>
             </plugin>
         </plugins>
     </build>

@@ -7,11 +7,7 @@ import java.sql.ResultSetMetaData;
 import java.sql.SQLException;
 
 /**
- * Created by IntelliJ IDEA.
- * User: lars
- * Date: 11/19/11
- * Time: 9:26 PM
- * To change this template use File | Settings | File Templates.
+ * The table factory is used to create {@link Table} instances.
  */
 public class TableFactory {
     

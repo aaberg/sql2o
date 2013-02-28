@@ -8,11 +8,7 @@ import java.util.HashMap;
 import java.util.Map;
 
 /**
- * Created by IntelliJ IDEA.
- * User: lars
- * Date: 11/14/11
- * Time: 2:08 PM
- * To change this template use File | Settings | File Templates.
+ * Static class used to register new converters. Also used internally by sql2o to lookup a converter.
  */
 public class Convert {
 
