@@ -117,24 +117,55 @@ public class Sql2o {
         this.defaultCaseSensitive = defaultCaseSensitive;
     }
 
+    /**
+     * Creates a {@link Query}
+     * @param query the sql query string
+     * @param name name of query. Only used for logging purposes
+     * @param returnGeneratedKeys boolean value indicating if the database should return any generated keys.
+     * @return the {@link Query} instance
+     */
     public Query createQuery(String query, String name, boolean returnGeneratedKeys) {
         return new Connection(this).createQuery(query, name, returnGeneratedKeys);
     }
 
+    /**
+     * Creates a {@link Query}
+     * @param query the sql query string
+     * @param returnGeneratedKeys boolean value indicating if the database should return any generated keys.
+     * @return the {@link Query} instance
+     */
     public Query createQuery(String query, boolean returnGeneratedKeys) {
         return createQuery(query, null, returnGeneratedKeys);
     }
 
+    /**
+     * Creates a {@link Query}
+     * @param query the sql query string
+     * @param name name of query. Only used for logging purposes
+     * @return the {@link Query} instance
+     */
     public Query createQuery(String query, String name){
 
         Connection connection = new Connection(this);
         return connection.createQuery(query, name);
     }
-    
+
+    /**
+     * Creates a {@link Query}
+     * @param query the sql query string
+     * @return the {@link Query} instance
+     */
     public Query createQuery(String query){
         return createQuery(query, null);
     }
 
+    /**
+     * Begins a transaction with the given isolation level. Every statement executed on the return {@link Connection}
+     * instance, will be executed in the transaction. It is very important to always call either the {@link org.sql2o.Connection#commit()}
+     * method or the {@link org.sql2o.Connection#rollback()} method to close the transaction. Use proper try-catch logic.
+     * @param isolationLevel the isolation level of the transaction
+     * @return the {@link Connection} instance to use to run statements in the transaction.
+     */
     public Connection beginTransaction(int isolationLevel){
 
         Connection connection = new Connection(this);
@@ -149,18 +180,55 @@ public class Sql2o {
         return connection;
     }
 
+    /**
+     * Begins a transaction with isolation level {@link java.sql.Connection#TRANSACTION_READ_COMMITTED}. Every statement executed on the return {@link Connection}
+     * instance, will be executed in the transaction. It is very important to always call either the {@link org.sql2o.Connection#commit()}
+     * method or the {@link org.sql2o.Connection#rollback()} method to close the transaction. Use proper try-catch logic.
+     * @return the {@link Connection} instance to use to run statements in the transaction.
+     */
     public Connection beginTransaction(){
         return this.beginTransaction(java.sql.Connection.TRANSACTION_READ_COMMITTED);
     }
 
+    /**
+     * Calls the {@link StatementRunnable#run(Connection, Object)} method on the {@link StatementRunnable} parameter. All statements
+     * run on the {@link Connection} instance in the {@link StatementRunnable#run(Connection, Object) run} method will be
+     * executed in a transaction. The transaction will automatically be committed if the {@link StatementRunnable#run(Connection, Object) run}
+     * method finishes without throwing an exception. If an exception is thrown within the {@link StatementRunnable#run(Connection, Object) run} method,
+     * the transaction will automatically be rolled back.
+     *
+     * The isolation level of the transaction will be set to {@link java.sql.Connection#TRANSACTION_READ_COMMITTED}
+     * @param runnable The {@link StatementRunnable} instance.
+     */
     public void runInTransaction(StatementRunnable runnable){
         runInTransaction(runnable, null);
     }
 
+    /**
+     * Calls the {@link StatementRunnable#run(Connection, Object)} method on the {@link StatementRunnable} parameter. All statements
+     * run on the {@link Connection} instance in the {@link StatementRunnable#run(Connection, Object) run} method will be
+     * executed in a transaction. The transaction will automatically be committed if the {@link StatementRunnable#run(Connection, Object) run}
+     * method finishes without throwing an exception. If an exception is thrown within the {@link StatementRunnable#run(Connection, Object) run} method,
+     * the transaction will automatically be rolled back.
+     *
+     * The isolation level of the transaction will be set to {@link java.sql.Connection#TRANSACTION_READ_COMMITTED}
+     * @param runnable The {@link StatementRunnable} instance.
+     * @param argument An argument which will be forwarded to the {@link StatementRunnable#run(Connection, Object) run} method
+     */
     public void runInTransaction(StatementRunnable runnable, Object argument){
         runInTransaction(runnable, argument, java.sql.Connection.TRANSACTION_READ_COMMITTED);
     }
 
+    /**
+     * Calls the {@link StatementRunnable#run(Connection, Object)} method on the {@link StatementRunnable} parameter. All statements
+     * run on the {@link Connection} instance in the {@link StatementRunnable#run(Connection, Object) run} method will be
+     * executed in a transaction. The transaction will automatically be committed if the {@link StatementRunnable#run(Connection, Object) run}
+     * method finishes without throwing an exception. If an exception is thrown within the {@link StatementRunnable#run(Connection, Object) run} method,
+     * the transaction will automatically be rolled back.
+     * @param runnable The {@link StatementRunnable} instance.
+     * @param argument An argument which will be forwarded to the {@link StatementRunnable#run(Connection, Object) run} method
+     * @param isolationLevel The isolation level of the transaction
+     */
     public void runInTransaction(StatementRunnable runnable, Object argument, int isolationLevel){
 
         Connection connection = this.beginTransaction(isolationLevel);

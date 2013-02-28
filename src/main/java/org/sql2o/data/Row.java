@@ -10,11 +10,7 @@ import java.util.HashMap;
 import java.util.Map;
 
 /**
- * Created by IntelliJ IDEA.
- * User: lars
- * Date: 11/19/11
- * Time: 8:43 PM
- * To change this template use File | Settings | File Templates.
+ * Represents a result set row.
  */
 public class Row {
     

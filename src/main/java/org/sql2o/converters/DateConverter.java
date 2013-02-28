@@ -5,11 +5,7 @@ import org.sql2o.Sql2oException;
 import java.util.Date;
 
 /**
- * Created by IntelliJ IDEA.
- * User: lars
- * Date: 11/14/11
- * Time: 3:53 PM
- * To change this template use File | Settings | File Templates.
+ * Used by sql2o to convert a value from the database into a {@link Date}.
  */
 public class DateConverter implements Converter<Date> {
     

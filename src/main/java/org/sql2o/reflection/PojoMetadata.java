@@ -8,11 +8,7 @@ import java.util.HashMap;
 import java.util.Map;
 
 /**
- * Created by IntelliJ IDEA.
- * User: lars
- * Date: 11/15/11
- * Time: 8:58 PM
- * To change this template use File | Settings | File Templates.
+ * Stores metadata for a POJO.
  */
 public class PojoMetadata {
     

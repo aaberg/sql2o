@@ -9,11 +9,7 @@ import java.sql.*;
 import java.sql.Connection;
 
 /**
- * Created with IntelliJ IDEA.
- * User: lars
- * Date: 10/5/12
- * Time: 12:13 AM
- * To change this template use File | Settings | File Templates.
+ * Used internally by sql2o, if the {@link Sql2o#Sql2o(String, String, String)} constructor overload.
  */
 public class GenericDatasource implements DataSource {
 

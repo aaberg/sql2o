@@ -1,11 +1,7 @@
 package org.sql2o.converters;
 
 /**
- * Created by IntelliJ IDEA.
- * User: lars
- * Date: 11/14/11
- * Time: 1:32 PM
- * To change this template use File | Settings | File Templates.
+ * Base class for numeric converters.
  */
 public abstract class NumberConverter<V extends Number> implements Converter<V>{
 

@@ -18,11 +18,7 @@ import java.sql.Date;
 import java.util.*;
 
 /**
- * Created by IntelliJ IDEA.
- * User: lars
- * Date: 5/18/11
- * Time: 8:27 PM
- * To change this template use File | Settings | File Templates.
+ * Represents a sql2o statement. With sql2o, all statements are instances of the Query class.
  */
 public class Query {
 

@@ -1,11 +1,7 @@
 package org.sql2o;
 
 /**
- * Created by IntelliJ IDEA.
- * User: lars
- * Date: 10/23/11
- * Time: 7:03 PM
- * To change this template use File | Settings | File Templates.
+ * Represents an exception thrown by Sql2o.
  */
 public class Sql2oException extends RuntimeException {
 

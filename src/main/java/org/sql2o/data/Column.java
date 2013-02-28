@@ -1,11 +1,7 @@
 package org.sql2o.data;
 
 /**
- * Created by IntelliJ IDEA.
- * User: lars
- * Date: 11/19/11
- * Time: 8:42 PM
- * To change this template use File | Settings | File Templates.
+ * Represents a result set column
  */
 public class Column {
     
