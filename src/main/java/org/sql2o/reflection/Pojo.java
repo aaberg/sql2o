@@ -9,15 +9,9 @@ import java.util.HashMap;
 import java.util.Map;
 
 /**
- * Created by IntelliJ IDEA.
- * User: lars
- * Date: 11/16/11
- * Time: 9:34 PM
- * To change this template use File | Settings | File Templates.
+ * Used internally to represent a plain old java object.
  */
 public class Pojo {
-
-    // todo column mappings
 
     private PojoMetadata metadata;
     private boolean caseSensitive;

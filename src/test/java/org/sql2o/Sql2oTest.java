@@ -671,6 +671,25 @@ public class Sql2oTest {
         assertThat(testEnum2, is(nullValue()));
     }
 
+    public void test(){
+        final String sql = "";
+
+        sql2o.runInTransaction(new StatementRunnable() {
+            public void run(Connection connection, Object argument) throws Throwable {
+                Query query = connection.createQuery(sql);
+
+                for (int i = 0; i < 100; i++){
+                    query.addParameter("id", i).addParameter("value", "foo" + i).addToBatch();
+                }
+
+                query.executeBatch();
+            }
+        });
+
+
+
+    }
+
 
     /************** Helper stuff ******************/
 

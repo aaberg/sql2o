@@ -6,11 +6,7 @@ import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 
 /**
- * Created by IntelliJ IDEA.
- * User: lars
- * Date: 11/15/11
- * Time: 8:41 PM
- * To change this template use File | Settings | File Templates.
+ * used internally to set property values via its setter method.
  */
 public class MethodSetter implements  Setter{
     

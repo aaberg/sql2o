@@ -14,11 +14,7 @@ import java.util.List;
 import java.util.Properties;
 
 /**
- * Created by IntelliJ IDEA.
- * User: lars
- * Date: 10/12/11
- * Time: 10:41 PM
- * To change this template use File | Settings | File Templates.
+ * Represents a connection to the database with a transaction.
  */
 public class Connection {
     
