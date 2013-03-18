@@ -27,6 +27,7 @@ public class Query {
     public Query(Connection connection, String queryText, String name, boolean returnGeneratedKeys) {
         this.connection = connection;
         this.name = name;
+        this.returnGeneratedKeys = returnGeneratedKeys;
 
         try{
             statement = new NamedParameterStatement(connection.getJdbcConnection(), queryText, returnGeneratedKeys);
@@ -51,6 +52,7 @@ public class Query {
     private boolean caseSensitive;
     
     private final String name;
+    private boolean returnGeneratedKeys;
 
     public Query addParameter(String name, Object value){
         try{
@@ -293,7 +295,7 @@ public class Query {
         long start = System.currentTimeMillis();
         try{
             this.connection.setResult(statement.executeUpdate());
-            this.connection.setKeys(statement.getStatement().getGeneratedKeys());
+            this.connection.setKeys(this.returnGeneratedKeys ? statement.getStatement().getGeneratedKeys() : null);
             connection.setCanGetKeys(true);
         }
         catch(SQLException ex){

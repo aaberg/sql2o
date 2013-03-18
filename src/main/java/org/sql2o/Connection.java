@@ -159,6 +159,7 @@ public class Connection {
 
     void setKeys(ResultSet rs) throws SQLException {
         if (rs == null){
+            this.keys = null;
             return;
         }
         this.keys = new ArrayList<Object>();
