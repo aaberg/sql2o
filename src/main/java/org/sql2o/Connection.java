@@ -169,7 +169,7 @@ public class Connection {
 
     public Object getKey(){
         if (!isCanGetKeys()){
-            throw new Sql2oException("Keys where not fetched from database. Please call executeUpdate(true) to fetch keys");
+            throw new Sql2oException("Keys where not fetched from database");
         }
         if (this.keys != null && this.keys.size() > 0){
             return  keys.get(0);
