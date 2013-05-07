@@ -289,12 +289,39 @@ public class Query {
         }
     }
 
+    /**
+     * Wraps the retrieval of generated keys so that we can special-case if needed
+     * @throws SQLException
+     */
+    protected void retrieveGeneratedKeys() throws SQLException {
+        try {
+
+            this.connection.setKeys( statement.getStatement().getGeneratedKeys() );
+            this.connection.setCanGetKeys(true);
+        } catch (SQLException e) {
+
+            // If using Oracle, this operation will fail with
+            // "java.sql.SQLException: operation not allowed"
+            // if it does not make sense to call getGeneratedKeys given
+            // the actual sql statement - we must wrap that exception
+            if ( QuirksMode.Oracle.equals( this.connection.getSql2o().quirksMode) ) {
+                if ( "operation not allowed".equals( e.getMessage() )) {
+                    // It did not make sense to call getGeneratedKeys() given the sql statement.
+                    // Just ignore the error.
+                    return ;
+                }
+            }
+
+            // Nothing special to handle - rethrow the exception
+            throw e;
+        }
+    }
+
     public Connection executeUpdate(){
         long start = System.currentTimeMillis();
         try{
             this.connection.setResult(statement.executeUpdate());
-            this.connection.setKeys(statement.getStatement().getGeneratedKeys());
-            connection.setCanGetKeys(true);
+            retrieveGeneratedKeys();
         }
         catch(SQLException ex){
             this.connection.onException();
