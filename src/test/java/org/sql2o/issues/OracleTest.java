@@ -6,6 +6,7 @@ import org.joda.time.LocalDate;
 import org.junit.Ignore;
 import org.junit.Test;
 import org.sql2o.Connection;
+import org.sql2o.Query;
 import org.sql2o.Sql2o;
 import org.sql2o.StatementRunnable;
 
@@ -73,4 +74,34 @@ public class OracleTest {
         String val = sql2o.createQuery(sql).executeScalar(String.class);
         assertEquals("test", val);
     }
+
+
+    // this test requires two objects in the oracle database.
+    // create sequence testseq;
+    // create table testtable(id integer primary key, val varchar2(30))
+//    @Test
+//    public void testForIssue13ProblemWithGetGeneratedKeys() {
+//
+//        Connection connection = null;
+//        try {
+//            connection = sql2o.beginTransaction();
+//
+//            Query q = connection.createQuery("create sequence fooseq", false);
+//            q.executeUpdate();
+//
+//            String insertSomethingSql = "insert into testtable (id, val) values(testseq.nextval, :val)";
+//            Long generatedKey = connection.createQuery(insertSomethingSql, true).addParameter("val", "foo").executeUpdate().getKey(Long.class);
+//
+//            Long fetchedKey = connection.createQuery("select id from test_tbl").executeScalar(Long.class);
+//
+//            assertEquals(generatedKey, fetchedKey);
+//        } finally {
+//            if (connection != null) {
+//                connection.rollback();
+//            }
+//
+//        }
+//
+//
+//    }
 }

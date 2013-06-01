@@ -48,11 +48,6 @@ public class PostgresTest {
             assertThat(resultRow.getLong("id"), equalTo(key));
             assertThat(resultRow.getString("val"), is("something"));
 
-            // When not setting the "returnGeneratedKeys" flag, the postgres driver is expected to return key value null,
-            // even though a key was generated. See https://github.com/aaberg/sql2o/issues/10 for more info.
-            Long newKey = (Long)sql2o.createQuery(insertSql).addParameter("val", "bla bla bla").executeUpdate().getKey(Long.class);
-            assertNull(newKey);
-
         } finally {
             String dropTableSql = "drop table if exists test_table";
             sql2o.createQuery(dropTableSql).executeUpdate();
@@ -84,10 +79,6 @@ public class PostgresTest {
             assertThat(resultRow.getLong("id"), equalTo(key));
             assertThat(resultRow.getString("val"), is("something"));
 
-            // When not setting the "returnGeneratedKeys" flag, the postgres driver is expected to return key value null,
-            // even though a key was generated. See https://github.com/aaberg/sql2o/issues/10 for more info.
-            Long newKey = (Long)connection.createQuery(insertSql).addParameter("val", "bla bla bla").executeUpdate().getKey(Long.class);
-            assertNull(newKey);
         } finally {
 
             // always rollback, as this is only for tesing purposes.
