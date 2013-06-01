@@ -6,6 +6,7 @@ database, the resultset will automatically be filled into you POJO objects. Kind
 p. Check out the "sql2o website(sql2o website)":http://www.sql2o.org for examples.
 
 h3. Enable oracle tests.
+
 p. To run the oracle database tests it is necessary to download the oracle jdbc driver manually, and register it with maven. Oracle
 does not have a public repository where maven can download the driver automatically.
 
