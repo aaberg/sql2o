@@ -45,6 +45,10 @@ public class Convert {
         registerConverter(java.sql.Time.class, utilDateConverter);
         registerConverter(java.sql.Timestamp.class, utilDateConverter);
 
+        BooleanConverter booleanConverter = new BooleanConverter();
+        registerConverter(Boolean.class, booleanConverter);
+        registerConverter(boolean.class, booleanConverter);
+
         try {
             Class jodaTimeClass = Class.forName("org.joda.time.DateTime");
             registerConverter(jodaTimeClass, new JodaTimeConverter());

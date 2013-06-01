@@ -671,23 +671,28 @@ public class Sql2oTest {
         assertThat(testEnum2, is(nullValue()));
     }
 
-    public void test(){
-        final String sql = "";
+    public static class BooleanPOJO {
+        public boolean val1;
+        public Boolean val2;
+    }
 
-        sql2o.runInTransaction(new StatementRunnable() {
-            public void run(Connection connection, Object argument) throws Throwable {
-                Query query = connection.createQuery(sql);
+    @Test
+    public void testBooleanConverter() {
+        String sql = "select true as val1, false as val2 from (values(0))";
 
-                for (int i = 0; i < 100; i++){
-                    query.addParameter("id", i).addParameter("value", "foo" + i).addToBatch();
-                }
+        BooleanPOJO pojo = sql2o.createQuery(sql).executeAndFetchFirst(BooleanPOJO.class);
+        assertTrue(pojo.val1);
+        assertFalse(pojo.val2);
 
-                query.executeBatch();
-            }
-        });
+        String sql2 = "select null as val1, null as val2 from (values(0))";
+        BooleanPOJO pojo2 = sql2o.createQuery(sql2).executeAndFetchFirst(BooleanPOJO.class);
+        assertFalse(pojo2.val1);
+        assertNull(pojo2.val2);
 
-
-
+        String sql3 = "select 'false' as val1, 'true' as val2 from (values(0))";
+        BooleanPOJO pojo3 = sql2o.createQuery(sql3).executeAndFetchFirst(BooleanPOJO.class);
+        assertFalse(pojo3.val1);
+        assertTrue(pojo3.val2);
     }
 
 
