@@ -5,13 +5,16 @@ import org.joda.time.DateTime;
 import org.joda.time.LocalDate;
 import org.junit.Ignore;
 import org.junit.Test;
+import org.sql2o.Connection;
 import org.sql2o.Sql2o;
+import org.sql2o.StatementRunnable;
 
 import java.sql.DriverManager;
 import java.sql.SQLException;
 import java.util.Date;
 
 import static org.hamcrest.CoreMatchers.*;
+import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertThat;
 
 /**
@@ -60,5 +63,14 @@ public class OracleTest {
 
         assertThat(new DateTime(dateVal).toLocalDate(), is(equalTo(new LocalDate())));
         assertThat(dateTimeVal.toLocalDate(), is(equalTo(new LocalDate())));
+    }
+
+
+    @Test
+    public void testForIssue12ErrorReadingClobValue() {
+        final String sql = "select to_clob('test') val from dual";
+
+        String val = sql2o.createQuery(sql).executeScalar(String.class);
+        assertEquals("test", val);
     }
 }
