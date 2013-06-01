@@ -99,4 +99,56 @@ public class PostgresTest {
 
     }
 
+    @Test
+    public void testGetKeyOnSequence(){
+        Connection connection = null;
+
+        try {
+            connection = sql2o.beginTransaction();
+
+            String createSequenceSql = "create sequence testseq";
+            connection.createQuery(createSequenceSql).executeUpdate();
+
+            String createTableSql = "create table test_seq_table (id integer primary key, val varchar(20))";
+            connection.createQuery(createTableSql).executeUpdate();
+
+            String insertSql = "insert into test_seq_table(id, val) values (nextval('testseq'), 'something')";
+            Long key = connection.createQuery(insertSql, true).executeUpdate().getKey(Long.class);
+
+            assertThat(key, equalTo(1L));
+
+            key = connection.createQuery(insertSql, true).executeUpdate().getKey(Long.class);
+            assertThat(key, equalTo(2L));
+        } finally {
+            if (connection != null) {
+                connection.rollback();
+            }
+        }
+    }
+
+    @Test
+    public void testKeyKeyOnSerial() {
+        Connection connection = null;
+
+        try {
+            connection = sql2o.beginTransaction();
+
+            String createTableSql = "create table test_serial_table (id serial primary key, val varchar(20))";
+            connection.createQuery(createTableSql).executeUpdate();
+
+            String insertSql = "insert into test_serial_table(val) values ('something')";
+            Long key = connection.createQuery(insertSql, true).executeUpdate().getKey(Long.class);
+
+            assertThat(key, equalTo(1L));
+
+            key = connection.createQuery(insertSql, true).executeUpdate().getKey(Long.class);
+            assertThat(key, equalTo(2L));
+        } finally {
+            if (connection != null) {
+                connection.rollback();
+            }
+        }
+    }
+
+
 }
