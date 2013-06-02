@@ -48,11 +48,6 @@ public class PostgresTest {
             assertThat(resultRow.getLong("id"), equalTo(key));
             assertThat(resultRow.getString("val"), is("something"));
 
-            // When not setting the "returnGeneratedKeys" flag, the postgres driver is expected to return key value null,
-            // even though a key was generated. See https://github.com/aaberg/sql2o/issues/10 for more info.
-            Long newKey = (Long)sql2o.createQuery(insertSql).addParameter("val", "bla bla bla").executeUpdate().getKey(Long.class);
-            assertNull(newKey);
-
         } finally {
             String dropTableSql = "drop table if exists test_table";
             sql2o.createQuery(dropTableSql).executeUpdate();
@@ -84,10 +79,6 @@ public class PostgresTest {
             assertThat(resultRow.getLong("id"), equalTo(key));
             assertThat(resultRow.getString("val"), is("something"));
 
-            // When not setting the "returnGeneratedKeys" flag, the postgres driver is expected to return key value null,
-            // even though a key was generated. See https://github.com/aaberg/sql2o/issues/10 for more info.
-            Long newKey = (Long)connection.createQuery(insertSql).addParameter("val", "bla bla bla").executeUpdate().getKey(Long.class);
-            assertNull(newKey);
         } finally {
 
             // always rollback, as this is only for tesing purposes.
@@ -98,5 +89,57 @@ public class PostgresTest {
 
 
     }
+
+    @Test
+    public void testGetKeyOnSequence(){
+        Connection connection = null;
+
+        try {
+            connection = sql2o.beginTransaction();
+
+            String createSequenceSql = "create sequence testseq";
+            connection.createQuery(createSequenceSql).executeUpdate();
+
+            String createTableSql = "create table test_seq_table (id integer primary key, val varchar(20))";
+            connection.createQuery(createTableSql).executeUpdate();
+
+            String insertSql = "insert into test_seq_table(id, val) values (nextval('testseq'), 'something')";
+            Long key = connection.createQuery(insertSql, true).executeUpdate().getKey(Long.class);
+
+            assertThat(key, equalTo(1L));
+
+            key = connection.createQuery(insertSql, true).executeUpdate().getKey(Long.class);
+            assertThat(key, equalTo(2L));
+        } finally {
+            if (connection != null) {
+                connection.rollback();
+            }
+        }
+    }
+
+    @Test
+    public void testKeyKeyOnSerial() {
+        Connection connection = null;
+
+        try {
+            connection = sql2o.beginTransaction();
+
+            String createTableSql = "create table test_serial_table (id serial primary key, val varchar(20))";
+            connection.createQuery(createTableSql).executeUpdate();
+
+            String insertSql = "insert into test_serial_table(val) values ('something')";
+            Long key = connection.createQuery(insertSql, true).executeUpdate().getKey(Long.class);
+
+            assertThat(key, equalTo(1L));
+
+            key = connection.createQuery(insertSql, true).executeUpdate().getKey(Long.class);
+            assertThat(key, equalTo(2L));
+        } finally {
+            if (connection != null) {
+                connection.rollback();
+            }
+        }
+    }
+
 
 }

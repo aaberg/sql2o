@@ -294,9 +294,10 @@ public class Query {
     public Connection executeUpdate(){
         long start = System.currentTimeMillis();
         try{
+
             this.connection.setResult(statement.executeUpdate());
             this.connection.setKeys(this.returnGeneratedKeys ? statement.getStatement().getGeneratedKeys() : null);
-            connection.setCanGetKeys(true);
+            connection.setCanGetKeys(this.returnGeneratedKeys);
         }
         catch(SQLException ex){
             this.connection.onException();
