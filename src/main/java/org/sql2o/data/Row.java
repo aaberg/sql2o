@@ -134,11 +134,19 @@ public class Row {
     }
     
     public String getString(int columnIndex){
-        return new StringConverter().convert(getObject(columnIndex));
+        try {
+            return new StringConverter().convert(getObject(columnIndex));
+        } catch (ConverterException e) {
+            throw new Sql2oException("Could not convert column with index " + columnIndex + " to " + String.class.getName());
+        }
     }
     
     public String getString(String columnName){
-        return new StringConverter().convert(getObject(columnName));
+        try {
+            return new StringConverter().convert(getObject(columnName));
+        } catch (ConverterException e) {
+            throw new Sql2oException("Could not convert column with name " + columnName+ " to " + String.class.getName());
+        }
     }
 
 }
