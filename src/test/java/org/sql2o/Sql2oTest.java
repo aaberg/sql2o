@@ -671,6 +671,18 @@ public class Sql2oTest {
         assertThat(testEnum2, is(nullValue()));
     }
 
+    @Test
+    public void testRunMultipleOnOneQuery(){
+        Query query = sql2o.createQuery("select 1 from (values (1))");
+
+        int i = query.executeScalar(Integer.class);
+        int j = query.executeScalar(Integer.class);
+
+        assertThat(i, is(equalTo(j)));
+        assertThat(i, is(equalTo(1)));
+
+    }
+
     public static class BooleanPOJO {
         public boolean val1;
         public Boolean val2;

@@ -22,6 +22,6 @@ public class StringConverter implements Converter<String>{
             }
         }
 
-        return val.toString();
+        return val.toString().trim();
     }
 }

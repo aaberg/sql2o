@@ -54,7 +54,11 @@ public class NamedParameterStatement {
     public NamedParameterStatement(Connection connection, String query, boolean returnGeneratedKeys) throws SQLException {
         indexMap=new HashMap();
         String parsedQuery=parse(query, indexMap);
-        statement=connection.prepareStatement(parsedQuery, returnGeneratedKeys ? Statement.RETURN_GENERATED_KEYS : Statement.NO_GENERATED_KEYS);
+        if (returnGeneratedKeys) {
+            statement = connection.prepareStatement(parsedQuery, Statement.RETURN_GENERATED_KEYS);
+        } else {
+            statement = connection.prepareStatement(parsedQuery);
+        }
     }
 
 
