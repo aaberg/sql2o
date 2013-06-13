@@ -1,6 +1,5 @@
 package org.sql2o;
 
-import junit.framework.TestCase;
 import org.hsqldb.jdbcDriver;
 import org.joda.time.DateTime;
 import org.junit.Test;
@@ -9,15 +8,18 @@ import org.junit.runners.Parameterized;
 import org.sql2o.data.Row;
 import org.sql2o.data.Table;
 import org.sql2o.pojos.*;
+import org.sql2o.tools.IOUtils;
 
+import java.io.IOException;
+import java.io.InputStream;
 import java.math.BigDecimal;
 import java.sql.Driver;
 import java.sql.DriverManager;
 import java.sql.SQLException;
 import java.util.*;
 
-import static org.junit.Assert.*;
 import static org.hamcrest.CoreMatchers.*;
+import static org.junit.Assert.*;
 
 /**
  * Created by IntelliJ IDEA.
@@ -671,18 +673,6 @@ public class Sql2oTest {
         assertThat(testEnum2, is(nullValue()));
     }
 
-    @Test
-    public void testRunMultipleOnOneQuery(){
-        Query query = sql2o.createQuery("select 1 from (values (1))");
-
-        int i = query.executeScalar(Integer.class);
-        int j = query.executeScalar(Integer.class);
-
-        assertThat(i, is(equalTo(j)));
-        assertThat(i, is(equalTo(1)));
-
-    }
-
     public static class BooleanPOJO {
         public boolean val1;
         public Boolean val2;
@@ -707,6 +697,38 @@ public class Sql2oTest {
         assertTrue(pojo3.val2);
     }
 
+    public static class BlobPOJO1{
+        public int id;
+        public byte[] data;
+    }
+
+    public static class BlobPOJO2{
+        public int id;
+        public InputStream data;
+    }
+
+    @Test
+    public void testBlob() throws IOException {
+        String createSql = "create table blobtbl(id int identity primary key, data blob)";
+        sql2o.createQuery(createSql).executeUpdate();
+
+        String dataString = "test";
+        byte[] data = dataString.getBytes();
+        String insertSql = "insert into blobtbl(data) values(:data)";
+        sql2o.createQuery(insertSql).addParameter("data", data).executeUpdate();
+
+        // select
+        String sql = "select id, data from blobtbl";
+        BlobPOJO1 pojo1 = sql2o.createQuery(sql).executeAndFetchFirst(BlobPOJO1.class);
+        BlobPOJO2 pojo2 = sql2o.createQuery(sql).executeAndFetchFirst(BlobPOJO2.class);
+
+        String pojo1DataString = new String(pojo1.data);
+        assertThat(dataString, is(equalTo(pojo1DataString)));
+
+        byte[] pojo2Data = IOUtils.toByteArray(pojo2.data);
+        String pojo2DataString = new String(pojo2Data);
+        assertThat(dataString, is(equalTo(pojo2DataString)));
+    }
 
     /************** Helper stuff ******************/
 

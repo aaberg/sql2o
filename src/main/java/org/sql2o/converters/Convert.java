@@ -3,6 +3,8 @@ package org.sql2o.converters;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.io.ByteArrayInputStream;
+import java.io.InputStream;
 import java.math.BigDecimal;
 import java.util.HashMap;
 import java.util.Map;
@@ -55,6 +57,14 @@ public class Convert {
         } catch (ClassNotFoundException e) {
             logger.warn("Failed to initialize Jodatime. Jodatime converter not registered");
         }
+
+        ByteArrayConverter byteArrayConverter = new ByteArrayConverter();
+        registerConverter(Byte[].class, byteArrayConverter);
+        registerConverter(byte[].class, byteArrayConverter);
+
+        InputStreamConverter inputStreamConverter = new InputStreamConverter();
+        registerConverter(InputStream.class, inputStreamConverter);
+        registerConverter(ByteArrayInputStream.class, inputStreamConverter);
     }
     
     public static Converter getConverter(Class clazz) throws ConverterException {
@@ -63,7 +73,7 @@ public class Convert {
         } else if (clazz.isEnum()) {
             return new EnumConverter(clazz);
         } else{
-            throw new ConverterException("No converter registered for class: " + clazz.toString());
+            throw new ConverterException("No converter registered for class: " + clazz.getName());
         }
 
     }
