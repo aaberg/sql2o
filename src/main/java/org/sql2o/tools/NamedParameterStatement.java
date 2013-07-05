@@ -1,5 +1,6 @@
 package org.sql2o.tools;
 
+import java.io.InputStream;
 import java.sql.*;
 import java.util.HashMap;
 import java.util.Iterator;
@@ -168,6 +169,21 @@ public class NamedParameterStatement {
         int[] indexes=getIndexes(name);
         for (int i = 0; i < indexes.length; i++){
             statement.setNull(indexes[i], sqlType);
+        }
+    }
+
+    /**
+     * Sets a parameter.
+     * @param name  parameter name
+     * @param value parameter value
+     * @throws SQLException if an error occurred
+     * @throws IllegalArgumentException if the parameter does not exist
+     * @see PreparedStatement#setBinaryStream(int, java.io.InputStream inputStream)
+     */
+    public void setInputStream( String name, InputStream value ) throws SQLException {
+        int[] indexes=getIndexes(name);
+        for (int i = 0; i < indexes.length; i++){
+            statement.setBinaryStream( indexes[i], value );
         }
     }
 
