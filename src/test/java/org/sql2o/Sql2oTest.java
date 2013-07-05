@@ -710,16 +710,16 @@ public class Sql2oTest {
 
     @Test
     public void testBlob() throws IOException {
-        String createSql = "create table blobtbl(id int identity primary key, data blob)";
+        String createSql = "create table blobtbl2(id int identity primary key, data blob)";
         sql2o.createQuery(createSql).executeUpdate();
 
         String dataString = "test";
         byte[] data = dataString.getBytes();
-        String insertSql = "insert into blobtbl(data) values(:data)";
+        String insertSql = "insert into blobtbl2(data) values(:data)";
         sql2o.createQuery(insertSql).addParameter("data", data).executeUpdate();
 
         // select
-        String sql = "select id, data from blobtbl";
+        String sql = "select id, data from blobtbl2";
         BlobPOJO1 pojo1 = sql2o.createQuery(sql).executeAndFetchFirst(BlobPOJO1.class);
         BlobPOJO2 pojo2 = sql2o.createQuery(sql).executeAndFetchFirst(BlobPOJO2.class);
 
