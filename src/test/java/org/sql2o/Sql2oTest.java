@@ -10,6 +10,7 @@ import org.sql2o.data.Table;
 import org.sql2o.pojos.*;
 import org.sql2o.tools.IOUtils;
 
+import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.math.BigDecimal;
@@ -716,6 +717,32 @@ public class Sql2oTest {
         byte[] data = dataString.getBytes();
         String insertSql = "insert into blobtbl(data) values(:data)";
         sql2o.createQuery(insertSql).addParameter("data", data).executeUpdate();
+
+        // select
+        String sql = "select id, data from blobtbl";
+        BlobPOJO1 pojo1 = sql2o.createQuery(sql).executeAndFetchFirst(BlobPOJO1.class);
+        BlobPOJO2 pojo2 = sql2o.createQuery(sql).executeAndFetchFirst(BlobPOJO2.class);
+
+        String pojo1DataString = new String(pojo1.data);
+        assertThat(dataString, is(equalTo(pojo1DataString)));
+
+        byte[] pojo2Data = IOUtils.toByteArray(pojo2.data);
+        String pojo2DataString = new String(pojo2Data);
+        assertThat(dataString, is(equalTo(pojo2DataString)));
+    }
+
+    @Test
+    public void testInputStream() throws IOException {
+        String createSql = "create table blobtbl(id int identity primary key, data blob)";
+        sql2o.createQuery(createSql).executeUpdate();
+
+        String dataString = "test";
+        byte[] data = dataString.getBytes();
+
+        InputStream inputStream = new ByteArrayInputStream( data );
+
+        String insertSql = "insert into blobtbl(data) values(:data)";
+        sql2o.createQuery(insertSql).addParameter("data", inputStream).executeUpdate();
 
         // select
         String sql = "select id, data from blobtbl";
