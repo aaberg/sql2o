@@ -8,6 +8,7 @@ import java.io.InputStream;
 import java.math.BigDecimal;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.UUID;
 
 /**
  * Static class used to register new converters. Also used internally by sql2o to lookup a converter.
@@ -65,6 +66,9 @@ public class Convert {
         InputStreamConverter inputStreamConverter = new InputStreamConverter();
         registerConverter(InputStream.class, inputStreamConverter);
         registerConverter(ByteArrayInputStream.class, inputStreamConverter);
+
+        registerConverter(UUID.class, new UUIDConverter());
+
     }
     
     public static Converter getConverter(Class clazz) throws ConverterException {
