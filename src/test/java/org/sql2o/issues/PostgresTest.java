@@ -7,6 +7,8 @@ import org.sql2o.Sql2o;
 import org.sql2o.data.Row;
 import org.sql2o.data.Table;
 
+import java.util.UUID;
+
 import static org.hamcrest.CoreMatchers.equalTo;
 import static org.hamcrest.CoreMatchers.is;
 import static org.junit.Assert.*;
@@ -140,6 +142,36 @@ public class PostgresTest {
             }
         }
     }
+
+    @Test
+    public void testUUID() {
+
+        Connection connection = null;
+
+        try {
+            connection = sql2o.beginTransaction();
+
+            String createSql = "create table uuidtable(id serial primary key, data uuid)";
+            connection.createQuery(createSql).executeUpdate();
+
+            UUID uuid = UUID.randomUUID();
+
+            String insertSql = "insert into uuidtable(data) values (:data)";
+            connection.createQuery(insertSql).addParameter("data", uuid).executeUpdate();
+
+            String selectSql = "select data from uuidtable";
+
+            UUID fetchedUuid = connection.createQuery(selectSql).executeScalar(UUID.class);
+
+            assertThat(fetchedUuid, is(equalTo(uuid)));
+        } finally {
+            if (connection != null) {
+                connection.rollback();
+            }
+        }
+
+    }
+
 
 
 }
