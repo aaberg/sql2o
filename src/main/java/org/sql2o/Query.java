@@ -13,6 +13,7 @@ import org.sql2o.reflection.PojoMetadata;
 import org.sql2o.tools.NamedParameterStatement;
 
 import java.io.InputStream;
+import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.sql.*;
 import java.sql.Date;
@@ -199,6 +200,44 @@ public class Query {
     public Query addParameter(String name, Enum value) {
         String strVal = value == null ? null : value.toString();
         return addParameter(name, strVal);
+    }
+    
+    public Query bind(Object bean){
+        Class clazz = bean.getClass();
+        Method[] methods = clazz.getDeclaredMethods();
+        for(Method method : methods){
+            try{
+                method.setAccessible(true);
+                String methodName = method.getName();
+                /*
+                It looks in the class for all the methods that start with get
+                */
+                if(methodName.startsWith("get") && method.getParameterTypes().length == 0){
+                    String param = methodName.substring(3);//remove the get prefix
+                    param = param.substring(0, 1).toLowerCase() + param.substring(1);//set the first letter in Lowercase => so getItem produces item
+                    Object res = method.invoke(bean);
+                    if( res!= null){
+                        try {
+                            Method addParam = this.getClass().getDeclaredMethod("addParameter", param.getClass(), method.getReturnType());
+                            addParam.invoke(this, param, res);
+                        } catch (NoSuchMethodException ex) {
+                            logger.debug("Using addParameter(String, Object)", ex);
+                            addParameter(param, res);
+                        }
+                    }else
+                        addParameter(param, res);
+                }
+            }catch(IllegalArgumentException ex){
+                logger.debug("Ignoring Illegal Arguments", ex);
+            }catch(IllegalAccessException ex){
+                throw new RuntimeException(ex);
+            } catch (SecurityException ex) {
+                throw new RuntimeException(ex);
+            } catch (InvocationTargetException ex) {
+                throw new RuntimeException(ex);
+            }
+        }
+        return this;
     }
 
     public boolean isCaseSensitive() {

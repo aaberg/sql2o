@@ -756,6 +756,59 @@ public class Sql2oTest {
         String pojo2DataString = new String(pojo2Data);
         assertThat(dataString, is(equalTo(pojo2DataString)));
     }
+    
+    public static class BindablePojo{
+        private String data1;
+        private String data2;
+        private Long data3;
+        public String getData1() {
+            return data1;
+        }
+        public String getData2() {
+            return data2;
+        }
+        public Long getData3() {
+            return data3;
+        }
+        public void setData1(String data1) {
+            this.data1 = data1;
+        }
+        public void setData2(String data2) {
+            this.data2 = data2;
+        }
+        public void setData3(Long data3) {
+            this.data3 = data3;
+        }
+        @Override
+        public boolean equals(Object obj) {
+            if((obj != null) && (obj instanceof BindablePojo)){
+                BindablePojo other = (BindablePojo)obj;
+                boolean res = data1.equals(other.data1) && data2.equals(other.data2) && data3.equals(other.data3);
+                return res;
+            }else
+                return false;
+        }
+        
+    }
+    
+    @Test
+    public void testBindPojo(){
+        String createSql = "create table bindtbl(id int identity primary key, data1 varchar(10), data2 varchar(10), data3 bigint)";
+        sql2o.createQuery(createSql).executeUpdate();
+        
+        BindablePojo pojo1 = new BindablePojo();
+        pojo1.setData1("Foo");
+        pojo1.setData2("Bar");
+        pojo1.setData3(789456123L);
+        
+        String insertSql = "insert into bindtbl(data1, data2, data3) values(:data1, :data2, :data3)";
+        sql2o.createQuery(insertSql).bind(pojo1).executeUpdate();
+        
+        String selectSql = "select data1, data2, data3 from bindtbl";
+        BindablePojo pojo2 = sql2o.createQuery(selectSql).executeAndFetchFirst(BindablePojo.class);
+        
+        assertEquals(pojo1, pojo2);
+    }
 
     /************** Helper stuff ******************/
 
