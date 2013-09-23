@@ -17,6 +17,7 @@ import java.math.BigDecimal;
 import java.sql.Driver;
 import java.sql.DriverManager;
 import java.sql.SQLException;
+import java.sql.Timestamp;
 import java.util.*;
 
 import static org.hamcrest.CoreMatchers.*;
@@ -759,12 +760,12 @@ public class Sql2oTest {
     
     public static class BindablePojo{
         private String data1;
-        private String data2;
+        private Timestamp data2;
         private Long data3;
         public String getData1() {
             return data1;
         }
-        public String getData2() {
+        public Timestamp getData2() {
             return data2;
         }
         public Long getData3() {
@@ -773,7 +774,7 @@ public class Sql2oTest {
         public void setData1(String data1) {
             this.data1 = data1;
         }
-        public void setData2(String data2) {
+        public void setData2(Timestamp data2) {
             this.data2 = data2;
         }
         public void setData3(Long data3) {
@@ -783,6 +784,9 @@ public class Sql2oTest {
         public boolean equals(Object obj) {
             if((obj != null) && (obj instanceof BindablePojo)){
                 BindablePojo other = (BindablePojo)obj;
+                /*System.out.println(data1 + " == " + other.data1);
+                System.out.println(data2 + " == " + other.data2);
+                System.out.println(data3 + " == " + other.data3);*/
                 boolean res = data1.equals(other.data1) && data2.equals(other.data2) && data3.equals(other.data3);
                 return res;
             }else
@@ -793,12 +797,12 @@ public class Sql2oTest {
     
     @Test
     public void testBindPojo(){
-        String createSql = "create table bindtbl(id int identity primary key, data1 varchar(10), data2 varchar(10), data3 bigint)";
+        String createSql = "create table bindtbl(id int identity primary key, data1 varchar(10), data2 timestamp, data3 bigint)";
         sql2o.createQuery(createSql).executeUpdate();
         
         BindablePojo pojo1 = new BindablePojo();
         pojo1.setData1("Foo");
-        pojo1.setData2("Bar");
+        pojo1.setData2(new Timestamp(new Date().getTime()));
         pojo1.setData3(789456123L);
         
         String insertSql = "insert into bindtbl(data1, data2, data3) values(:data1, :data2, :data3)";
@@ -807,7 +811,7 @@ public class Sql2oTest {
         String selectSql = "select data1, data2, data3 from bindtbl";
         BindablePojo pojo2 = sql2o.createQuery(selectSql).executeAndFetchFirst(BindablePojo.class);
         
-        assertEquals(pojo1, pojo2);
+        assertTrue(pojo1.equals(pojo2));
     }
 
     /************** Helper stuff ******************/
