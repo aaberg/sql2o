@@ -1,6 +1,7 @@
 package org.sql2o;
 
 import org.hsqldb.jdbcDriver;
+import org.hsqldb.jdbc.JDBCDataSource;
 import org.joda.time.DateTime;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -19,6 +20,9 @@ import java.sql.DriverManager;
 import java.sql.SQLException;
 import java.sql.Timestamp;
 import java.util.*;
+
+import javax.naming.Context;
+import javax.naming.InitialContext;
 
 import static org.hamcrest.CoreMatchers.*;
 import static org.junit.Assert.*;
@@ -80,6 +84,30 @@ public class Sql2oTest {
 
     private int insertIntoUsers = 0;
 
+    @Test
+    public void testCreateSql2oFromJndi() throws Exception {
+        System.setProperty(Context.INITIAL_CONTEXT_FACTORY, "org.apache.naming.java.javaURLContextFactory");
+        System.setProperty(Context.URL_PKG_PREFIXES, "org.apache.naming");
+
+        InitialContext ic = new InitialContext();
+
+        ic.createSubcontext("java:");
+        ic.createSubcontext("java:comp");
+        ic.createSubcontext("java:comp/env");
+
+        JDBCDataSource datasource = new JDBCDataSource();
+        datasource.setUrl(url);
+        datasource.setUser(user);
+        datasource.setPassword(pass);
+
+        ic.bind("java:comp/env/Sql2o", datasource);
+
+        System.out.println("Datasource initialized.");
+
+        Sql2o jndiSql2o = new Sql2o("Sql2o");
+
+        assertTrue(jndiSql2o != null);
+    }
 
     @Test
     public void testExecuteAndFetch(){

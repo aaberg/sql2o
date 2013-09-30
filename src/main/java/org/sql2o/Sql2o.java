@@ -1,7 +1,10 @@
 package org.sql2o;
 
-    import javax.sql.DataSource;
-    import java.sql.SQLException;
+import javax.naming.Context;
+import javax.naming.InitialContext;
+import javax.naming.NamingException;
+import javax.sql.DataSource;
+import java.sql.SQLException;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -21,6 +24,35 @@ import java.util.Map;
  */
 
 public class Sql2o {
+
+    public Sql2o(String jndiLookup) {
+        this(_getJndiDatasource(jndiLookup));
+    }
+
+    private static DataSource _getJndiDatasource(String jndiLookup) {
+        Context ctx = null;
+        DataSource datasource = null;
+
+        try {
+            InitialContext context = new InitialContext();
+            datasource = (DataSource) context.lookup(jndiLookup);
+        }
+        catch (NamingException e) {
+            throw new RuntimeException(e);
+        }
+        finally {
+            if (ctx != null) {
+                try {
+                    ctx.close();
+                }
+                catch (NamingException e) {
+                    throw new RuntimeException(e);
+                }
+            }
+        }
+
+        return datasource;
+    }
 
     /**
      * Creates a new instance of the Sql2o class. Internally this constructor will create a {@link GenericDatasource},
