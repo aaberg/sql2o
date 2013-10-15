@@ -93,7 +93,7 @@ public class Connection {
             this.getJdbcConnection().rollback();
         }
         catch (SQLException e) {
-            logger.warn("Could not role back transaction. message: {}", e.getMessage());
+            logger.warn("Could not roll back transaction. message: {}", e);
         }
         finally {
             try {
@@ -102,7 +102,7 @@ public class Connection {
                 }
             }
             catch (SQLException e) {
-                e.printStackTrace();
+                logger.warn("Could not close connection. message: {}", e);
             }
         }
         return this.getSql2o();
