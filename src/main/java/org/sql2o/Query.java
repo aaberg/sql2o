@@ -477,7 +477,7 @@ public class Query {
         }
     }
     
-    public void setColumnMappings(Map<String, String> mappings){
+    public Query setColumnMappings(Map<String, String> mappings){
 
         this.caseSensitiveColumnMappings = new HashMap<String, String>();
         this.columnMappings = new HashMap<String, String>();
@@ -486,6 +486,8 @@ public class Query {
             this.caseSensitiveColumnMappings.put(entry.getKey(), entry.getValue());
             this.columnMappings.put(entry.getKey().toLowerCase(), entry.getValue().toLowerCase());
         }
+        
+        return this;
     }
 
     public Query addColumnMapping(String columnName, String propertyName){
