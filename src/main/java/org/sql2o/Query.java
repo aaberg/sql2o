@@ -477,7 +477,7 @@ public class Query {
         }
     }
     
-    void setColumnMappings(Map<String, String> mappings){
+    public void setColumnMappings(Map<String, String> mappings){
 
         this.caseSensitiveColumnMappings = new HashMap<String, String>();
         this.columnMappings = new HashMap<String, String>();
