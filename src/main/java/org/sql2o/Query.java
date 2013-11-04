@@ -16,6 +16,7 @@ import java.util.List;
 import java.util.Map;
 
 import org.codehaus.jackson.JsonNode;
+import org.codehaus.jackson.map.ObjectMapper;
 import org.joda.time.DateTime;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -202,9 +203,18 @@ public class Query {
     }
 
     public Query addParameter(String name, JsonNode value) {
-    	String stringValue = value.getValueAsText();
-    	if(stringValue != null && stringValue.trim().length() == 0) stringValue="{}";
-    	return addParameter(name, (Object)stringValue);
+    	try
+    	{
+    		ObjectMapper mapper = new ObjectMapper();
+    		JsonNode node = mapper.valueToTree(value);    	
+    		String stringValue = mapper.writeValueAsString(node);
+    		if(stringValue == null || stringValue.trim().length() == 0) stringValue="{}";
+    		return addParameter(name, (Object)stringValue);
+    	}
+    	catch(Exception e)
+    	{
+    		return addParameter(name, (Object)null);
+    	}
     }
     public Query addParameter(String name, DateTime value){
         java.util.Date dtVal = value == null ? null : value.toDate();
