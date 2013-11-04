@@ -205,9 +205,7 @@ public class Query {
     public Query addParameter(String name, JsonNode value) {
     	try
     	{
-    		ObjectMapper mapper = new ObjectMapper();
-    		JsonNode node = mapper.valueToTree(value);    	
-    		String stringValue = mapper.writeValueAsString(node);
+    		String stringValue = new ObjectMapper().writeValueAsString(value);
     		if(stringValue == null || stringValue.trim().length() == 0) stringValue="{}";
     		return addParameter(name, (Object)stringValue);
     	}
