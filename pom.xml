@@ -43,7 +43,7 @@
 			<artifactId>postgresql</artifactId>
 			<version>9.1-901.jdbc4</version>
 		</dependency>
-        
+
         <!-- test dependencies -->
         <dependency>
             <scope>test</scope>
