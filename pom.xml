@@ -31,6 +31,12 @@
         	<artifactId>slf4j-api</artifactId>
         	<version>1.6.4</version>
         </dependency>
+
+		<dependency>
+			<groupId>com.google.guava</groupId>
+			<artifactId>guava</artifactId>
+			<version>10.0.1</version>
+		</dependency>
         
         <!-- test dependencies -->
         <dependency>
