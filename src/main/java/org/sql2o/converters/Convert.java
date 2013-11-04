@@ -53,7 +53,7 @@ public class Convert {
         registerConverter(boolean.class, booleanConverter);
 
         try {
-            Class<?> jodaTimeClass = Class.forName("org.joda.time.DateTime");
+            Class jodaTimeClass = Class.forName("org.joda.time.DateTime");
             registerConverter(jodaTimeClass, new JodaTimeConverter());
         } catch (ClassNotFoundException e) {
             logger.warn("Failed to initialize Jodatime. Jodatime converter not registered");
@@ -69,15 +69,6 @@ public class Convert {
 
         registerConverter(UUID.class, new UUIDConverter());
 
-        try
-        {
-        	Class<?> jsonNodeClass = Class.forName("org.codehaus.jackson.JsonNode");
-        	registerConverter(jsonNodeClass, new JsonNodeConverter());
-        }
-        catch(ClassNotFoundException e)
-        {
-        	logger.warn("Failed to initialize JsonNode. JsonNode converter not register");
-        }
     }
     
     public static Converter getConverter(Class clazz) throws ConverterException {
