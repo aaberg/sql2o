@@ -1,11 +1,11 @@
 package org.sql2o.reflection;
 
-import org.sql2o.Sql2oException;
-
 import java.lang.reflect.Field;
 import java.lang.reflect.Method;
 import java.util.HashMap;
 import java.util.Map;
+
+import org.sql2o.Sql2oException;
 
 /**
  * Stores metadata for a POJO.

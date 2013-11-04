@@ -26,12 +26,24 @@
             <version>1.6.2</version>
         </dependency>
 
+		<dependency>
+			<groupId>org.jboss.resteasy</groupId>
+			<artifactId>resteasy-jackson-provider</artifactId>
+			<version>2.3.2.Final</version>
+		</dependency>
+		
         <dependency>
         	<groupId>org.slf4j</groupId>
         	<artifactId>slf4j-api</artifactId>
         	<version>1.6.4</version>
         </dependency>
         
+		<dependency>
+			<groupId>postgresql</groupId>
+			<artifactId>postgresql</artifactId>
+			<version>9.1-901.jdbc4</version>
+		</dependency>
+
         <!-- test dependencies -->
         <dependency>
             <scope>test</scope>
@@ -56,13 +68,6 @@
 
         <dependency>
             <scope>test</scope>
-            <groupId>postgresql</groupId>
-            <artifactId>postgresql</artifactId>
-            <version>9.1-901.jdbc4</version>
-        </dependency>
-
-        <dependency>
-            <scope>test</scope>
         	<groupId>org.slf4j</groupId>
         	<artifactId>slf4j-simple</artifactId>
         	<version>1.6.4</version>
@@ -71,8 +76,8 @@
         <dependency>
             <scope>test</scope>
             <groupId>com.oracle</groupId>
-            <artifactId>ojdbc6</artifactId>
-            <version>11.2.0.3</version>
+			<artifactId>ojdbc6_g</artifactId>
+			<version>11.2.0.2.0</version>
         </dependency>
 
     </dependencies>
