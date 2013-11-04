@@ -25,13 +25,25 @@
             <artifactId>joda-time</artifactId>
             <version>1.6.2</version>
         </dependency>
-
+		
+		<dependency>
+			<groupId>org.jboss.resteasy</groupId>
+			<artifactId>resteasy-jackson-provider</artifactId>
+			<version>2.3.2.Final</version>
+		</dependency>
+		
         <dependency>
         	<groupId>org.slf4j</groupId>
         	<artifactId>slf4j-api</artifactId>
         	<version>1.6.4</version>
         </dependency>
-        
+
+		<dependency>
+			<groupId>postgresql</groupId>
+			<artifactId>postgresql</artifactId>
+			<version>9.1-901.jdbc4</version>
+		</dependency>
+		        
         <!-- test dependencies -->
         <dependency>
             <scope>test</scope>
@@ -52,13 +64,6 @@
             <groupId>org.hsqldb</groupId>
             <artifactId>hsqldb</artifactId>
             <version>2.2.8</version>
-        </dependency>
-
-        <dependency>
-            <scope>test</scope>
-            <groupId>postgresql</groupId>
-            <artifactId>postgresql</artifactId>
-            <version>9.1-901.jdbc4</version>
         </dependency>
 
         <dependency>
