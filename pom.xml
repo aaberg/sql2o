@@ -69,10 +69,10 @@
         </dependency>
 
         <dependency>
-            <scope>test</scope>
-            <groupId>com.oracle</groupId>
-            <artifactId>ojdbc6</artifactId>
-            <version>11.2.0.3</version>
+			<scope>test</scope>
+			<groupId>com.oracle</groupId>
+			<artifactId>ojdbc6_g</artifactId>
+			<version>11.2.0.2.0</version>
         </dependency>
 
     </dependencies>
