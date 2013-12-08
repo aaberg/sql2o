@@ -290,7 +290,7 @@ public class Query {
             rs.close();
             long afterClose = System.currentTimeMillis();
 
-            logger.info("total: {} ms, execution: {} ms, reading and parsing: {} ms; executed [{}]", new Object[]{
+            logger.debug("total: {} ms, execution: {} ms, reading and parsing: {} ms; executed [{}]", new Object[]{
                     afterClose - start, 
                     afterExecQuery-start, 
                     afterClose - afterExecQuery, 
@@ -326,7 +326,7 @@ public class Query {
             Table table = TableFactory.createTable(rs, this.isCaseSensitive(), this.connection.getSql2o().quirksMode);
             long afterClose = System.currentTimeMillis();
             
-            logger.info("total: {} ms, execution: {} ms, reading and parsing: {} ms; executed fetch table [{}]", new Object[]{
+            logger.debug("total: {} ms, execution: {} ms, reading and parsing: {} ms; executed fetch table [{}]", new Object[]{
                 afterClose - start, 
                 afterExecute-start, 
                 afterClose - afterExecute, 
@@ -358,7 +358,7 @@ public class Query {
         }
 
         long end = System.currentTimeMillis();
-        logger.info("total: {} ms; executed update [{}]", new Object[]{
+        logger.debug("total: {} ms; executed update [{}]", new Object[]{
             end - start, 
             this.getName() == null ? "No name" : this.getName()
         });
@@ -373,7 +373,7 @@ public class Query {
             if (rs.next()){
                 Object o = getRSVal(rs, 1);
                 long end = System.currentTimeMillis();
-                logger.info("total: {} ms; executed scalar [{}]", new Object[]{
+                logger.debug("total: {} ms; executed scalar [{}]", new Object[]{
                     end - start, 
                     this.getName() == null ? "No name" : this.getName()
                 });
@@ -416,7 +416,7 @@ public class Query {
             }
 
             long end = System.currentTimeMillis();
-            logger.info("total: {} ms; executed scalar list [{}]", new Object[]{
+            logger.debug("total: {} ms; executed scalar list [{}]", new Object[]{
                 end - start,
                 this.getName() == null ? "No name" : this.getName()
             });
@@ -458,7 +458,7 @@ public class Query {
         }
 
         long end = System.currentTimeMillis();
-        logger.info("total: {} ms; executed batch [{}]", new Object[]{
+        logger.debug("total: {} ms; executed batch [{}]", new Object[]{
             end - start,
             this.getName() == null ? "No name" : this.getName()
         });
