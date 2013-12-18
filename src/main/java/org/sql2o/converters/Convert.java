@@ -54,7 +54,9 @@ public class Convert {
 
         try {
             Class jodaTimeClass = Class.forName("org.joda.time.DateTime");
+            Class jodaTimeLocalTimeClass = Class.forName("org.joda.time.LocalTime");
             registerConverter(jodaTimeClass, new JodaTimeConverter());
+            registerConverter(jodaTimeLocalTimeClass, new LocalTimeConverter());
         } catch (ClassNotFoundException e) {
             logger.warn("Failed to initialize Jodatime. Jodatime converter not registered");
         }

@@ -3,6 +3,7 @@ package org.sql2o;
 import org.hsqldb.jdbcDriver;
 import org.hsqldb.jdbc.JDBCDataSource;
 import org.joda.time.DateTime;
+import org.joda.time.LocalTime;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.Parameterized;
@@ -15,11 +16,9 @@ import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.math.BigDecimal;
-import java.sql.Driver;
-import java.sql.DriverManager;
-import java.sql.SQLException;
-import java.sql.Timestamp;
+import java.sql.*;
 import java.util.*;
+import java.util.Date;
 
 import javax.naming.Context;
 import javax.naming.InitialContext;
@@ -784,6 +783,22 @@ public class Sql2oTest {
         byte[] pojo2Data = IOUtils.toByteArray(pojo2.data);
         String pojo2DataString = new String(pojo2Data);
         assertThat(dataString, is(equalTo(pojo2DataString)));
+    }
+
+    @Test
+    public void testTimeConverter(){
+        String sql = "select current_time as col1 from (values(0))";
+
+        Time sqlTime = sql2o.createQuery(sql).executeScalar(Time.class);
+        assertThat(sqlTime, is(notNullValue()));
+        assertTrue(sqlTime.getTime() > 0);
+
+        Date date = sql2o.createQuery(sql).executeScalar(Date.class);
+        assertThat(date, is(notNullValue()));
+
+        LocalTime jodaTime = sql2o.createQuery(sql).executeScalar(LocalTime.class);
+        assertTrue(jodaTime.getMillisOfDay() > 0);
+        assertThat(jodaTime.getHourOfDay(), is(equalTo(new LocalTime().getHourOfDay())));
     }
     
     public static class BindablePojo{
