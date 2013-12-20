@@ -193,8 +193,8 @@ public class Query {
     }
 
     public Query addParameter(String name, DateTime value){
-        java.util.Date dtVal = value == null ? null : value.toDate();
-        return addParameter(name, dtVal);
+        Timestamp timestamp = value == null ? null : new Timestamp(value.toDate().getTime());
+        return addParameter(name, timestamp);
     }
 
     public Query addParameter(String name, Enum value) {
