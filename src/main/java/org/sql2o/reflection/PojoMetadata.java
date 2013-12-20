@@ -1,11 +1,13 @@
 package org.sql2o.reflection;
 
-import org.sql2o.Sql2oException;
-
 import java.lang.reflect.Field;
 import java.lang.reflect.Method;
 import java.util.HashMap;
 import java.util.Map;
+
+import org.sql2o.Sql2oException;
+
+import com.google.common.base.CaseFormat;
 
 /**
  * Stores metadata for a POJO.
@@ -15,6 +17,7 @@ public class PojoMetadata {
     private Map<String, Setter> propertySetters;
     private Map<String, Field> fields;
     private boolean caseSensitive;
+    private boolean autoDeriveColumnNames;
     private Class clazz;
     
     private Map<String,String> columnMappings;
@@ -24,8 +27,13 @@ public class PojoMetadata {
     }
 
     public PojoMetadata(Class clazz, boolean caseSensitive, Map<String,String> columnMappings){
+    	this(clazz, caseSensitive, false, columnMappings);
+    }
+    
+    public PojoMetadata(Class clazz, boolean caseSensitive, boolean autoDeriveColumnNames, Map<String,String> columnMappings){
         
         this.caseSensitive = caseSensitive;
+        this.autoDeriveColumnNames = autoDeriveColumnNames;
         this.clazz = clazz;
         this.columnMappings = columnMappings == null ? new HashMap<String, String>() : columnMappings;
 
@@ -64,6 +72,11 @@ public class PojoMetadata {
         
         String name = this.caseSensitive ? propertyName : propertyName.toLowerCase();
 
+        if(autoDeriveColumnNames) {
+        	name = CaseFormat.LOWER_UNDERSCORE.to(CaseFormat.LOWER_CAMEL, name);
+        	if(!this.caseSensitive) name = name.toLowerCase();
+        }
+        
         if (this.columnMappings.containsKey(name)){
             name = this.columnMappings.get(name);
         }
