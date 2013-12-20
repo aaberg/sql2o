@@ -1,14 +1,15 @@
 package org.sql2o.converters;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
 import java.io.ByteArrayInputStream;
 import java.io.InputStream;
 import java.math.BigDecimal;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.UUID;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * Static class used to register new converters. Also used internally by sql2o to lookup a converter.
@@ -17,7 +18,7 @@ public class Convert {
 
     private static final Logger logger = LoggerFactory.getLogger(Convert.class);
     
-    private static Map<Class, Converter> registeredConverters = new HashMap<Class, Converter>();
+    private static Map<Class<?>, Converter<?>> registeredConverters = new HashMap<Class<?>, Converter<?>>();
 
     static{
         registerConverter(Integer.class, new IntegerConverter(false));
@@ -42,7 +43,7 @@ public class Convert {
         
         registerConverter(String.class, new StringConverter());
         
-        Converter utilDateConverter = new DateConverter();
+        Converter<Date> utilDateConverter = new DateConverter();
         registerConverter(java.util.Date.class, utilDateConverter);
         registerConverter(java.sql.Date.class, utilDateConverter);
         registerConverter(java.sql.Time.class, utilDateConverter);
@@ -53,7 +54,7 @@ public class Convert {
         registerConverter(boolean.class, booleanConverter);
 
         try {
-            Class jodaTimeClass = Class.forName("org.joda.time.DateTime");
+            Class<?> jodaTimeClass = Class.forName("org.joda.time.DateTime");
             registerConverter(jodaTimeClass, new JodaTimeConverter());
         } catch (ClassNotFoundException e) {
             logger.warn("Failed to initialize Jodatime. Jodatime converter not registered");
@@ -68,10 +69,18 @@ public class Convert {
         registerConverter(ByteArrayInputStream.class, inputStreamConverter);
 
         registerConverter(UUID.class, new UUIDConverter());
+        
+        try {
+        	Class<?> jsonNodeClass = Class.forName("org.codehaus.jackson.JsonNode");
+        	registerConverter(jsonNodeClass, new JsonNodeConverter());
+        }
+        catch(ClassNotFoundException e) {
+        	logger.warn("Failed to initialize JsonNode. JsonNode converter not register");
+        }
 
     }
     
-    public static Converter getConverter(Class clazz) throws ConverterException {
+    public static Converter<?> getConverter(Class<?> clazz) throws ConverterException {
         if (registeredConverters.containsKey(clazz)){
             return registeredConverters.get(clazz);
         } else if (clazz.isEnum()) {
@@ -82,7 +91,7 @@ public class Convert {
 
     }
     
-    public static void registerConverter(Class clazz, Converter converter){
+    public static void registerConverter(Class<?> clazz, Converter<?> converter){
         registeredConverters.put(clazz, converter);
     }
 }
