@@ -52,6 +52,7 @@ public class Query {
     private NamedParameterStatement statement;
 
     private boolean caseSensitive;
+    private boolean autoDeriveColumnNames;
     
     private final String name;
     private boolean returnGeneratedKeys;
@@ -248,6 +249,15 @@ public class Query {
         this.caseSensitive = caseSensitive;
         return this;
     }
+
+    public boolean isAutoDeriveColumnNames() {
+    	return autoDeriveColumnNames;
+    }
+    
+    public Query setAutoDeriveColumnNames(boolean autoDeriveColumnNames) {
+    	this.autoDeriveColumnNames = autoDeriveColumnNames;
+    	return this;
+    }
     
     public Connection getConnection(){
         return this.connection;
@@ -259,7 +269,7 @@ public class Query {
 
     public <T> List<T> executeAndFetch(Class returnType){
         List list = new ArrayList();
-        PojoMetadata metadata = new PojoMetadata(returnType, this.isCaseSensitive(), this.getColumnMappings());
+        PojoMetadata metadata = new PojoMetadata(returnType, this.isCaseSensitive(), this.isAutoDeriveColumnNames(), this.getColumnMappings());
         try{
             //java.util.Date st = new java.util.Date();
             long start = System.currentTimeMillis();
