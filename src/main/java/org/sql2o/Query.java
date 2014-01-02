@@ -153,30 +153,13 @@ public class Query {
     }
 
     public Query addParameter(String name, Date value){
-        try{
-            if (value == null){
-                statement.setNull(name, Types.DATE);
-            } else {
-                statement.setDate(name, value);
-            }
-        }
-        catch (Exception ex){
-            throw new RuntimeException(ex);
-        }
-
-        return this;
+        Timestamp timestamp = value == null ? null : new Timestamp(value.getTime());
+        return addParameter(name, timestamp);
     }
 
     public Query addParameter(String name, java.util.Date value){
-        Date sqlDate = value == null ? null : new Date(value.getTime());
-        if (sqlDate != null && this.connection.getSql2o().quirksMode == QuirksMode.DB2){
-            // With the DB2 driver you can get an error if trying to put a date value into a timestamp column,
-            // but of some reason it works if using setObject().
-            return addParameter(name, (Object)sqlDate);
-        }else{
-
-            return addParameter(name, sqlDate);
-        }
+        Timestamp timestamp = value == null ? null : new Timestamp(value.getTime());
+        return addParameter(name, timestamp);
     }
 
     public Query addParameter(String name, Time value){
@@ -193,8 +176,8 @@ public class Query {
     }
 
     public Query addParameter(String name, DateTime value){
-        java.util.Date dtVal = value == null ? null : value.toDate();
-        return addParameter(name, dtVal);
+        Timestamp timestamp = value == null ? null : new Timestamp( value.getMillis() );
+        return addParameter(name, timestamp);
     }
 
     public Query addParameter(String name, Enum value) {
