@@ -857,6 +857,29 @@ public class Sql2oTest {
         assertTrue(pojo1.equals(pojo2));
     }
 
+    @Test
+    public void testRowGetObjectWithConverters() {
+        String sql = "select 1 col1, '23' col2 from (values(0))";
+        Table t = sql2o.createQuery(sql).executeAndFetchTable();
+        Row r = t.rows().get(0);
+
+        String col1AsString = r.getObject("col1", String.class);
+        Integer col1AsInteger = r.getObject("col1", Integer.class);
+        Long col1AsLong = r.getObject("col1", Long.class);
+
+        assertThat(col1AsString, is(equalTo("1")));
+        assertThat(col1AsInteger, is(equalTo(1)));
+        assertThat(col1AsLong, is(equalTo(1L)));
+
+        String col2AsString = r.getObject("col2", String.class);
+        Integer col2AsInteger = r.getObject("col2", Integer.class);
+        Long col2AsLong = r.getObject("col2", Long.class);
+
+        assertThat(col2AsString, is(equalTo("23")));
+        assertThat(col2AsInteger, is(equalTo(23)));
+        assertThat(col2AsLong, is(equalTo(23L)));
+    }
+
     /************** Helper stuff ******************/
 
     private void createAndFillUserTable(){

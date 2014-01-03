@@ -44,6 +44,22 @@ public class Row {
         
         return obj;
     }
+
+    public <V> V getObject(int columnIndex, Class clazz){
+        try{
+            return (V)Convert.getConverter(clazz).convert(getObject(columnIndex));
+        } catch (ConverterException ex){
+            throw new Sql2oException("Error converting value", ex);
+        }
+    }
+
+    public <V> V getObject(String columnName, Class clazz) {
+        try{
+            return (V)Convert.getConverter(clazz).convert(getObject(columnName));
+        } catch (ConverterException ex){
+            throw new Sql2oException("Error converting value", ex);
+        }
+    }
     
     public BigDecimal getBigDecimal(int columnIndex){
         return new BigDecimalConverter().convert(getObject(columnIndex));
