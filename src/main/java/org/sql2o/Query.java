@@ -177,7 +177,7 @@ public class Query {
     }
 
     public Query addParameter(String name, DateTime value){
-        Timestamp timestamp = value == null ? null : new Timestamp( value.getMillis() );
+        Timestamp timestamp = value == null ? null : new Timestamp(value.toDate().getTime());
         return addParameter(name, timestamp);
     }
 
