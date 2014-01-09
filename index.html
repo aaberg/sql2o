@@ -1,0 +1,171 @@
+---
+title: Sql2o - Easy database query library
+layout: default
+topmenu: index
+moreScripts: <script type="text/javascript" src="https://apis.google.com/js/plusone.js"></script>
+---
+
+<div style="text-align: center; margin: 10px 0 0 0;">
+
+    <div style="vertical-align: top; display: inline-block; margin-right: 40px; height: 30px;">
+        <a href="https://twitter.com/sql2o" class="twitter-follow-button" data-show-count="false">Follow @sql2o</a>
+        <script>!function(d,s,id){var js,fjs=d.getElementsByTagName(s)[0];if(!d.getElementById(id)){js=d.createElement(s);js.id=id;js.src="//platform.twitter.com/widgets.js";fjs.parentNode.insertBefore(js,fjs);}}(document,"script","twitter-wjs");</script>
+    </div>
+
+    <div style="vertical-align: top; display: inline-block;"><div class="g-plusone" data-annotation="bubble" data-size="medium" data-href="http://sql2o.org"></div></div>
+    <iframe src="http://ghbtns.com/github-btn.html?user=aaberg&repo=sql2o&type=watch&count=true"
+            allowtransparency="true" frameborder="0" scrolling="0" width="100" height="30"></iframe>
+    <iframe src="http://ghbtns.com/github-btn.html?user=aaberg&repo=sql2o&type=fork&count=true"
+            allowtransparency="true" frameborder="0" scrolling="0" width="100" height="30"></iframe>
+    <iframe src="http://ghbtns.com/github-btn.html?user=aaberg&type=follow&count=true"
+            allowtransparency="true" frameborder="0" scrolling="0" width="150" height="30"></iframe>
+
+</div>
+
+<b>Sql2o is a small java framework that makes it easy to execute sql statements on your JDBC compliant database from java.</b>
+
+<p>Sql2o uses JDBC internally, so it should work with any database with a JDBC driver <a href="#supportedDatabases">(*)</a>.</p>
+
+<p>With sql2o you get:</p>
+
+<ul>
+    <li>Functionality to automatically map the result set of your query with a java class, without the need of any annotations or configuration.</li>
+    <li>support for named parameters.</li>
+    <li>A smooth and flexible api that is a lot easier to read (and requires much lesser code) than plain JDBC.</li>
+</ul>
+
+<p>Consider the following java class</p>
+
+{% highlight java %}
+
+public class Task{
+private int id;
+private String category;
+private Date dueDate;
+
+// getters and setters here
+}
+
+{% endhighlight %}
+
+<!-- *************** JDBC Comparison ****************** -->
+
+<p>Say you want to fetch all tasks from your database with category='foo'. The following comparison shows how this is
+typically done with <b>sql2o</b> compared to how it is done with plain JDBC.</p>
+
+<div class="row-fluid">
+    <div class="span6">
+
+        <h3>sql2o</h3>
+
+        {% highlight java %}
+
+        String sql =
+        "SELECT id, category, duedate " +
+        "FROM tasks " +
+        "WHERE category = :category";
+
+        Sql2o sql2o = new Sql2o(DB_URL, USER, PASS);
+        List<Task> tasks = sql2o.createQuery(sql)
+        .addParameter("category", "foo")
+        .executeAndFetch(Task.class);
+
+        {% endhighlight %}
+
+        <p>The mapping between columns and properties are done automatically by name. Of course this is not always possible,
+        so sql2o provides a <a href="/learn#columnMappings">simple and flexible column mapping solution</a>.</p>
+
+    </div>
+    <div class="span6">
+
+        <h3>Plain JDBC</h3>
+
+{% highlight java %}
+
+List<Task> tasks = new ArrayList<Task>();
+Connection conn = null;
+PreparedStatement stmt = null;
+
+String sql =
+    "SELECT id, category, duedate " +
+    "FROM tasks " +
+    "WHERE category = ?";
+
+try {
+    conn = DriverManager.getConnection(DB_URL, USER, PASS);
+
+    stmt = conn.prepareStatement(sql);
+    stmt.setString(1, "foo");
+
+    ResultSet rs = stmt.executeQuery();
+
+    while(rs.next()) {
+        Task task = new Task();
+        task.setId(rs.getLong("id"));
+        task.setCategory(rs.getString("category"));
+        task.setDueDate(rs.getDate("duedate"));
+    }
+    rs.close();
+} catch(SQLException se) {
+    //Handle errors for JDBC. I'll just throw a RuntimeException.
+    throw new RuntimeExcetion("error when executing query", se);
+} finally {
+    try{
+        if(stmt != null) {
+            stmt.close();
+        }
+    } catch(SQLException se) {
+        se.printStackTrace();
+    }
+    try {
+        if (conn != null) {
+            conn.close();
+        }
+    } catch(SQLException se) {
+        se.printStackTrace();
+    }
+}
+
+{% endhighlight %}
+    </div>
+</div>
+
+
+<!-- Background and features -->
+<p>INSERT, UPDATE and DELETE statements are also made a lot easier. Just take a look at this example.</p>
+
+{% highlight java %}
+String sql =
+    "INSERT INTO tasks(id, description, due_date) " +
+    "VALUES (:id, :description, :dueDate)";
+
+// With sql2o, all statements are queries; Even INSERT, UPDATE and DELETE statements
+sql2o.createQuery(sql)
+    .addParameter("id", task.getId())
+    .addParameter("description", task.getDescription())
+    .addParameter("dueDate", task.getDueDate())
+    .executeUpdate();
+{% endhighlight %}
+
+
+<h2>What sql2o is not!</h2>
+<p>sql2o is not an <a href="http://en.wikipedia.org/wiki/Object-Relational_Mapping">ORM</a>. It has no sql generation
+capabilities. Don't use sql2o if you don't want to write sql.</p>
+
+<h2>Feature Highlights</h2>
+<ul>
+    <li>Automatic column to property mapping by name. Case sensitive or case-insensitive, you choose.</li>
+    <li>Possibility to add custom column mappings if desired.</li>
+    <li>Allows chaining of method calls, so you can do a lot of stuff on one line of code.</li>
+    <li>Named parameters.</li>
+    <li>Slick transaction handling.</li>
+    <li>Ability to execute multiple queries in a batch</li>
+    <li>Compatible with JodaTime for mapping with date/datetime/timestamp fields in your database</li>
+</ul>
+
+<p>Check out the <a href="/learn">learn section</a> for more examples and features.</p>
+
+<div id="supportedDatabases"></div>
+
+<h2>Compatibility</h2>
+<p>Sql2o is tested to work with JDBC drivers for <b> PostgreSQL, MySQL, Oracle, MS Sql Server, IBM DB2, H2</b> and <b>HyperSQL</b>.</p>

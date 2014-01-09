@@ -1,0 +1,43 @@
+---
+title: Download
+layout: default
+topmenu: download
+---
+
+<h1>Downloads</h1>
+<p>Get the latest stable version of sql2o:</p>
+
+<div class="downloadBox">
+    <div class="inner">
+        <a href="https://github.com/aaberg/aaberg_mvn_repo/raw/master/org/sql2o/sql2o/{{ site.data.config.latestversion }}/sql2o-{{ site.data.config.latestversion }}.jar">
+            <p>Download</p>
+            <p class="smallPrint">sql2o-{{ site.data.config.latestversion }}.jar (42KB)</p>
+        </a>
+    </div>
+</div>
+
+<h2>Maven repository</h2>
+<p>Sql2o has a <a href="https://github.com/aaberg/aaberg_mvn_repo/tree/master/org/sql2o/sql2o" target="_blank">repository hosted on github</a>.
+To add sql2o as a dependency in your maven project, put the following in your pom.xml</p>
+
+{% highlight xml %}
+
+<repositories>
+    <repository>
+        <id>aaberg_mvn_repo</id>
+        <url>https://github.com/aaberg/aaberg_mvn_repo/raw/master</url>
+    </repository>
+</repositories>
+
+<dependencies>
+    <dependency>
+        <groupId>org.sql2o</groupId>
+        <artifactId>sql2o</artifactId>
+        <version>${ver}</version>
+    </dependency>
+</dependencies>
+
+{% endhighlight %}
+
+<p>&nbsp;</p>
+<p>All downloads can be found <a href="https://github.com/aaberg/aaberg_mvn_repo/tree/master/org/sql2o/sql2o" target="_blank">here</a></p>
