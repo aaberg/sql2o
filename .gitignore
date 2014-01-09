@@ -4,3 +4,4 @@ out/
 target/
 release.properties
 pom.xml.releaseBackup
+_site/
