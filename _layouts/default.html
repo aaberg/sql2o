@@ -11,14 +11,14 @@
 
     <link href='http://fonts.googleapis.com/css?family=Ubuntu:300,400,700' rel='stylesheet' type='text/css' />
     <link href='http://fonts.googleapis.com/css?family=Ubuntu+Mono:400,700' rel='stylesheet' type='text/css' />
-    <link rel="stylesheet" type="text/css" href="/public/bootstrap/css/bootstrap.css" />
-    <link rel="stylesheet" media="screen" href="/public/stylesheets/main.css"/>
-    <link rel="stylesheet" media="screen" href="/public/stylesheets/highlight.css" />
+    <link rel="stylesheet" type="text/css" href="{{ page.base_url }}public/bootstrap/css/bootstrap.css" />
+    <link rel="stylesheet" media="screen" href="{{ page.base_url }}public/stylesheets/main.css"/>
+    <link rel="stylesheet" media="screen" href="{{ page.base_url }}public/stylesheets/highlight.css" />
 
     {{ page.moreStyles }}
-    <link rel="shortcut icon" type="image/png" href="/public/images/favicon3.png" />
-    <script src="/public/javascripts/jquery-1.9.1.min.js" type="text/javascript" charset="UTF-8"></script>
-    <script src="/public/bootstrap/js/bootstrap.js" type="text/javascript" charset="UTF-8"></script>
+    <link rel="shortcut icon" type="image/png" href="{{ page.base_url }}public/images/favicon3.png" />
+    <script src="{{ page.base_url }}public/javascripts/jquery-1.9.1.min.js" type="text/javascript" charset="UTF-8"></script>
+    <script src="{{ page.base_url }}public/bootstrap/js/bootstrap.js" type="text/javascript" charset="UTF-8"></script>
 
     {{ page.moreScripts }}
 
@@ -53,14 +53,14 @@
             
 
             <ul class="nav">
-                <li {% if page.topmenu == "index" %}class="active" {% endif %}><a href="/">Home</a></li>
-                <li {% if page.topmenu == "docs" %}class="active" {% endif %}><a href="/docs/welcome">Docs</a></li>
+                <li {% if page.topmenu == "index" %}class="active" {% endif %}><a href="{{ page.base_url }}">Home</a></li>
+                <li {% if page.topmenu == "docs" %}class="active" {% endif %}><a href="{{ page.base_url }}docs/welcome">Docs</a></li>
             </ul>
 
             <!-- Everything you want hidden at 940px or less, place within here -->
             <div class="nav-collapse collapse">
                 <ul class="nav">
-                    <li {% if page.topmenu == "download" %}class="active" {% endif %}><a href="/download">Download / install</a></li>
+                    <li {% if page.topmenu == "download" %}class="active" {% endif %}><a href="{{ page.base_url }}download">Download / install</a></li>
                     <li><a href="http://api.sql2o.org/{{ site.data.config.latestversion }}" target="_blank">Javadoc</a></li>
                     <li><a href="https://github.com/aaberg/sql2o/issues" target="_blank">Report a bug&nbsp;<i class="icon-share"></i></a></li>
                     <li><a href="http://groups.google.com/group/sql2o" target="_blank">Google group&nbsp;<i class="icon-share"></i></a></li>
@@ -74,7 +74,7 @@
 <div id="header">
     <div class="container">
         <h1 style="display: none" itemprop="name">Sql2o</h1>
-        <img itemprop="image" src="/public/images/sql2o_logo.png" alt="sql2o logo" />
+        <img itemprop="image" src="{{ page.base_url }}public/images/sql2o_logo.png" alt="sql2o logo" />
         <div id="subtitle" itemprop="description">Easy database query library.  </div>
     </div>
 </div>
