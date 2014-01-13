@@ -5,14 +5,14 @@ topmenu: docs
 leftmenu: transactions
 ---
 
-<p>You can open a transaction by calling the beginTransaction() method on the Sql2o instance; this returns a Connection
+You can open a transaction by calling the beginTransaction() method on the Sql2o instance; this returns a Connection
 instance. All queries created with the createQuery() method of the returned Connection object, is run in a transaction.
-Call commit() or rollback() to either commit or rollback the transaction and close the connection.</p>
+Call commit() or rollback() to either commit or rollback the transaction and close the connection.
 
-<p>In the example below, a few queries are run in a transaction.</p>
+In the example below, a few queries are run in a transaction.
+
 
 {% highlight java %}
-
 String sql1 = "INSERT INTO SomeTable(id, value) VALUES (:id, :value)";
 String sql2 = "UPDATE SomeOtherTable SET value = :val WHERE id = :id";
 
@@ -28,23 +28,21 @@ try{
     }
     throw t;
 }
-
 {% endhighlight %}
 
-<p>Be very careful with your try-catch logic when executing sql in transactions. If an exception is thrown, and your code
+Be very careful with your try-catch logic when executing sql in transactions. If an exception is thrown, and your code
 doesn't call either rollback() or commit(), the transaction will not be closed. Most relational databases use row-locks
 or even table-locks when sql is run in transactions, which might cause some pretty nasty deadlocks if your transactions
-are not closed.</p>
+are not closed.
 
-<p>To make things a bit easier, Sql2o offers another way of running sql in a transaction. With this method Sql2o ensures
+To make things a bit easier, Sql2o offers another way of running sql in a transaction. With this method Sql2o ensures
 that the transaction is always closed without the need of try-catch logic. Simply create a class that implements the
-StatementRunnable or StatementRunnableWithResult interface, and use it as a parameter to the runInTransaction() method.</p>
+StatementRunnable or StatementRunnableWithResult interface, and use it as a parameter to the runInTransaction() method.
 
-<p>If an exception is thrown within the run() method of the StatementRunnable, the transaction is automatically rolled back.
-If everything goes well and without exceptions, the transaction is automatically committed.</p>
+If an exception is thrown within the run() method of the StatementRunnable, the transaction is automatically rolled back.
+If everything goes well and without exceptions, the transaction is automatically committed.
 
 {% highlight java %}
-
 public void doSomething() {
 
     MyStatemenRunnable statemenRunnable = new MyStatemenRunnable();
@@ -58,11 +56,9 @@ public static class MyStatemenRunnable implements StatementRunnable{
         // all queries that are created with the connection.createQuery(..) method, are executed in the transaction.
     }
 }
-
 {% endhighlight %}
 
-
-<p>With an anonomous inner class it looks something like this:</p>
+With an anonomous inner class it looks something like this:
 
 {% highlight java %}
 public void doSomething() {
@@ -75,6 +71,4 @@ public void doSomething() {
         }
     });
 }
-
 {% endhighlight %}
-

@@ -5,12 +5,12 @@ topmenu: docs
 leftmenu: batch
 ---
 
-<p>If you need to run an UPDATE, INSERT or DELETE query multiple times with different parameters, you will get a huge
+If you need to run an UPDATE, INSERT or DELETE query multiple times with different parameters, you will get a huge
 performance gain by running them in a batch. This is by some databases also known as bulk updates or bulk inserts. Sql2o
 supports only homogeneous batches, that is batches with only one query, but with multiple sets of parameters. This is
-due to limitations in jdbc.</p>
+due to limitations in jdbc.
 
-<p>In the example below, 100 rows are inserted into a table in the database in one batch.</p>
+In the example below, 100 rows are inserted into a table in the database in one batch.
 
 {% highlight java %}
 
@@ -32,5 +32,5 @@ public void insertABunchOfRows(){
 
 {% endhighlight %}
 
-<p>It is almost always a good idea to run batch updates in a transaction, as batch updates are not atomic and therefor
-might leave your database in an inconsistent state.</p>
+It is almost always a good idea to run batch updates in a transaction, as batch updates are not atomic and therefor
+might leave your database in an inconsistent state.
