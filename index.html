@@ -23,6 +23,8 @@ base_url: ./
 
 </div>
 
+<div class="alert alert-info"><span class="label">14 jan 2014</span> Version 1.2.0 of sql2o has been released with some exiting new features. <a href="{{ page.base_url }}/2014/01/14/Sql2o-version-1.2.0-released.html">Click here to see the change log</a> </div>
+
 <b>Sql2o is a small java framework that makes it easy to execute sql statements on your JDBC compliant database from java.</b>
 
 <p>Sql2o uses JDBC internally, so it should work with any database with a JDBC driver <a href="#supportedDatabases">(*)</a>.</p>
@@ -40,11 +42,11 @@ base_url: ./
 {% highlight java %}
 
 public class Task{
-private int id;
-private String category;
-private Date dueDate;
+    private int id;
+    private String category;
+    private Date dueDate;
 
-// getters and setters here
+    // getters and setters here
 }
 
 {% endhighlight %}
@@ -59,19 +61,19 @@ typically done with <b>sql2o</b> compared to how it is done with plain JDBC.</p>
 
         <h3>sql2o</h3>
 
-        {% highlight java %}
+{% highlight java %}
 
-        String sql =
-        "SELECT id, category, duedate " +
-        "FROM tasks " +
-        "WHERE category = :category";
+String sql =
+    "SELECT id, category, duedate " +
+    "FROM tasks " +
+    "WHERE category = :category";
 
-        Sql2o sql2o = new Sql2o(DB_URL, USER, PASS);
-        List<Task> tasks = sql2o.createQuery(sql)
-        .addParameter("category", "foo")
-        .executeAndFetch(Task.class);
+Sql2o sql2o = new Sql2o(DB_URL, USER, PASS);
+List<Task> tasks = sql2o.createQuery(sql)
+    .addParameter("category", "foo")
+    .executeAndFetch(Task.class);
 
-        {% endhighlight %}
+{% endhighlight %}
 
         <p>The mapping between columns and properties are done automatically by name. Of course this is not always possible,
         so sql2o provides a <a href="/learn#columnMappings">simple and flexible column mapping solution</a>.</p>
