@@ -52,9 +52,13 @@
             <!-- Be sure to leave the brand out there if you want it shown -->
             
 
-            <ul class="nav">
+            <ul class="nav pull-left">
                 <li {% if page.topmenu == "index" %}class="active" {% endif %}><a href="{{ page.base_url }}">Home</a></li>
                 <li {% if page.topmenu == "docs" %}class="active" {% endif %}><a href="{{ page.base_url }}docs/configuration">Docs</a></li>
+            </ul>
+
+            <ul class="nav pull-right">
+                <li class="pull-right"><a>Latest version: {{ site.data.config.latestversion }}</a></li>
             </ul>
 
             <!-- Everything you want hidden at 940px or less, place within here -->
@@ -67,6 +71,8 @@
                     <li><a href="https://github.com/aaberg/sql2o" target="_blank">Github page&nbsp;<i class="icon-share"></i></a></li>
                 </ul>
             </div>
+
+            
 
         </div>
     </div>
