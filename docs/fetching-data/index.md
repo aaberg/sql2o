@@ -12,33 +12,13 @@ to create a Task class with id, description and dueDate properties. In a real li
 a lot more properties, but as this is only a demonstration we will stick with these 3 properties.
 
 {% highlight java %}
-import java.util.Date;
-
 public class Task {
 
     private Long id;
     private String description;
     private Date dueDate;
 
-    public Long getId() {
-        return id;
-    }
-
-    public String getDescription() {
-        return description;
-    }
-
-    public void setDescription(String description) {
-        this.description = description;
-    }
-
-    public Date getDueDate() {
-        return dueDate;
-    }
-
-    public void setDueDate(Date dueDate) {
-        this.dueDate = dueDate;
-    }
+    // getters and setters here
 }
 {% endhighlight %}
 
