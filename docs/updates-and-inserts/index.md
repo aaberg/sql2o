@@ -52,3 +52,35 @@ int insertedId = sql2o.createQuery(sql, true)
 	.getKey();
 
 {% endhighlight %}
+
+### The bind() method.
+
+If you need to add many parameters from a POJO class, you can use the Query.bind(Object) method.
+
+**Example:**
+{% highlight java %}
+
+public class MyModel {
+	private int prop1;
+	private String prop2;
+	private String prop3;
+	private Date prop4;
+	// and so on..
+
+	// Getters and settes
+}
+
+{% endhighlight %}
+
+{% highlight java %}
+
+MyModel model = getAnInstanceOfMyModel();
+
+// Give the parameters the same names as the corresponding properties in your model class
+String sql = 
+	"insert into MYTABLE(col1, col2, col3, col4 ...) "
+	"values (:prop1, :prop2, :prop3, :prop4 ...)";
+
+sql2o.createQuery(sql).bind(model).executeUpdate();
+
+{% endhighlight %}
