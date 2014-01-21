@@ -1,8 +1,17 @@
 ---
 layout: default
-title: Version 1.2.0 has been released!
+title: Version 1.2.1 has been released!
 base_url: ../../../
 ---
+
+
+# Sql2o 1.2.1 released
+_<small>21 jan 2014 <a href="https://github.com/aaberg">Lars Aaberg</a> </small>_
+
+#####- Bug fix  
+>when using the Query.addParameter(String, Date) method, IBM DB2 jdbc driver would throw an exception when column is 'date' datatype <a href="https://github.com/aaberg/sql2o/pull/41"><span class="badge badge-info">#41</span></a>  
+>_<small>Fixed by [Lars Aaberg](https://github.com/aaberg)</small>_
+
 
 # Sql2o 1.2.0 released
 _<small>14 jan 2014 <a href="https://github.com/aaberg">Lars Aaberg</a> </small>_
