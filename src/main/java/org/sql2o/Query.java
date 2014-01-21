@@ -154,8 +154,22 @@ public class Query {
     }
 
     public Query addParameter(String name, Date value){
-        Timestamp timestamp = value == null ? null : new Timestamp(value.getTime());
-        return addParameter(name, timestamp);
+        if (this.getConnection().getSql2o().quirksMode == QuirksMode.MSSqlServer){
+            Timestamp timestamp = value == null ? null : new Timestamp(value.getTime());
+            return addParameter(name, timestamp);
+        }
+
+        try{
+            if (value == null) {
+                statement.setNull(name, Types.DATE);
+            } else {
+                statement.setDate(name, value);
+            }
+        } catch (Exception ex) {
+            throw new Sql2oException("Error setting parameter '" + name + "'", ex);
+        }
+
+        return this;
     }
 
     public Query addParameter(String name, java.util.Date value){
