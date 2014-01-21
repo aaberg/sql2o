@@ -1,7 +1,8 @@
 package org.sql2o.converters;
 
 /**
- * Used by sql2o to convert a value from the database into an {@link Enum}.
+ * Default implementation of {@link org.sql2o.converters.EnumConverter},
+ * used by sql2o to convert a value from the database into an {@link Enum}.
  */
 public class DefaultEnumConverter implements EnumConverter
 {
