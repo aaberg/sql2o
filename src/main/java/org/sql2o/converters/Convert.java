@@ -17,7 +17,7 @@ public class Convert {
 
     private static final Logger logger = LoggerFactory.getLogger(Convert.class);
 
-    private static EnumConverter registeredEnumConverter;
+    private static EnumConverter registeredEnumConverter = new DefaultEnumConverter();
     private static Map<Class, Converter> registeredConverters = new HashMap<Class, Converter>();
 
     static{
@@ -78,12 +78,8 @@ public class Convert {
         if (registeredConverters.containsKey(clazz)){
             return registeredConverters.get(clazz);
         } else if (clazz.isEnum()) {
-            EnumConverter ec = registeredEnumConverter;
-            if (ec == null) {
-                ec = new DefaultEnumConverter();
-            }
-            ec.setEnumType(clazz);
-            return ec;
+            registeredEnumConverter.setEnumType(clazz);
+            return registeredEnumConverter;
         } else{
             throw new ConverterException("No converter registered for class: " + clazz.getName());
         }
