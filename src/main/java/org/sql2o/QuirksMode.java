@@ -5,5 +5,5 @@ package org.sql2o;
  */
 public enum QuirksMode {
 
-    None, DB2, PostgreSQL
+    None, DB2, PostgreSQL, MSSqlServer
 }
