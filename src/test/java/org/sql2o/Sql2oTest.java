@@ -884,6 +884,30 @@ public class Sql2oTest {
         assertThat(col2AsLong, is(equalTo(23L)));
     }
 
+    @Test
+    public void testExecuteAndFetchLazy(){
+        createAndFillUserTable();
+
+        Iterable<User> allUsers = sql2o.createQuery("select * from User").executeAndFetchLazy(User.class);
+
+        // read in batches, because maybe we are bulk exporting and can't fit them all into a list
+        int totalSize = 0;
+        int batchSize = 500;
+        List<User> batch = new ArrayList<User>(batchSize);
+        for (User u : allUsers) {
+            totalSize++;
+            if (batch.size() == batchSize) {
+                System.out.println(String.format("Read batch of %d users, great!", batchSize));
+                batch.clear();
+            }
+            batch.add(u);
+        }
+
+        assertTrue(totalSize == insertIntoUsers);
+        deleteUserTable();
+    }
+
+
     /************** Helper stuff ******************/
 
     private void createAndFillUserTable(){
