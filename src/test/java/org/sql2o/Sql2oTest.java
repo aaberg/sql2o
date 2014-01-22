@@ -888,7 +888,7 @@ public class Sql2oTest {
     public void testExecuteAndFetchLazy(){
         createAndFillUserTable();
 
-        Iterable<User> allUsers = sql2o.createQuery("select * from User").executeAndFetchLazy(User.class);
+        ResultSetIterable<User> allUsers = sql2o.createQuery("select * from User").executeAndFetchLazy(User.class);
 
         // read in batches, because maybe we are bulk exporting and can't fit them all into a list
         int totalSize = 0;
@@ -903,10 +903,36 @@ public class Sql2oTest {
             batch.add(u);
         }
 
+        allUsers.close();
+
         assertTrue(totalSize == insertIntoUsers);
         deleteUserTable();
     }
 
+    @Test
+    public void testResultSetIterator_multipleHasNextWorks() {
+        createAndFillUserTable();
+
+        ResultSetIterable<User> allUsers = sql2o.createQuery("select * from User").executeAndFetchLazy(User.class);
+
+        Iterator<User> usersIterator = allUsers.iterator();
+
+        // call hasNext a few times, should have no effect
+        usersIterator.hasNext();
+        usersIterator.hasNext();
+        usersIterator.hasNext();
+
+        int totalSize = 0;
+        while (usersIterator.hasNext()) {
+            totalSize++;
+            usersIterator.next();
+        }
+
+        allUsers.close();
+
+        assertTrue(totalSize == insertIntoUsers);
+        deleteUserTable();
+    }
 
     /************** Helper stuff ******************/
 

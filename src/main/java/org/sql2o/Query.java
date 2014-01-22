@@ -11,6 +11,7 @@ import org.sql2o.data.TableFactory;
 import org.sql2o.reflection.Pojo;
 import org.sql2o.reflection.PojoMetadata;
 import org.sql2o.tools.NamedParameterStatement;
+import org.sql2o.tools.ResultSetUtils;
 
 import java.io.InputStream;
 import java.lang.reflect.InvocationTargetException;
@@ -271,103 +272,16 @@ public class Query {
         return name;
     }
 
-    public class ResultSetIterator<T> implements Iterator<T> {
-        private T next; // keep track of next item in case hasNext() is called multiple times
-        private boolean resultSetFinished;
-
-        private ResultSet rs;
-        private ResultSetMetaData meta;
-        private PojoMetadata metadata;
-        private boolean isCaseSensitive;
-        private QuirksMode quirksMode;
-
-        public ResultSetIterator(ResultSet rs, PojoMetadata metadata, boolean isCaseSensitive, QuirksMode quirksMode) {
-            this.rs = rs;
-            this.metadata = metadata;
-            this.isCaseSensitive = isCaseSensitive;
-            this.quirksMode = quirksMode;
-            try {
-                meta = rs.getMetaData();
-            }
-            catch(SQLException ex) {
-                throw new Sql2oException("Database error: " + ex.getMessage(), ex);
-            }
-        }
-
-        public boolean hasNext() {
-            // check if we already fetched next item
-            if (next != null) {
-                return true;
-            }
-
-            // check if result set already finished
-            if (resultSetFinished) {
-                return false;
-            }
-
-            // now fetch next item
-            next = readNext();
-
-            // check if we got something
-            if (next != null) {
-                return true;
-            }
-
-            // no more items
-            resultSetFinished = true;
-
-            return false;
-        }
-
-        public T next() {
-            if (!hasNext()) {
-                throw new NoSuchElementException();
-            }
-
-            T result = next;
-
-            next = null;
-
-            return result;
-        }
-
-        public void remove() {
-            throw new UnsupportedOperationException();
-        }
-
-        private T readNext() {
-            try {
-                if (rs.next()) {
-                    Pojo pojo = new Pojo(metadata, isCaseSensitive);
-
-                    for(int colIdx = 1; colIdx <= meta.getColumnCount(); colIdx++) {
-                        String colName;
-                        if (quirksMode == QuirksMode.DB2){
-                            colName = meta.getColumnName(colIdx);
-                        } else {
-                            colName = meta.getColumnLabel(colIdx);
-                        }
-                        pojo.setProperty(colName, getRSVal(rs, colIdx));
-                    }
-
-                    return (T)pojo.getObject();
-                }
-            }
-            catch (SQLException ex) {
-                throw new Sql2oException("Database error: " + ex.getMessage(), ex);
-            }
-            return null;
-        }
-    }
-
-    // trivial iterable wrapper around ResultSetIterator
-    public class ResultSetIterable<T> implements Iterable<T>, AutoCloseable {
+    /**
+     * Iterable {@link java.sql.ResultSet} that wraps {@link org.sql2o.ResultSetIterator}.
+     */
+    private class ResultSetIterableImpl<T> implements ResultSetIterable<T> {
         private long start;
         private ResultSet rs;
         private PojoMetadata metadata;
         private long afterExecQuery;
 
-        public ResultSetIterable(Class<T> returnType) {
+        public ResultSetIterableImpl(Class<T> returnType) {
             metadata = new PojoMetadata(returnType, isCaseSensitive(), isAutoDeriveColumnNames(), getColumnMappings());
             try {
                 start = System.currentTimeMillis();
@@ -409,8 +323,16 @@ public class Query {
         }
     }
 
+    /**
+     * Read a collection lazily. Generally speaking, this should only be used if you are reading MANY
+     * results and keeping them all in a Collection would cause memory issues. You MUST call
+     * {@link org.sql2o.ResultSetIterable#close()} when you are done iterating.
+     *
+     * @param returnType type of each row
+     * @return iterable results
+     */
     public <T> ResultSetIterable<T> executeAndFetchLazy(final Class<T> returnType) {
-        return new ResultSetIterable<T>(returnType);
+        return new ResultSetIterableImpl<T>(returnType);
     }
 
     public <T> List<T> executeAndFetch(Class<T> returnType){
@@ -502,7 +424,7 @@ public class Query {
         try {
             ResultSet rs = this.statement.executeQuery();
             if (rs.next()){
-                Object o = getRSVal(rs, 1);
+                Object o = ResultSetUtils.getRSVal(rs, 1);
                 long end = System.currentTimeMillis();
                 logger.debug("total: {} ms; executed scalar [{}]", new Object[]{
                     end - start, 
@@ -543,7 +465,7 @@ public class Query {
         try{
             ResultSet rs = this.statement.executeQuery();
             while(rs.next()){
-                list.add((T)getRSVal(rs,1));
+                list.add((T) ResultSetUtils.getRSVal(rs, 1));
             }
 
             long end = System.currentTimeMillis();
@@ -640,16 +562,4 @@ public class Query {
             throw new RuntimeException("Error while attempting to close connection", ex);
         }
     }
-
-    private Object getRSVal(ResultSet rs, int idx) throws SQLException {
-        Object o = rs.getObject(idx);
-        // oracle timestamps are not always convertible to a java Date. If ResultSet.getTimestamp is used instead of
-        // ResultSet.getObject, a normal java.sql.Timestamp instance is returnd.
-        if (o != null && o.getClass().getCanonicalName().startsWith("oracle.sql.TIMESTAMP")){
-            o = rs.getTimestamp(idx);
-        }
-
-        return o;
-    }
-
 }
