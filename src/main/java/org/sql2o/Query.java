@@ -271,151 +271,180 @@ public class Query {
         return name;
     }
 
-    public <T> Iterable<T> executeAndFetchLazy(Class<T> returnType) {
-        final PojoMetadata metadata = new PojoMetadata(returnType, this.isCaseSensitive(), this.isAutoDeriveColumnNames(), this.getColumnMappings());
-        final boolean isCaseSensitive = this.isCaseSensitive();
-        final QuirksMode quirksMode = this.connection.getSql2o().quirksMode;
-        final String name = this.getName() == null ? "No name" : this.getName();
+    public class ResultSetIterator<T> implements Iterator<T> {
+        private T next; // keep track of next item in case hasNext() is called multiple times
+        private boolean resultSetFinished;
 
-        final Iterator<T> resultSetIterator = new Iterator<T>() {
-            private T next; // keep track of next item in case hasNext() is called multiple times
+        private ResultSet rs;
+        private ResultSetMetaData meta;
+        private PojoMetadata metadata;
+        private boolean isCaseSensitive;
+        private QuirksMode quirksMode;
 
-            private long start;
-            private ResultSet rs;
-            private long afterExecQuery;
-            private ResultSetMetaData meta;
+        public ResultSetIterator(ResultSet rs, PojoMetadata metadata, boolean isCaseSensitive, QuirksMode quirksMode) {
+            this.rs = rs;
+            this.metadata = metadata;
+            this.isCaseSensitive = isCaseSensitive;
+            this.quirksMode = quirksMode;
+            try {
+                meta = rs.getMetaData();
+            }
+            catch(SQLException ex) {
+                throw new Sql2oException("Database error: " + ex.getMessage(), ex);
+            }
+        }
 
-            public boolean hasNext() {
-                // check if we already fetched next item
-                if (next != null) {
-                    return true;
-                }
+        public boolean hasNext() {
+            // check if we already fetched next item
+            if (next != null) {
+                return true;
+            }
 
-                // initialize if necessary
-                if (meta == null) {
-                    initialize();
-                }
-
-                // check if result set already closed
-                if (rs == null) {
-                    return false;
-                }
-
-                // now fetch next item
-                next = readNext();
-
-                // check if we got something
-                if (next != null) {
-                    return true;
-                }
-
-                // no more items, close up ResultSet
-                close();
-
-                // log the query
-                long afterClose = System.currentTimeMillis();
-                logger.debug("total: {} ms, execution: {} ms, reading and parsing: {} ms; executed [{}]", new Object[]{
-                        afterClose - start,
-                        afterExecQuery-start,
-                        afterClose - afterExecQuery,
-                        name
-                });
-
+            // check if result set already finished
+            if (resultSetFinished) {
                 return false;
             }
 
-            public T next() {
-                if (!hasNext()) {
-                    throw new NoSuchElementException();
-                }
+            // now fetch next item
+            next = readNext();
 
-                T result = next;
-
-                next = null;
-
-                return result;
+            // check if we got something
+            if (next != null) {
+                return true;
             }
 
-            public void remove() {
-                throw new UnsupportedOperationException();
+            // no more items
+            resultSetFinished = true;
+
+            return false;
+        }
+
+        public T next() {
+            if (!hasNext()) {
+                throw new NoSuchElementException();
             }
 
-            private void initialize() {
-                try {
-                    start = System.currentTimeMillis();
-                    rs = statement.executeQuery();
-                    afterExecQuery = System.currentTimeMillis();
-                    meta = rs.getMetaData();
-                }
-                catch(SQLException ex) {
-                    close();
-                    throw new Sql2oException("Database error: " + ex.getMessage(), ex);
-                }
-            }
+            T result = next;
 
-            private T readNext() {
-                try {
-                    if (rs.next()) {
-                        Pojo pojo = new Pojo(metadata, isCaseSensitive);
+            next = null;
 
-                        for(int colIdx = 1; colIdx <= meta.getColumnCount(); colIdx++) {
-                            String colName;
-                            if (quirksMode == QuirksMode.DB2){
-                                colName = meta.getColumnName(colIdx);
-                            } else {
-                                colName = meta.getColumnLabel(colIdx);
-                            }
-                            pojo.setProperty(colName, getRSVal(rs, colIdx));
+            return result;
+        }
+
+        public void remove() {
+            throw new UnsupportedOperationException();
+        }
+
+        private T readNext() {
+            try {
+                if (rs.next()) {
+                    Pojo pojo = new Pojo(metadata, isCaseSensitive);
+
+                    for(int colIdx = 1; colIdx <= meta.getColumnCount(); colIdx++) {
+                        String colName;
+                        if (quirksMode == QuirksMode.DB2){
+                            colName = meta.getColumnName(colIdx);
+                        } else {
+                            colName = meta.getColumnLabel(colIdx);
                         }
-
-                        return (T)pojo.getObject();
+                        pojo.setProperty(colName, getRSVal(rs, colIdx));
                     }
+
+                    return (T)pojo.getObject();
                 }
-                catch (SQLException ex) {
-                    throw new Sql2oException("Database error: " + ex.getMessage(), ex);
-                }
-                return null;
             }
+            catch (SQLException ex) {
+                throw new Sql2oException("Database error: " + ex.getMessage(), ex);
+            }
+            return null;
+        }
+    }
 
-            private void close() {
-                try {
-                    if (rs != null && !rs.isClosed()) {
-                        rs.close();
-                    }
-                }
-                catch (SQLException ex) {
-                    throw new Sql2oException("Error attempting to close ResultSet.", ex);
-                }
-                finally {
+    // trivial iterable wrapper around ResultSetIterator
+    public class ResultSetIterable<T> implements Iterable<T>, AutoCloseable {
+        private long start;
+        private ResultSet rs;
+        private PojoMetadata metadata;
+        private long afterExecQuery;
+
+        public ResultSetIterable(Class<T> returnType) {
+            metadata = new PojoMetadata(returnType, isCaseSensitive(), isAutoDeriveColumnNames(), getColumnMappings());
+            try {
+                start = System.currentTimeMillis();
+                rs = statement.executeQuery();
+                afterExecQuery = System.currentTimeMillis();
+            }
+            catch (SQLException ex) {
+                throw new Sql2oException("Database error: " + ex.getMessage(), ex);
+            }
+        }
+
+        public Iterator<T> iterator() {
+            return new ResultSetIterator<T>(rs, metadata, isCaseSensitive(), getConnection().getSql2o().quirksMode);
+        }
+
+        public void close() {
+            try {
+                if (rs != null) {
+                    rs.close();
+
+                    // log the query
+                    long afterClose = System.currentTimeMillis();
+                    logger.debug("total: {} ms, execution: {} ms, reading and parsing: {} ms; executed [{}]", new Object[]{
+                            afterClose - start,
+                            afterExecQuery-start,
+                            afterClose - afterExecQuery,
+                            name
+                    });
+
                     rs = null;
-                    closeConnectionIfNecessary();
                 }
             }
-
-        };
-
-        return new Iterable<T>() {
-            public Iterator<T> iterator() {
-                return resultSetIterator;
+            catch (SQLException ex) {
+                throw new Sql2oException("Error closing ResultSet.", ex);
             }
-        };
+            finally {
+                closeConnectionIfNecessary();
+            }
+        }
+    }
+
+    public <T> ResultSetIterable<T> executeAndFetchLazy(final Class<T> returnType) {
+        return new ResultSetIterable<T>(returnType);
     }
 
     public <T> List<T> executeAndFetch(Class<T> returnType){
         List<T> list = new ArrayList<T>();
-        for (T item : executeAndFetchLazy(returnType)) {
-            list.add(item);
+
+        // if sql2o moves to java 7 at some point, this could be much cleaner using try-with-resources
+        ResultSetIterable<T> iterable = null;
+        try {
+            iterable = executeAndFetchLazy(returnType);
+            for (T item : iterable) {
+                list.add(item);
+            }
         }
+        finally {
+            if (iterable != null) {
+                iterable.close();
+            }
+        }
+
         return list;
     }
 
     public <T> T executeAndFetchFirst(Class<T> returnType){
-        Iterator<T> iterator = executeAndFetchLazy(returnType).iterator();
-        if (iterator.hasNext()) {
-            return iterator.next();
+        // if sql2o moves to java 7 at some point, this could be much cleaner using try-with-resources
+        ResultSetIterable<T> iterable = null;
+        try {
+            iterable = executeAndFetchLazy(returnType);
+            Iterator<T> iterator = iterable.iterator();
+            return iterator.hasNext() ? iterator.next() : null;
         }
-        else {
-            return null;
+        finally {
+            if (iterable != null) {
+                iterable.close();
+            }
         }
     }
     
