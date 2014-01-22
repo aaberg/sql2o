@@ -805,6 +805,7 @@ public class Sql2oTest {
         private String data1;
         private Timestamp data2;
         private Long data3;
+        private Float data4;
         public String getData1() {
             return data1;
         }
@@ -814,6 +815,7 @@ public class Sql2oTest {
         public Long getData3() {
             return data3;
         }
+        public Float getData4() { return data4; }
         public void setData1(String data1) {
             this.data1 = data1;
         }
@@ -823,6 +825,7 @@ public class Sql2oTest {
         public void setData3(Long data3) {
             this.data3 = data3;
         }
+        public void setData4(Float data4) { this.data4 = data4; }
         @Override
         public boolean equals(Object obj) {
             if((obj != null) && (obj instanceof BindablePojo)){
@@ -847,6 +850,7 @@ public class Sql2oTest {
         pojo1.setData1("Foo");
         pojo1.setData2(new Timestamp(new Date().getTime()));
         pojo1.setData3(789456123L);
+        pojo1.setData4(4.5f);
         
         String insertSql = "insert into bindtbl(data1, data2, data3) values(:data1, :data2, :data3)";
         sql2o.createQuery(insertSql).bind(pojo1).executeUpdate();
