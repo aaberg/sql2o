@@ -250,63 +250,151 @@ public class Query {
         return name;
     }
 
-    public <T> List<T> executeAndFetch(Class returnType){
-        List list = new ArrayList();
-        PojoMetadata metadata = new PojoMetadata(returnType, this.isCaseSensitive(), this.isAutoDeriveColumnNames(), this.getColumnMappings());
-        try{
-            //java.util.Date st = new java.util.Date();
-            long start = System.currentTimeMillis();
-            ResultSet rs = statement.executeQuery();
-            long afterExecQuery = System.currentTimeMillis();
+    public <T> Iterable<T> executeAndFetchLazy(Class<T> returnType) {
+        final PojoMetadata metadata = new PojoMetadata(returnType, this.isCaseSensitive(), this.isAutoDeriveColumnNames(), this.getColumnMappings());
+        final boolean isCaseSensitive = this.isCaseSensitive();
+        final QuirksMode quirksMode = this.connection.getSql2o().quirksMode;
+        final String name = this.getName() == null ? "No name" : this.getName();
 
-            ResultSetMetaData meta = rs.getMetaData();
+        final Iterator<T> resultSetIterator = new Iterator<T>() {
+            private T next; // keep track of next item in case hasNext() is called multiple times
 
-            while(rs.next()){
+            private long start;
+            private ResultSet rs;
+            private long afterExecQuery;
+            private ResultSetMetaData meta;
 
-                Pojo pojo = new Pojo(metadata, this.isCaseSensitive());
-
-                //Object obj = returnType.newInstance();
-                for(int colIdx = 1; colIdx <= meta.getColumnCount(); colIdx++){
-                    String colName;
-                    if (this.connection.getSql2o().quirksMode == QuirksMode.DB2){
-                        colName = meta.getColumnName(colIdx);
-                    } else {
-                        colName = meta.getColumnLabel(colIdx);
-                    }
-                    pojo.setProperty(colName, getRSVal(rs, colIdx));
+            public boolean hasNext() {
+                // check if we already fetched next item
+                if (next != null) {
+                    return true;
                 }
 
-                list.add(pojo.getObject());
+                // initialize if necessary
+                if (meta == null) {
+                    initialize();
+                }
+
+                // check if result set already closed
+                if (rs == null) {
+                    return false;
+                }
+
+                // now fetch next item
+                next = readNext();
+
+                // check if we got something
+                if (next != null) {
+                    return true;
+                }
+
+                // no more items, close up ResultSet
+                close();
+
+                // log the query
+                long afterClose = System.currentTimeMillis();
+                logger.debug("total: {} ms, execution: {} ms, reading and parsing: {} ms; executed [{}]", new Object[]{
+                        afterClose - start,
+                        afterExecQuery-start,
+                        afterClose - afterExecQuery,
+                        name
+                });
+
+                return false;
             }
 
+            public T next() {
+                if (!hasNext()) {
+                    throw new NoSuchElementException();
+                }
 
-            rs.close();
-            long afterClose = System.currentTimeMillis();
+                T result = next;
 
-            logger.debug("total: {} ms, execution: {} ms, reading and parsing: {} ms; executed [{}]", new Object[]{
-                    afterClose - start, 
-                    afterExecQuery-start, 
-                    afterClose - afterExecQuery, 
-                    this.getName() == null ? "No name" : this.getName()
-                });
-        }
-        catch(SQLException ex){
-            throw new Sql2oException("Database error: " + ex.getMessage(), ex);
-        }
-        finally {
-            closeConnectionIfNecessary();
-        }
+                next = null;
 
+                return result;
+            }
+
+            public void remove() {
+                throw new UnsupportedOperationException();
+            }
+
+            private void initialize() {
+                try {
+                    start = System.currentTimeMillis();
+                    rs = statement.executeQuery();
+                    afterExecQuery = System.currentTimeMillis();
+                    meta = rs.getMetaData();
+                }
+                catch(SQLException ex) {
+                    close();
+                    throw new Sql2oException("Database error: " + ex.getMessage(), ex);
+                }
+            }
+
+            private T readNext() {
+                try {
+                    if (rs.next()) {
+                        Pojo pojo = new Pojo(metadata, isCaseSensitive);
+
+                        for(int colIdx = 1; colIdx <= meta.getColumnCount(); colIdx++) {
+                            String colName;
+                            if (quirksMode == QuirksMode.DB2){
+                                colName = meta.getColumnName(colIdx);
+                            } else {
+                                colName = meta.getColumnLabel(colIdx);
+                            }
+                            pojo.setProperty(colName, getRSVal(rs, colIdx));
+                        }
+
+                        return (T)pojo.getObject();
+                    }
+                }
+                catch (SQLException ex) {
+                    throw new Sql2oException("Database error: " + ex.getMessage(), ex);
+                }
+                return null;
+            }
+
+            private void close() {
+                try {
+                    if (rs != null && !rs.isClosed()) {
+                        rs.close();
+                    }
+                }
+                catch (SQLException ex) {
+                    throw new Sql2oException("Error attempting to close ResultSet.", ex);
+                }
+                finally {
+                    rs = null;
+                    closeConnectionIfNecessary();
+                }
+            }
+
+        };
+
+        return new Iterable<T>() {
+            public Iterator<T> iterator() {
+                return resultSetIterator;
+            }
+        };
+    }
+
+    public <T> List<T> executeAndFetch(Class<T> returnType){
+        List<T> list = new ArrayList<T>();
+        for (T item : executeAndFetchLazy(returnType)) {
+            list.add(item);
+        }
         return list;
     }
 
-    public <T> T executeAndFetchFirst(Class returnType){
-        List l = this.executeAndFetch(returnType);
-        if (l.size() == 0){
-            return null;
+    public <T> T executeAndFetchFirst(Class<T> returnType){
+        Iterator<T> iterator = executeAndFetchLazy(returnType).iterator();
+        if (iterator.hasNext()) {
+            return iterator.next();
         }
-        else{
-            return (T)l.get(0);
+        else {
+            return null;
         }
     }
     
