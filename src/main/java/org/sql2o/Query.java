@@ -11,6 +11,7 @@ import org.sql2o.data.TableFactory;
 import org.sql2o.reflection.Pojo;
 import org.sql2o.reflection.PojoMetadata;
 import org.sql2o.tools.NamedParameterStatement;
+import org.sql2o.tools.ResultSetUtils;
 
 import java.io.InputStream;
 import java.lang.reflect.InvocationTargetException;
@@ -271,63 +272,101 @@ public class Query {
         return name;
     }
 
-    public <T> List<T> executeAndFetch(Class returnType){
-        List list = new ArrayList();
-        PojoMetadata metadata = new PojoMetadata(returnType, this.isCaseSensitive(), this.isAutoDeriveColumnNames(), this.getColumnMappings());
-        try{
-            //java.util.Date st = new java.util.Date();
-            long start = System.currentTimeMillis();
-            ResultSet rs = statement.executeQuery();
-            long afterExecQuery = System.currentTimeMillis();
+    /**
+     * Iterable {@link java.sql.ResultSet} that wraps {@link org.sql2o.ResultSetIterator}.
+     */
+    private class ResultSetIterableImpl<T> implements ResultSetIterable<T> {
+        private long start;
+        private ResultSet rs;
+        private PojoMetadata metadata;
+        private long afterExecQuery;
 
-            ResultSetMetaData meta = rs.getMetaData();
-
-            while(rs.next()){
-
-                Pojo pojo = new Pojo(metadata, this.isCaseSensitive());
-
-                //Object obj = returnType.newInstance();
-                for(int colIdx = 1; colIdx <= meta.getColumnCount(); colIdx++){
-                    String colName;
-                    if (this.connection.getSql2o().quirksMode == QuirksMode.DB2){
-                        colName = meta.getColumnName(colIdx);
-                    } else {
-                        colName = meta.getColumnLabel(colIdx);
-                    }
-                    pojo.setProperty(colName, getRSVal(rs, colIdx));
-                }
-
-                list.add(pojo.getObject());
+        public ResultSetIterableImpl(Class<T> returnType) {
+            metadata = new PojoMetadata(returnType, isCaseSensitive(), isAutoDeriveColumnNames(), getColumnMappings());
+            try {
+                start = System.currentTimeMillis();
+                rs = statement.executeQuery();
+                afterExecQuery = System.currentTimeMillis();
             }
-
-
-            rs.close();
-            long afterClose = System.currentTimeMillis();
-
-            logger.debug("total: {} ms, execution: {} ms, reading and parsing: {} ms; executed [{}]", new Object[]{
-                    afterClose - start, 
-                    afterExecQuery-start, 
-                    afterClose - afterExecQuery, 
-                    this.getName() == null ? "No name" : this.getName()
-                });
+            catch (SQLException ex) {
+                throw new Sql2oException("Database error: " + ex.getMessage(), ex);
+            }
         }
-        catch(SQLException ex){
-            throw new Sql2oException("Database error: " + ex.getMessage(), ex);
+
+        public Iterator<T> iterator() {
+            return new ResultSetIterator<T>(rs, metadata, isCaseSensitive(), getConnection().getSql2o().quirksMode);
+        }
+
+        public void close() {
+            try {
+                if (rs != null) {
+                    rs.close();
+
+                    // log the query
+                    long afterClose = System.currentTimeMillis();
+                    logger.debug("total: {} ms, execution: {} ms, reading and parsing: {} ms; executed [{}]", new Object[]{
+                            afterClose - start,
+                            afterExecQuery-start,
+                            afterClose - afterExecQuery,
+                            name
+                    });
+
+                    rs = null;
+                }
+            }
+            catch (SQLException ex) {
+                throw new Sql2oException("Error closing ResultSet.", ex);
+            }
+            finally {
+                closeConnectionIfNecessary();
+            }
+        }
+    }
+
+    /**
+     * Read a collection lazily. Generally speaking, this should only be used if you are reading MANY
+     * results and keeping them all in a Collection would cause memory issues. You MUST call
+     * {@link org.sql2o.ResultSetIterable#close()} when you are done iterating.
+     *
+     * @param returnType type of each row
+     * @return iterable results
+     */
+    public <T> ResultSetIterable<T> executeAndFetchLazy(final Class<T> returnType) {
+        return new ResultSetIterableImpl<T>(returnType);
+    }
+
+    public <T> List<T> executeAndFetch(Class<T> returnType){
+        List<T> list = new ArrayList<T>();
+
+        // if sql2o moves to java 7 at some point, this could be much cleaner using try-with-resources
+        ResultSetIterable<T> iterable = null;
+        try {
+            iterable = executeAndFetchLazy(returnType);
+            for (T item : iterable) {
+                list.add(item);
+            }
         }
         finally {
-            closeConnectionIfNecessary();
+            if (iterable != null) {
+                iterable.close();
+            }
         }
 
         return list;
     }
 
-    public <T> T executeAndFetchFirst(Class returnType){
-        List l = this.executeAndFetch(returnType);
-        if (l.size() == 0){
-            return null;
+    public <T> T executeAndFetchFirst(Class<T> returnType){
+        // if sql2o moves to java 7 at some point, this could be much cleaner using try-with-resources
+        ResultSetIterable<T> iterable = null;
+        try {
+            iterable = executeAndFetchLazy(returnType);
+            Iterator<T> iterator = iterable.iterator();
+            return iterator.hasNext() ? iterator.next() : null;
         }
-        else{
-            return (T)l.get(0);
+        finally {
+            if (iterable != null) {
+                iterable.close();
+            }
         }
     }
     
@@ -385,7 +424,7 @@ public class Query {
         try {
             ResultSet rs = this.statement.executeQuery();
             if (rs.next()){
-                Object o = getRSVal(rs, 1);
+                Object o = ResultSetUtils.getRSVal(rs, 1);
                 long end = System.currentTimeMillis();
                 logger.debug("total: {} ms; executed scalar [{}]", new Object[]{
                     end - start, 
@@ -426,7 +465,7 @@ public class Query {
         try{
             ResultSet rs = this.statement.executeQuery();
             while(rs.next()){
-                list.add((T)getRSVal(rs,1));
+                list.add((T) ResultSetUtils.getRSVal(rs, 1));
             }
 
             long end = System.currentTimeMillis();
@@ -523,16 +562,4 @@ public class Query {
             throw new RuntimeException("Error while attempting to close connection", ex);
         }
     }
-
-    private Object getRSVal(ResultSet rs, int idx) throws SQLException {
-        Object o = rs.getObject(idx);
-        // oracle timestamps are not always convertible to a java Date. If ResultSet.getTimestamp is used instead of
-        // ResultSet.getObject, a normal java.sql.Timestamp instance is returnd.
-        if (o != null && o.getClass().getCanonicalName().startsWith("oracle.sql.TIMESTAMP")){
-            o = rs.getTimestamp(idx);
-        }
-
-        return o;
-    }
-
 }
