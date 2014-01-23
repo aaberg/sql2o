@@ -370,6 +370,20 @@ public class Query {
         }
     }
     
+    public void executeWithoutResult(){
+        long start = System.currentTimeMillis();
+        try {
+            this.statement.executeQuery();
+        }
+        catch (SQLException e) {
+            this.connection.onException();
+            throw new Sql2oException("Database error occurred while running executeWithoutReturn: " + e.getMessage(), e);
+        }
+        finally{
+            closeConnectionIfNecessary();
+        }
+    }
+
     public Table executeAndFetchTable(){
         ResultSet rs;
         long start = System.currentTimeMillis();
