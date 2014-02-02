@@ -4,8 +4,8 @@
     <artifactId>sql2o</artifactId>
     <packaging>jar</packaging>
     <version>1.2.2-SNAPSHOT</version>
-    <name>Sql2o</name>
-    <url>http://sql2o.aabergs.net</url>
+    <name>sql2o</name>
+    <url>http://www.sql2o.org</url>
     <licenses>
         <license>
             <name>MIT</name>
@@ -13,11 +13,24 @@
             <distribution>repo</distribution>
         </license>
     </licenses>
-
+    <parent>
+        <groupId>org.sonatype.oss</groupId>
+        <artifactId>oss-parent</artifactId>
+        <version>7</version>
+    </parent>
     <scm>
-        <url>scm:git:git@github.com:aaberg/sql2o.git</url>
-        <connection>scm:git:file:///home/lars/Programming/Repositories/sql2o.git/</connection>
+        <connection>scm:git:git@github.com:aaberg/sql2o.git</connection>
+        <developerConnection>scm:git:git@github.com:aaberg/sql2o.git</developerConnection>
+        <url>git@github.com:aaberg/sql2o.git</url>
     </scm>
+    <developers>
+        <developer>
+            <email>lars@aaberg.cc</email>
+            <id>aaberg</id>
+            <name>Lars Aaberg</name>
+            <url>https://github.com/aaberg/</url>
+        </developer>
+    </developers>
 
     <dependencies>
         <dependency>
