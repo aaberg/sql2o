@@ -75,13 +75,21 @@ public class Convert {
     }
 
     public static Converter getConverter(Class clazz) throws ConverterException {
+        Converter converter = getConverterIfExists(clazz);
+        if (converter == null) {
+            throw new ConverterException("No converter registered for class: " + clazz.getName());
+        }
+        return converter;
+    }
+
+    public static Converter getConverterIfExists(Class clazz) {
         if (registeredConverters.containsKey(clazz)){
             return registeredConverters.get(clazz);
         } else if (clazz.isEnum()) {
             registeredEnumConverter.setEnumType(clazz);
             return registeredEnumConverter;
-        } else{
-            throw new ConverterException("No converter registered for class: " + clazz.getName());
+        } else {
+            return null;
         }
     }
 

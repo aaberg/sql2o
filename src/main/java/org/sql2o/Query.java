@@ -3,12 +3,8 @@ package org.sql2o;
 import org.joda.time.DateTime;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.sql2o.converters.Convert;
-import org.sql2o.converters.Converter;
-import org.sql2o.converters.ConverterException;
 import org.sql2o.data.Table;
 import org.sql2o.data.TableFactory;
-import org.sql2o.reflection.Pojo;
 import org.sql2o.reflection.PojoMetadata;
 import org.sql2o.tools.NamedParameterStatement;
 import org.sql2o.tools.ResultSetUtils;
@@ -16,8 +12,8 @@ import org.sql2o.tools.ResultSetUtils;
 import java.io.InputStream;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
-import java.sql.*;
 import java.sql.Date;
+import java.sql.*;
 import java.util.*;
 
 /**
@@ -419,6 +415,10 @@ public class Query {
         return this.connection;
     }
 
+    /**
+     * Use {@link #executeAndFetchFirst(Class)} instead.
+     */
+    @Deprecated
     public Object executeScalar(){
         long start = System.currentTimeMillis();
         try {
@@ -446,19 +446,19 @@ public class Query {
         }
         
     }
-    
-    public <V> V executeScalar(Class returnType){
-        Object value = executeScalar();
-        Converter converter = null;
-        try {
-            converter = Convert.getConverter(returnType);
-            return (V)converter.convert(value);
-        } catch (ConverterException e) {
-            throw new Sql2oException("Error occured while converting value from database to type " + returnType.toString(), e);
-        }
 
+    /**
+     * Use {@link #executeAndFetchFirst(Class)} instead.
+     */
+    @Deprecated
+    public <V> V executeScalar(Class<V> returnType) {
+        return executeAndFetchFirst(returnType);
     }
 
+    /**
+     * Use {@link #executeAndFetch(Class)} instead.
+     */
+    @Deprecated
     public <T> List<T> executeScalarList(){
         long start = System.currentTimeMillis();
         List<T> list = new ArrayList<T>();
