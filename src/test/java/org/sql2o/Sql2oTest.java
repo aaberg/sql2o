@@ -192,10 +192,10 @@ public class Sql2oTest {
     public void testExecuteScalar(){
         createAndFillUserTable();
 
-        Object o = sql2o.createQuery("select text from User where id = 2").executeScalar();
+        Object o = sql2o.createQuery("select text from User where id = 2").executeAndFetchFirst(String.class);
         assertTrue(o.getClass().equals(String.class));
 
-        Object o2 = sql2o.createQuery("select 10").executeScalar();
+        Object o2 = sql2o.createQuery("select 10").executeAndFetchFirst(Integer.class);
         assertEquals(o2, 10);
 
         deleteUserTable();
@@ -244,7 +244,7 @@ public class Sql2oTest {
 
     @Test
     public void testExecuteAndFetchResultSet() throws SQLException {
-        List<Integer> list = sql2o.createQuery("select 1 val from (values(0)) union select 2 from (values(0)) union select 3 from (values(0))").executeScalarList();
+        List<Integer> list = sql2o.createQuery("select 1 val from (values(0)) union select 2 from (values(0)) union select 3 from (values(0))").executeAndFetch(Integer.class);
 
         assertEquals((int)list.get(0), 1);
         assertEquals((int)list.get(1), 2);
@@ -317,7 +317,7 @@ public class Sql2oTest {
                 .addParameter("id", 1)
                 .addParameter("date", (Date)null).executeUpdate();
 
-        Date d = (Date)sql2o.createQuery("select somedate from nullDateTest where id = 1").executeScalar();
+        Date d = sql2o.createQuery("select somedate from nullDateTest where id = 1").executeAndFetchFirst(Date.class);
         assertNull(d);
     }
 
@@ -386,7 +386,7 @@ public class Sql2oTest {
                 .addParameter("val", "something to rollback")
                 .executeUpdate()
                 .rollback();
-        long rowCount = (Long)sql2o.createQuery("select count(*) from test_rollback_table").executeScalar();
+        long rowCount = sql2o.createQuery("select count(*) from test_rollback_table").executeAndFetchFirst(Long.class);
 
         assertEquals(1, rowCount);
     }
@@ -550,7 +550,7 @@ public class Sql2oTest {
         }
         
         assertTrue(failed);
-        long rowCount = (Long)sql2o.createQuery("select count(*) from runinsidetransactiontable").executeScalar();
+        long rowCount = sql2o.createQuery("select count(*) from runinsidetransactiontable").executeAndFetchFirst(Long.class);
         assertEquals(0, rowCount);
 
         sql2o.runInTransaction(new StatementRunnable() {
@@ -560,7 +560,7 @@ public class Sql2oTest {
             }
         });
 
-        rowCount = (Long)sql2o.createQuery("select count(*) from runinsidetransactiontable").executeScalar();
+        rowCount = sql2o.createQuery("select count(*) from runinsidetransactiontable").executeAndFetchFirst(Long.class);
         assertEquals(1, rowCount);
 
 
@@ -576,7 +576,7 @@ public class Sql2oTest {
             }
         }, argument);
     
-        rowCount = (Long)sql2o.createQuery("select count(*) from runinsidetransactiontable").executeScalar();
+        rowCount = sql2o.createQuery("select count(*) from runinsidetransactiontable").executeAndFetchFirst(Long.class);
         assertEquals(2, rowCount);
     }
 
@@ -604,9 +604,9 @@ public class Sql2oTest {
 
     @Test
     public void testDynamicExecuteScalar(){
-        Object origVal = sql2o.createQuery("select 1").executeScalar();
+        Object origVal = sql2o.createQuery("select 1").executeAndFetchFirst(Integer.class);
         assertTrue(Integer.class.equals(origVal.getClass()));
-        assertEquals((Integer)1, origVal);
+        assertEquals(1, origVal);
         
         Long intVal = sql2o.createQuery("select 1").executeScalar(Long.class);
         assertEquals((Long)1l, intVal);
