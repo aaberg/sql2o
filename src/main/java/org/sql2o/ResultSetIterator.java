@@ -92,12 +92,12 @@ public class ResultSetIterator<T> implements Iterator<T> {
         try {
             if (rs.next()) {
 
-                // if we have a converter for this type, we want executeScalar with straight conversion
-                if (this.converter != null) {
+                // if we have a converter and are selecting 1 column, we want executeScalar
+                if (this.converter != null && meta.getColumnCount() == 1) {
                     return (T)converter.convert(ResultSetUtils.getRSVal(rs, 1));
                 }
 
-                // otherwise we want executeList with object mapping
+                // otherwise we want executeAndFetch with object mapping
                 Pojo pojo = new Pojo(metadata, isCaseSensitive);
 
                 for(int colIdx = 1; colIdx <= meta.getColumnCount(); colIdx++) {
