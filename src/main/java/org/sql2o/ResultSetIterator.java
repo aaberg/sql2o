@@ -1,5 +1,8 @@
 package org.sql2o;
 
+import org.sql2o.converters.Convert;
+import org.sql2o.converters.Converter;
+import org.sql2o.converters.ConverterException;
 import org.sql2o.reflection.Pojo;
 import org.sql2o.reflection.PojoMetadata;
 import org.sql2o.tools.ResultSetUtils;
@@ -23,6 +26,7 @@ public class ResultSetIterator<T> implements Iterator<T> {
     private PojoMetadata metadata;
     private boolean isCaseSensitive;
     private QuirksMode quirksMode;
+    private Converter converter;
 
     public ResultSetIterator(ResultSet rs, PojoMetadata metadata, boolean isCaseSensitive, QuirksMode quirksMode) {
         this.rs = rs;
@@ -35,6 +39,7 @@ public class ResultSetIterator<T> implements Iterator<T> {
         catch(SQLException ex) {
             throw new Sql2oException("Database error: " + ex.getMessage(), ex);
         }
+        this.converter = Convert.getConverterIfExists(metadata.getType());
     }
 
     // fields needed to properly implement
@@ -82,9 +87,17 @@ public class ResultSetIterator<T> implements Iterator<T> {
         throw new UnsupportedOperationException();
     }
 
+    @SuppressWarnings("unchecked") // Convert should be refactored so that this isn't needed
     private T readNext() {
         try {
             if (rs.next()) {
+
+                // if we have a converter and are selecting 1 column, we want executeScalar
+                if (this.converter != null && meta.getColumnCount() == 1) {
+                    return (T)converter.convert(ResultSetUtils.getRSVal(rs, 1));
+                }
+
+                // otherwise we want executeAndFetch with object mapping
                 Pojo pojo = new Pojo(metadata, isCaseSensitive);
 
                 for(int colIdx = 1; colIdx <= meta.getColumnCount(); colIdx++) {
@@ -102,6 +115,9 @@ public class ResultSetIterator<T> implements Iterator<T> {
         }
         catch (SQLException ex) {
             throw new Sql2oException("Database error: " + ex.getMessage(), ex);
+        }
+        catch (ConverterException e) {
+            throw new Sql2oException("Error occurred while converting value from database to type " + metadata.getType(), e);
         }
         return null;
     }
