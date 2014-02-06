@@ -129,6 +129,6 @@ public class ResultSetIterator<T> implements Iterator<T> {
     private boolean shouldTryExecuteScalar() throws SQLException {
         return converter != null &&
                meta.getColumnCount() == 1 &&
-               metadata.getPropertySetterIfExists(getColumnName(0)) == null;
+               metadata.getPropertySetterIfExists(getColumnName(1)) == null;
     }
 }
