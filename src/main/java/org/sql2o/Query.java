@@ -3,8 +3,12 @@ package org.sql2o;
 import org.joda.time.DateTime;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.sql2o.converters.Convert;
+import org.sql2o.converters.Converter;
+import org.sql2o.converters.ConverterException;
 import org.sql2o.data.Table;
 import org.sql2o.data.TableFactory;
+import org.sql2o.reflection.Pojo;
 import org.sql2o.reflection.PojoMetadata;
 import org.sql2o.tools.NamedParameterStatement;
 import org.sql2o.tools.ResultSetUtils;
@@ -12,8 +16,8 @@ import org.sql2o.tools.ResultSetUtils;
 import java.io.InputStream;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
-import java.sql.Date;
 import java.sql.*;
+import java.sql.Date;
 import java.util.*;
 
 /**
@@ -50,7 +54,7 @@ public class Query {
 
     private boolean caseSensitive;
     private boolean autoDeriveColumnNames;
-    
+
     private final String name;
     private boolean returnGeneratedKeys;
 
@@ -73,7 +77,7 @@ public class Query {
         }
         return this;
     }
-    
+
     public Query addParameter(String name, int value){
         try{
             statement.setInt(name, value);
@@ -107,7 +111,7 @@ public class Query {
         }
         return this;
     }
-    
+
     public Query addParameter(String name, Long value){
         try{
             if (value == null){
@@ -203,7 +207,7 @@ public class Query {
         String strVal = value == null ? null : value.toString();
         return addParameter(name, strVal);
     }
-    
+
     public Query bind(Object bean){
         Class clazz = bean.getClass();
         Method[] methods = clazz.getDeclaredMethods();
@@ -252,14 +256,14 @@ public class Query {
     }
 
     public boolean isAutoDeriveColumnNames() {
-    	return autoDeriveColumnNames;
+        return autoDeriveColumnNames;
     }
-    
+
     public Query setAutoDeriveColumnNames(boolean autoDeriveColumnNames) {
-    	this.autoDeriveColumnNames = autoDeriveColumnNames;
-    	return this;
+        this.autoDeriveColumnNames = autoDeriveColumnNames;
+        return this;
     }
-    
+
     public Connection getConnection(){
         return this.connection;
     }
@@ -365,7 +369,7 @@ public class Query {
             }
         }
     }
-    
+
     public Table executeAndFetchTable(){
         ResultSet rs;
         long start = System.currentTimeMillis();
@@ -374,14 +378,14 @@ public class Query {
             long afterExecute = System.currentTimeMillis();
             Table table = TableFactory.createTable(rs, this.isCaseSensitive(), this.connection.getSql2o().quirksMode);
             long afterClose = System.currentTimeMillis();
-            
+
             logger.debug("total: {} ms, execution: {} ms, reading and parsing: {} ms; executed fetch table [{}]", new Object[]{
-                afterClose - start, 
-                afterExecute-start, 
-                afterClose - afterExecute, 
-                this.getName() == null ? "No name" : this.getName()
+                    afterClose - start,
+                    afterExecute-start,
+                    afterClose - afterExecute,
+                    this.getName() == null ? "No name" : this.getName()
             });
-            
+
             return table;
         } catch (SQLException e) {
             throw new Sql2oException("Error while executing query", e);
@@ -408,17 +412,13 @@ public class Query {
 
         long end = System.currentTimeMillis();
         logger.debug("total: {} ms; executed update [{}]", new Object[]{
-            end - start, 
-            this.getName() == null ? "No name" : this.getName()
+                end - start,
+                this.getName() == null ? "No name" : this.getName()
         });
 
         return this.connection;
     }
 
-    /**
-     * Use {@link #executeAndFetchFirst(Class)} instead.
-     */
-    @Deprecated
     public Object executeScalar(){
         long start = System.currentTimeMillis();
         try {
@@ -427,8 +427,8 @@ public class Query {
                 Object o = ResultSetUtils.getRSVal(rs, 1);
                 long end = System.currentTimeMillis();
                 logger.debug("total: {} ms; executed scalar [{}]", new Object[]{
-                    end - start, 
-                    this.getName() == null ? "No name" : this.getName()
+                        end - start,
+                        this.getName() == null ? "No name" : this.getName()
                 });
                 return o;
             }
@@ -444,34 +444,36 @@ public class Query {
         finally{
             closeConnectionIfNecessary();
         }
-        
+
     }
 
-    /**
-     * Use {@link #executeAndFetchFirst(Class)} instead.
-     */
-    @Deprecated
-    public <V> V executeScalar(Class<V> returnType) {
-        return executeAndFetchFirst(returnType);
+    public <V> V executeScalar(Class<V> returnType){
+        Object value = executeScalar();
+        Converter converter;
+        try {
+            converter = Convert.getConverter(returnType);
+            return (V)converter.convert(value);
+        } catch (ConverterException e) {
+            throw new Sql2oException("Error occured while converting value from database to type " + returnType.toString(), e);
+        }
+
     }
 
-    /**
-     * Use {@link #executeAndFetch(Class)} instead.
-     */
-    @Deprecated
-    public <T> List<T> executeScalarList(){
+    public <T> List<T> executeScalarList(Class<T> returnType){
         long start = System.currentTimeMillis();
         List<T> list = new ArrayList<T>();
         try{
+            Converter converter = Convert.getConverter(returnType);
             ResultSet rs = this.statement.executeQuery();
             while(rs.next()){
-                list.add((T) ResultSetUtils.getRSVal(rs, 1));
+                Object value = ResultSetUtils.getRSVal(rs, 1);
+                list.add((T)converter.convert(value));
             }
 
             long end = System.currentTimeMillis();
             logger.debug("total: {} ms; executed scalar list [{}]", new Object[]{
-                end - start,
-                this.getName() == null ? "No name" : this.getName()
+                    end - start,
+                    this.getName() == null ? "No name" : this.getName()
             });
 
             return list;
@@ -479,6 +481,9 @@ public class Query {
         catch(SQLException ex){
             this.connection.onException();
             throw new Sql2oException("Error occurred while executing scalar list: " + ex.getMessage(), ex);
+        }
+        catch (ConverterException e) {
+            throw new Sql2oException("Error occurred while converting value from database to type " + returnType.toString(), e);
         }
         finally{
             closeConnectionIfNecessary();
@@ -512,8 +517,8 @@ public class Query {
 
         long end = System.currentTimeMillis();
         logger.debug("total: {} ms; executed batch [{}]", new Object[]{
-            end - start,
-            this.getName() == null ? "No name" : this.getName()
+                end - start,
+                this.getName() == null ? "No name" : this.getName()
         });
 
         return this.connection;
@@ -529,17 +534,17 @@ public class Query {
             return this.columnMappings;
         }
     }
-    
+
     public Query setColumnMappings(Map<String, String> mappings){
 
         this.caseSensitiveColumnMappings = new HashMap<String, String>();
         this.columnMappings = new HashMap<String, String>();
-        
+
         for (Map.Entry<String,String> entry : mappings.entrySet()){
             this.caseSensitiveColumnMappings.put(entry.getKey(), entry.getValue());
             this.columnMappings.put(entry.getKey().toLowerCase(), entry.getValue().toLowerCase());
         }
-        
+
         return this;
     }
 

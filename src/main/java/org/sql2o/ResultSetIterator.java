@@ -20,7 +20,7 @@ import java.util.NoSuchElementException;
  * @author aldenquimby@gmail.com
  */
 public class ResultSetIterator<T> implements Iterator<T> {
-    // fields needed to read result set
+
     private ResultSet rs;
     private ResultSetMetaData meta;
     private PojoMetadata metadata;
@@ -92,8 +92,8 @@ public class ResultSetIterator<T> implements Iterator<T> {
         try {
             if (rs.next()) {
 
-                // if we have a converter and are selecting 1 column, we want executeScalar
-                if (this.converter != null && meta.getColumnCount() == 1) {
+                // check if we should try executeScalar
+                if (shouldTryExecuteScalar()) {
                     return (T)converter.convert(ResultSetUtils.getRSVal(rs, 1));
                 }
 
@@ -101,12 +101,7 @@ public class ResultSetIterator<T> implements Iterator<T> {
                 Pojo pojo = new Pojo(metadata, isCaseSensitive);
 
                 for(int colIdx = 1; colIdx <= meta.getColumnCount(); colIdx++) {
-                    String colName;
-                    if (quirksMode == QuirksMode.DB2){
-                        colName = meta.getColumnName(colIdx);
-                    } else {
-                        colName = meta.getColumnLabel(colIdx);
-                    }
+                    String colName = getColumnName(colIdx);
                     pojo.setProperty(colName, ResultSetUtils.getRSVal(rs, colIdx));
                 }
 
@@ -120,5 +115,20 @@ public class ResultSetIterator<T> implements Iterator<T> {
             throw new Sql2oException("Error occurred while converting value from database to type " + metadata.getType(), e);
         }
         return null;
+    }
+
+    private String getColumnName(int colIdx) throws SQLException {
+        if (quirksMode == QuirksMode.DB2){
+            return meta.getColumnName(colIdx);
+        }
+        else {
+            return meta.getColumnLabel(colIdx);
+        }
+    }
+
+    private boolean shouldTryExecuteScalar() throws SQLException {
+        return converter != null &&
+               meta.getColumnCount() == 1 &&
+               metadata.getPropertySetterIfExists(getColumnName(0)) == null;
     }
 }

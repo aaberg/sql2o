@@ -67,20 +67,11 @@ public class PojoMetadata {
     }
     
     public Setter getPropertySetter(String propertyName){
-        
-        String name = this.caseSensitive ? propertyName : propertyName.toLowerCase();
 
-        if (this.columnMappings.containsKey(name)){
-            name = this.columnMappings.get(name);
-        }
-        
-        if(autoDeriveColumnNames) {
-        	name = UnderscoreToCamelCase.convert(name);
-        	if(!this.caseSensitive) name = name.toLowerCase();
-        }
-        
-        if (propertySetters.containsKey(name)){
-            return propertySetters.get(name);
+        Setter setter = getPropertySetterIfExists(propertyName);
+
+        if (setter != null) {
+            return setter;
         }
         else{
             String errorMsg = "Property with name '" + propertyName + "' not found on class " + this.clazz.toString();
@@ -89,6 +80,26 @@ public class PojoMetadata {
             }
             throw new Sql2oException(errorMsg);
         }
+    }
+
+    public Setter getPropertySetterIfExists(String propertyName){
+
+        String name = this.caseSensitive ? propertyName : propertyName.toLowerCase();
+
+        if (this.columnMappings.containsKey(name)){
+            name = this.columnMappings.get(name);
+        }
+
+        if(autoDeriveColumnNames) {
+            name = UnderscoreToCamelCase.convert(name);
+            if(!this.caseSensitive) name = name.toLowerCase();
+        }
+
+        if (propertySetters.containsKey(name)){
+            return propertySetters.get(name);
+        }
+
+        return null;
     }
     
     public Class getType(){
