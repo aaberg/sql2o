@@ -20,13 +20,14 @@ import java.util.NoSuchElementException;
  * @author aldenquimby@gmail.com
  */
 public class ResultSetIterator<T> implements Iterator<T> {
-
+    // fields needed to read result set
     private ResultSet rs;
     private ResultSetMetaData meta;
     private PojoMetadata metadata;
     private boolean isCaseSensitive;
     private QuirksMode quirksMode;
     private Converter converter;
+    private boolean useExecuteScalar;
 
     public ResultSetIterator(ResultSet rs, PojoMetadata metadata, boolean isCaseSensitive, QuirksMode quirksMode) {
         this.rs = rs;
@@ -40,6 +41,7 @@ public class ResultSetIterator<T> implements Iterator<T> {
             throw new Sql2oException("Database error: " + ex.getMessage(), ex);
         }
         this.converter = Convert.getConverterIfExists(metadata.getType());
+        this.useExecuteScalar = shouldTryExecuteScalar();
     }
 
     // fields needed to properly implement
@@ -92,8 +94,7 @@ public class ResultSetIterator<T> implements Iterator<T> {
         try {
             if (rs.next()) {
 
-                // check if we should try executeScalar
-                if (shouldTryExecuteScalar()) {
+                if (useExecuteScalar) {
                     return (T)converter.convert(ResultSetUtils.getRSVal(rs, 1));
                 }
 
@@ -126,9 +127,18 @@ public class ResultSetIterator<T> implements Iterator<T> {
         }
     }
 
-    private boolean shouldTryExecuteScalar() throws SQLException {
-        return converter != null &&
-               meta.getColumnCount() == 1 &&
-               metadata.getPropertySetterIfExists(getColumnName(1)) == null;
+    /**
+     * Fallback to executeScalar if converter exists,
+     * we're selecting 1 column, and no property setter exists for the column.
+     */
+    private boolean shouldTryExecuteScalar() {
+        try {
+            return converter != null &&
+                   meta.getColumnCount() == 1 &&
+                   metadata.getPropertySetterIfExists(getColumnName(1)) == null;
+        }
+        catch (SQLException ex) {
+            throw new Sql2oException("Database error: " + ex.getMessage(), ex);
+        }
     }
 }
