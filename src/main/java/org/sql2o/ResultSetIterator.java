@@ -1,5 +1,8 @@
 package org.sql2o;
 
+import org.sql2o.converters.Convert;
+import org.sql2o.converters.Converter;
+import org.sql2o.converters.ConverterException;
 import org.sql2o.reflection.Pojo;
 import org.sql2o.reflection.PojoMetadata;
 import org.sql2o.tools.ResultSetUtils;
@@ -23,6 +26,8 @@ public class ResultSetIterator<T> implements Iterator<T> {
     private PojoMetadata metadata;
     private boolean isCaseSensitive;
     private QuirksMode quirksMode;
+    private Converter converter;
+    private boolean useExecuteScalar;
 
     public ResultSetIterator(ResultSet rs, PojoMetadata metadata, boolean isCaseSensitive, QuirksMode quirksMode) {
         this.rs = rs;
@@ -35,6 +40,8 @@ public class ResultSetIterator<T> implements Iterator<T> {
         catch(SQLException ex) {
             throw new Sql2oException("Database error: " + ex.getMessage(), ex);
         }
+        this.converter = Convert.getConverterIfExists(metadata.getType());
+        this.useExecuteScalar = shouldTryExecuteScalar();
     }
 
     // fields needed to properly implement
@@ -82,18 +89,20 @@ public class ResultSetIterator<T> implements Iterator<T> {
         throw new UnsupportedOperationException();
     }
 
+    @SuppressWarnings("unchecked") // Convert should be refactored so that this isn't needed
     private T readNext() {
         try {
             if (rs.next()) {
+
+                if (useExecuteScalar) {
+                    return (T)converter.convert(ResultSetUtils.getRSVal(rs, 1));
+                }
+
+                // otherwise we want executeAndFetch with object mapping
                 Pojo pojo = new Pojo(metadata, isCaseSensitive);
 
                 for(int colIdx = 1; colIdx <= meta.getColumnCount(); colIdx++) {
-                    String colName;
-                    if (quirksMode == QuirksMode.DB2){
-                        colName = meta.getColumnName(colIdx);
-                    } else {
-                        colName = meta.getColumnLabel(colIdx);
-                    }
+                    String colName = getColumnName(colIdx);
                     pojo.setProperty(colName, ResultSetUtils.getRSVal(rs, colIdx));
                 }
 
@@ -103,6 +112,33 @@ public class ResultSetIterator<T> implements Iterator<T> {
         catch (SQLException ex) {
             throw new Sql2oException("Database error: " + ex.getMessage(), ex);
         }
+        catch (ConverterException e) {
+            throw new Sql2oException("Error occurred while converting value from database to type " + metadata.getType(), e);
+        }
         return null;
+    }
+
+    private String getColumnName(int colIdx) throws SQLException {
+        if (quirksMode == QuirksMode.DB2){
+            return meta.getColumnName(colIdx);
+        }
+        else {
+            return meta.getColumnLabel(colIdx);
+        }
+    }
+
+    /**
+     * Fallback to executeScalar if converter exists,
+     * we're selecting 1 column, and no property setter exists for the column.
+     */
+    private boolean shouldTryExecuteScalar() {
+        try {
+            return converter != null &&
+                   meta.getColumnCount() == 1 &&
+                   metadata.getPropertySetterIfExists(getColumnName(1)) == null;
+        }
+        catch (SQLException ex) {
+            throw new Sql2oException("Database error: " + ex.getMessage(), ex);
+        }
     }
 }
