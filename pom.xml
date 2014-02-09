@@ -30,6 +30,11 @@
             <name>Lars Aaberg</name>
             <url>https://github.com/aaberg/</url>
         </developer>
+        <developer>
+            <id>aldenquimby</id>
+            <name>Alden Quimby</name>
+            <url>https://github.com/aldenquimby</url>
+        </developer>
     </developers>
 
     <dependencies>
