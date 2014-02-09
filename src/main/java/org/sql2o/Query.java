@@ -8,8 +8,8 @@ import org.sql2o.data.Table;
 import org.sql2o.data.TableFactory;
 import org.sql2o.logging.LocalLoggerFactory;
 import org.sql2o.logging.Logger;
-import org.sql2o.reflection.Pojo;
 import org.sql2o.reflection.PojoMetadata;
+import org.sql2o.tools.FeatureDetector;
 import org.sql2o.tools.NamedParameterStatement;
 import org.sql2o.tools.ResultSetUtils;
 
@@ -58,7 +58,16 @@ public class Query {
     private final String name;
     private boolean returnGeneratedKeys;
 
+    // ------------------------------------------------
+    // ------------- Add Parameters -------------------
+    // ------------------------------------------------
+
     public Query addParameter(String name, Object value){
+
+        if (tryAddJodaDateTimeParameter(name, value)) {
+            return this;
+        }
+
         try{
             statement.setObject(name, value);
         }
@@ -198,14 +207,25 @@ public class Query {
         return this;
     }
 
-    public Query addParameter(String name, DateTime value){
-        Timestamp timestamp = value == null ? null : new Timestamp(value.toDate().getTime());
-        return addParameter(name, timestamp);
-    }
-
     public Query addParameter(String name, Enum value) {
         String strVal = value == null ? null : value.toString();
         return addParameter(name, strVal);
+    }
+
+    /**
+     * @return {@code true} if {@code value} is type DateTime and parameter added.
+     */
+    private boolean tryAddJodaDateTimeParameter(String name, Object value) {
+
+        if (FeatureDetector.isJodaTimeAvailable() && value != null) {
+            if (DateTime.class.isAssignableFrom(value.getClass())) {
+                Timestamp timestamp = new Timestamp(((DateTime)value).toDate().getTime());
+                addParameter(name, timestamp);
+                return true;
+            }
+        }
+
+        return false;
     }
 
     public Query bind(Object bean){

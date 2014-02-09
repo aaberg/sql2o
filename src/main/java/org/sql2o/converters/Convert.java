@@ -1,7 +1,8 @@
 package org.sql2o.converters;
 
-import org.sql2o.logging.LocalLoggerFactory;
-import org.sql2o.logging.Logger;
+import org.joda.time.DateTime;
+import org.joda.time.LocalTime;
+import org.sql2o.tools.FeatureDetector;
 
 import java.io.ByteArrayInputStream;
 import java.io.InputStream;
@@ -14,8 +15,6 @@ import java.util.UUID;
  * Static class used to register new converters. Also used internally by sql2o to lookup a converter.
  */
 public class Convert {
-
-    private static final Logger logger = LocalLoggerFactory.getLogger(Convert.class);
 
     private static EnumConverter registeredEnumConverter = new DefaultEnumConverter();
     private static Map<Class, Converter> registeredConverters = new HashMap<Class, Converter>();
@@ -53,15 +52,6 @@ public class Convert {
         registerConverter(Boolean.class, booleanConverter);
         registerConverter(boolean.class, booleanConverter);
 
-        try {
-            Class jodaTimeClass = Class.forName("org.joda.time.DateTime");
-            Class jodaTimeLocalTimeClass = Class.forName("org.joda.time.LocalTime");
-            registerConverter(jodaTimeClass, new JodaTimeConverter());
-            registerConverter(jodaTimeLocalTimeClass, new LocalTimeConverter());
-        } catch (ClassNotFoundException e) {
-            logger.warn("Failed to initialize Jodatime. Jodatime converter not registered");
-        }
-
         ByteArrayConverter byteArrayConverter = new ByteArrayConverter();
         registerConverter(Byte[].class, byteArrayConverter);
         registerConverter(byte[].class, byteArrayConverter);
@@ -72,6 +62,10 @@ public class Convert {
 
         registerConverter(UUID.class, new UUIDConverter());
 
+        if (FeatureDetector.isJodaTimeAvailable()) {
+            registerConverter(DateTime.class, new JodaTimeConverter());
+            registerConverter(LocalTime.class, new LocalTimeConverter());
+        }
     }
 
     public static Converter getConverter(Class clazz) throws ConverterException {
