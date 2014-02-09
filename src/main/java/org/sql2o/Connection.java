@@ -1,10 +1,10 @@
 package org.sql2o;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.sql2o.converters.Convert;
 import org.sql2o.converters.Converter;
 import org.sql2o.converters.ConverterException;
+import org.sql2o.logging.LocalLoggerFactory;
+import org.sql2o.logging.Logger;
 
 import java.sql.DriverManager;
 import java.sql.ResultSet;
@@ -18,7 +18,7 @@ import java.util.Properties;
  */
 public class Connection {
     
-    private final Logger logger = LoggerFactory.getLogger(Connection.class);
+    private final Logger logger = LocalLoggerFactory.getLogger(Connection.class);
 
     private java.sql.Connection jdbcConnection;
     private Sql2o sql2o;

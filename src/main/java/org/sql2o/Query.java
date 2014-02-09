@@ -1,13 +1,13 @@
 package org.sql2o;
 
 import org.joda.time.DateTime;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.sql2o.converters.Convert;
 import org.sql2o.converters.Converter;
 import org.sql2o.converters.ConverterException;
 import org.sql2o.data.Table;
 import org.sql2o.data.TableFactory;
+import org.sql2o.logging.LocalLoggerFactory;
+import org.sql2o.logging.Logger;
 import org.sql2o.reflection.Pojo;
 import org.sql2o.reflection.PojoMetadata;
 import org.sql2o.tools.NamedParameterStatement;
@@ -25,7 +25,7 @@ import java.util.*;
  */
 public class Query {
 
-    private final Logger logger = LoggerFactory.getLogger(Query.class);
+    private final Logger logger = LocalLoggerFactory.getLogger(Query.class);
 
     public Query(Connection connection, String queryText, String name, boolean returnGeneratedKeys) {
         this.connection = connection;

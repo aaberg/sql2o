@@ -1,7 +1,7 @@
 package org.sql2o.converters;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import org.sql2o.logging.LocalLoggerFactory;
+import org.sql2o.logging.Logger;
 
 import java.io.ByteArrayInputStream;
 import java.io.InputStream;
@@ -15,7 +15,7 @@ import java.util.UUID;
  */
 public class Convert {
 
-    private static final Logger logger = LoggerFactory.getLogger(Convert.class);
+    private static final Logger logger = LocalLoggerFactory.getLogger(Convert.class);
 
     private static EnumConverter registeredEnumConverter = new DefaultEnumConverter();
     private static Map<Class, Converter> registeredConverters = new HashMap<Class, Converter>();

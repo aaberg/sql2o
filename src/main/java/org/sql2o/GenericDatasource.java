@@ -1,7 +1,7 @@
 package org.sql2o;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import org.sql2o.logging.LocalLoggerFactory;
+import org.sql2o.logging.Logger;
 
 import javax.sql.DataSource;
 import java.io.PrintWriter;
@@ -29,7 +29,7 @@ public class GenericDatasource implements DataSource {
         this.user = user;
         this.password = password;
 
-        this.logger = LoggerFactory.getLogger(GenericDatasource.class);
+        this.logger = LocalLoggerFactory.getLogger(GenericDatasource.class);
     }
 
     public String getUrl() {

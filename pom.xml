@@ -43,6 +43,7 @@
         	<groupId>org.slf4j</groupId>
         	<artifactId>slf4j-api</artifactId>
         	<version>1.6.4</version>
+            <optional>true</optional>
         </dependency>
         
         <!-- test dependencies -->
