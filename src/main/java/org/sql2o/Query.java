@@ -58,12 +58,14 @@ public class Query {
     private final String name;
     private boolean returnGeneratedKeys;
 
+    // ------------------------------------------------
+    // ------------- Add Parameters -------------------
+    // ------------------------------------------------
+
     public Query addParameter(String name, Object value){
-        if (FeatureDetector.isJodaTimeAvailable()) {
-            if (DateTime.class.isAssignableFrom(value.getClass())) {
-                Timestamp timestamp = value == null ? null : new Timestamp(((DateTime)value).toDate().getTime());
-                return addParameter(name, timestamp);
-            }
+
+        if (tryAddJodaDateTimeParameter(name, value)) {
+            return this;
         }
 
         try{
@@ -208,6 +210,22 @@ public class Query {
     public Query addParameter(String name, Enum value) {
         String strVal = value == null ? null : value.toString();
         return addParameter(name, strVal);
+    }
+
+    /**
+     * @return {@code true} if {@code value} is type DateTime and parameter added.
+     */
+    private boolean tryAddJodaDateTimeParameter(String name, Object value) {
+
+        if (FeatureDetector.isJodaTimeAvailable() && value != null) {
+            if (DateTime.class.isAssignableFrom(value.getClass())) {
+                Timestamp timestamp = new Timestamp(((DateTime)value).toDate().getTime());
+                addParameter(name, timestamp);
+                return true;
+            }
+        }
+
+        return false;
     }
 
     public Query bind(Object bean){
