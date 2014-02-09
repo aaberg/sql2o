@@ -1,6 +1,5 @@
 package org.sql2o.data;
 
-import org.joda.time.DateTime;
 import org.sql2o.Sql2oException;
 import org.sql2o.converters.*;
 
@@ -60,7 +59,10 @@ public class Row {
             throw new Sql2oException("Error converting value", ex);
         }
     }
-    
+
+    // TODO can these all be removed?
+    // I think it is cleaner to just have getObject(String columnName, Class clazz) and use the registered converters
+
     public BigDecimal getBigDecimal(int columnIndex){
         return new BigDecimalConverter().convert(getObject(columnIndex));
     }
@@ -132,23 +134,7 @@ public class Row {
             throw new Sql2oException("Could not convert column with name " + columnName + " to " + Date.class.toString());
         }
     }
-    
-    public DateTime getDateTime(int columnIndex){
-        try {
-            return new JodaTimeConverter().convert(getObject(columnIndex));
-        } catch (ConverterException e) {
-            throw new Sql2oException("Could not convert column with index " + columnIndex + " to " + DateTime.class.toString());
-        }
-    }
-    
-    public DateTime getDateTime(String columnName){
-        try {
-            return new JodaTimeConverter().convert(getObject(columnName));
-        } catch (ConverterException e) {
-            throw new Sql2oException("Could not convert column with name " + columnName + " to " + DateTime.class.toString());
-        }
-    }
-    
+
     public String getString(int columnIndex){
         try {
             return new StringConverter().convert(getObject(columnIndex));
@@ -164,5 +150,4 @@ public class Row {
             throw new Sql2oException("Could not convert column with name " + columnName+ " to " + String.class.getName());
         }
     }
-
 }

@@ -8,8 +8,8 @@ import org.sql2o.data.Table;
 import org.sql2o.data.TableFactory;
 import org.sql2o.logging.LocalLoggerFactory;
 import org.sql2o.logging.Logger;
-import org.sql2o.reflection.Pojo;
 import org.sql2o.reflection.PojoMetadata;
+import org.sql2o.tools.FeatureDetector;
 import org.sql2o.tools.NamedParameterStatement;
 import org.sql2o.tools.ResultSetUtils;
 
@@ -59,6 +59,13 @@ public class Query {
     private boolean returnGeneratedKeys;
 
     public Query addParameter(String name, Object value){
+        if (FeatureDetector.isJodaTimeAvailable()) {
+            if (DateTime.class.isAssignableFrom(value.getClass())) {
+                Timestamp timestamp = value == null ? null : new Timestamp(((DateTime)value).toDate().getTime());
+                return addParameter(name, timestamp);
+            }
+        }
+
         try{
             statement.setObject(name, value);
         }
@@ -196,11 +203,6 @@ public class Query {
             throw new RuntimeException(e);
         }
         return this;
-    }
-
-    public Query addParameter(String name, DateTime value){
-        Timestamp timestamp = value == null ? null : new Timestamp(value.toDate().getTime());
-        return addParameter(name, timestamp);
     }
 
     public Query addParameter(String name, Enum value) {
