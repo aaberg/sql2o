@@ -60,9 +60,6 @@ public class Row {
         }
     }
 
-    // TODO can these all be removed?
-    // I think it is cleaner to just have getObject(String columnName, Class clazz) and use the registered converters
-
     public BigDecimal getBigDecimal(int columnIndex){
         return new BigDecimalConverter().convert(getObject(columnIndex));
     }

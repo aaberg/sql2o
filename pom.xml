@@ -5,6 +5,7 @@
     <packaging>jar</packaging>
     <version>1.2.2-SNAPSHOT</version>
     <name>sql2o</name>
+    <description>Easy database query library</description>
     <url>http://www.sql2o.org</url>
     <licenses>
         <license>
@@ -144,13 +145,4 @@
             </plugin>
         </plugins>
     </build>
-
-    <distributionManagement>
-        <repository>
-            <id>aaberg_mvn_repo</id>
-            <layout>default</layout>
-            <name>aaberg_mvn_repo</name>
-            <url>file:///home/lars/Programming/Repositories/aaberg_mvn_repo/</url>
-        </repository>
-    </distributionManagement>
 </project>
