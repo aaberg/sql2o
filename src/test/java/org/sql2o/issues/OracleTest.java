@@ -29,16 +29,17 @@ public class OracleTest {
 
     private Sql2o sql2o;
 
-    // uncomment this block to test the Oracle issues. Commented out by default, as I have no Oracle server to test
-    // with on my normal development setup.
-
     public OracleTest() {
         try {
             DriverManager.registerDriver(new OracleDriver());
         } catch (SQLException e) {
             throw new RuntimeException(e);
         }
-        this.sql2o = new Sql2o("jdbc:oracle:thin:@localhost:1521:orcl", "test", "test");
+        // new oracle developer day VM
+        this.sql2o = new Sql2o("jdbc:oracle:thin:@//localhost:1521/PDB1", "test", "test");
+
+        // older oracle developer day VM
+        //this.sql2o = new Sql2o("jdbc:oracle:thin:@localhost:1521:orcl", "test", "test");
     }
 
     /**
