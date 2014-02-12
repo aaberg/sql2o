@@ -16,7 +16,7 @@ import java.util.Properties;
 /**
  * Represents a connection to the database with a transaction.
  */
-public class Connection {
+public class Connection implements AutoCloseable {
     
     private final Logger logger = LocalLoggerFactory.getLogger(Connection.class);
 
@@ -204,5 +204,11 @@ public class Connection {
 
     void setCanGetKeys(boolean canGetKeys) {
         this.canGetKeys = canGetKeys;
+    }
+
+    public void close() throws Exception {
+        if (!this.getJdbcConnection().isClosed()){
+            this.rollback();
+        }
     }
 }

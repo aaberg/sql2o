@@ -954,6 +954,31 @@ public class Sql2oTest {
         deleteUserTable();
     }
 
+    @Test
+    public void testTransactionAutoClosable() throws Exception {
+
+        sql2o.createQuery("create table testTransactionAutoClosable(id int primary key, val varchar(20) not null)").executeUpdate();
+
+        try(Connection connection = sql2o.beginTransaction()){
+            String sql = "insert into testTransactionAutoClosable(id, val) values (:id, :val);";
+            connection.createQuery(sql).addParameter("id", 1).addParameter("val", "foo").executeUpdate();
+        }
+
+        int count = sql2o.createQuery("select count(*) from testTransactionAutoClosable").executeAndFetchFirst(Integer.class);
+        assertThat(count, is(equalTo(0)));
+
+        try(Connection connection = sql2o.beginTransaction()){
+            String sql = "insert into testTransactionAutoClosable(id, val) values (:id, :val);";
+            connection.createQuery(sql).addParameter("id", 1).addParameter("val", "foo").executeUpdate();
+
+            connection.commit();
+        }
+
+        count = sql2o.createQuery("select count(*) from testTransactionAutoClosable").executeAndFetchFirst(Integer.class);
+        assertThat(count, is(equalTo(1)));
+
+    }
+
     /************** Helper stuff ******************/
 
     private void createAndFillUserTable(){
