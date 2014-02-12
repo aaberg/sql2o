@@ -402,24 +402,21 @@ public class Query {
     }
 
     public Table executeAndFetchTable() {
-        LazyTable lt = executeAndFetchTableLazy();
+        LazyTable lt = null;
 
         List<Row> rows = new ArrayList<Row>();
 
-        ResultSetIterable<Row> iterable = null;
         try {
-            iterable = lt.getRows();
-            for (Row item : iterable) {
+            lt = executeAndFetchTableLazy();
+
+            for (Row item : lt.rows()) {
                 rows.add(item);
             }
-        }
-        finally {
-            if (iterable != null) {
-                iterable.close();
-            }
+        } finally {
+            lt.close();
         }
 
-        return new Table(lt.getName(), rows, lt.getColumns());
+        return new Table(lt.getName(), rows, lt.columns());
     }
 
     public Connection executeUpdate(){

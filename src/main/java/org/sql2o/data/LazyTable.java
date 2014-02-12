@@ -7,7 +7,7 @@ import java.util.List;
 /**
  * @author aldenquimby@gmail.com
  */
-public class LazyTable {
+public class LazyTable implements AutoCloseable {
     private String name;
     private ResultSetIterable<Row> rows;
     private List<Column> columns;
@@ -22,7 +22,7 @@ public class LazyTable {
         this.name = name;
     }
 
-    public ResultSetIterable<Row> getRows()
+    public ResultSetIterable<Row> rows()
     {
         return rows;
     }
@@ -32,7 +32,7 @@ public class LazyTable {
         this.rows = rows;
     }
 
-    public List<Column> getColumns()
+    public List<Column> columns()
     {
         return columns;
     }
@@ -40,5 +40,10 @@ public class LazyTable {
     void setColumns(List<Column> columns)
     {
         this.columns = columns;
+    }
+
+    @Override
+    public void close() {
+        this.rows().close();
     }
 }

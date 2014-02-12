@@ -7,6 +7,7 @@ import org.joda.time.LocalTime;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.Parameterized;
+import org.sql2o.data.LazyTable;
 import org.sql2o.data.Row;
 import org.sql2o.data.Table;
 import org.sql2o.pojos.*;
@@ -952,6 +953,27 @@ public class Sql2oTest {
         assertEquals(users.size(), userNames.size());
 
         deleteUserTable();
+    }
+
+    @Test
+    public void testLazyTable() throws SQLException {
+        createAndFillUserTable();
+
+        Query q = sql2o.createQuery("select * from User");
+        try (LazyTable lt = q.executeAndFetchTableLazy()) {
+            for (Row r : lt.rows()){
+                String name = r.getString("name");
+
+                assertThat(name, notNullValue());
+            }
+
+            // still in autoClosable scope. Expecting connection to be open.
+            assertThat(q.getConnection().getJdbcConnection().isClosed(), is(false));
+        }
+
+        // autoClosable scope exited. Expecting connection to be closed.
+        assertThat(q.getConnection().getJdbcConnection().isClosed(), is(true));
+
     }
 
     /************** Helper stuff ******************/
