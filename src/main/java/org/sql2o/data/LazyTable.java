@@ -5,10 +5,9 @@ import org.sql2o.ResultSetIterable;
 import java.util.List;
 
 /**
- * @author alden@mark43.com
+ * @author aldenquimby@gmail.com
  */
-public class LazyTable
-{
+public class LazyTable {
     private String name;
     private ResultSetIterable<Row> rows;
     private List<Column> columns;
