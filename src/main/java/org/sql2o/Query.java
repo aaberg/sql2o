@@ -4,8 +4,7 @@ import org.joda.time.DateTime;
 import org.sql2o.converters.Convert;
 import org.sql2o.converters.Converter;
 import org.sql2o.converters.ConverterException;
-import org.sql2o.data.Table;
-import org.sql2o.data.TableFactory;
+import org.sql2o.data.*;
 import org.sql2o.logging.LocalLoggerFactory;
 import org.sql2o.logging.Logger;
 import org.sql2o.reflection.PojoMetadata;
@@ -293,16 +292,14 @@ public class Query {
     }
 
     /**
-     * Iterable {@link java.sql.ResultSet} that wraps {@link org.sql2o.ResultSetIterator}.
+     * Iterable {@link java.sql.ResultSet} that wraps {@link PojoResultSetIterator}.
      */
-    private class ResultSetIterableImpl<T> implements ResultSetIterable<T> {
+    private abstract class ResultSetIterableBase<T> implements ResultSetIterable<T> {
         private long start;
-        private ResultSet rs;
-        private PojoMetadata metadata;
         private long afterExecQuery;
+        protected ResultSet rs;
 
-        public ResultSetIterableImpl(Class<T> returnType) {
-            metadata = new PojoMetadata(returnType, isCaseSensitive(), isAutoDeriveColumnNames(), getColumnMappings());
+        public ResultSetIterableBase() {
             try {
                 start = System.currentTimeMillis();
                 rs = statement.executeQuery();
@@ -311,10 +308,6 @@ public class Query {
             catch (SQLException ex) {
                 throw new Sql2oException("Database error: " + ex.getMessage(), ex);
             }
-        }
-
-        public Iterator<T> iterator() {
-            return new ResultSetIterator<T>(rs, metadata, isCaseSensitive(), getConnection().getSql2o().quirksMode);
         }
 
         public void close() {
@@ -352,7 +345,13 @@ public class Query {
      * @return iterable results
      */
     public <T> ResultSetIterable<T> executeAndFetchLazy(final Class<T> returnType) {
-        return new ResultSetIterableImpl<T>(returnType);
+        return new ResultSetIterableBase<T>() {
+            private PojoMetadata pojoMetadata = new PojoMetadata(returnType, isCaseSensitive(), isAutoDeriveColumnNames(), getColumnMappings());
+
+            public Iterator<T> iterator() {
+                return new PojoResultSetIterator<T>(rs, isCaseSensitive(), getConnection().getSql2o().quirksMode, pojoMetadata);
+            }
+        };
     }
 
     public <T> List<T> executeAndFetch(Class<T> returnType){
@@ -390,28 +389,37 @@ public class Query {
         }
     }
 
-    public Table executeAndFetchTable(){
-        ResultSet rs;
-        long start = System.currentTimeMillis();
+    public LazyTable executeAndFetchTableLazy() {
+        final LazyTable lt = new LazyTable();
+
+        lt.setRows(new ResultSetIterableBase<Row>() {
+            public Iterator<Row> iterator() {
+                return new TableResultSetIterator(rs, isCaseSensitive(), getConnection().getSql2o().quirksMode, lt);
+            }
+        });
+
+        return lt;
+    }
+
+    public Table executeAndFetchTable() {
+        LazyTable lt = executeAndFetchTableLazy();
+
+        List<Row> rows = new ArrayList<Row>();
+
+        ResultSetIterable<Row> iterable = null;
         try {
-            rs = statement.executeQuery();
-            long afterExecute = System.currentTimeMillis();
-            Table table = TableFactory.createTable(rs, this.isCaseSensitive(), this.connection.getSql2o().quirksMode);
-            long afterClose = System.currentTimeMillis();
-
-            logger.debug("total: {} ms, execution: {} ms, reading and parsing: {} ms; executed fetch table [{}]", new Object[]{
-                    afterClose - start,
-                    afterExecute-start,
-                    afterClose - afterExecute,
-                    this.getName() == null ? "No name" : this.getName()
-            });
-
-            return table;
-        } catch (SQLException e) {
-            throw new Sql2oException("Error while executing query", e);
-        } finally {
-            closeConnectionIfNecessary();
+            iterable = lt.getRows();
+            for (Row item : iterable) {
+                rows.add(item);
+            }
         }
+        finally {
+            if (iterable != null) {
+                iterable.close();
+            }
+        }
+
+        return new Table(lt.getName(), rows, lt.getColumns());
     }
 
     public Connection executeUpdate(){
