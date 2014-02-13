@@ -12,38 +12,31 @@ public class LazyTable implements AutoCloseable {
     private ResultSetIterable<Row> rows;
     private List<Column> columns;
 
-    public String getName()
-    {
+    public String getName() {
         return name;
     }
 
-    void setName(String name)
-    {
+    void setName(String name) {
         this.name = name;
     }
 
-    public ResultSetIterable<Row> rows()
-    {
+    public Iterable<Row> rows() {
         return rows;
     }
 
-    public void setRows(ResultSetIterable<Row> rows)
-    {
+    public void setRows(ResultSetIterable<Row> rows) {
         this.rows = rows;
     }
 
-    public List<Column> columns()
-    {
+    public List<Column> columns() {
         return columns;
     }
 
-    void setColumns(List<Column> columns)
-    {
+    void setColumns(List<Column> columns) {
         this.columns = columns;
     }
 
-    @Override
     public void close() {
-        this.rows().close();
+        this.rows.close();
     }
 }
