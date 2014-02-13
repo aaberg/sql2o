@@ -955,23 +955,33 @@ public class Sql2oTest {
     }
 
     @Test
-    public void testTransactionAutoClosable() throws Exception {
+    public void testTransactionAutoClosable() {
 
         sql2o.createQuery("create table testTransactionAutoClosable(id int primary key, val varchar(20) not null)").executeUpdate();
 
-        try(Connection connection = sql2o.beginTransaction()){
+        Connection connection = null;
+        try {
+            connection = sql2o.beginTransaction();
             String sql = "insert into testTransactionAutoClosable(id, val) values (:id, :val);";
             connection.createQuery(sql).addParameter("id", 1).addParameter("val", "foo").executeUpdate();
+        } finally {
+            // autoclosing
+            connection.close();
         }
 
         int count = sql2o.createQuery("select count(*) from testTransactionAutoClosable").executeAndFetchFirst(Integer.class);
         assertThat(count, is(equalTo(0)));
 
-        try(Connection connection = sql2o.beginTransaction()){
+        connection = null;
+        try {
+            connection = sql2o.beginTransaction();
             String sql = "insert into testTransactionAutoClosable(id, val) values (:id, :val);";
             connection.createQuery(sql).addParameter("id", 1).addParameter("val", "foo").executeUpdate();
 
             connection.commit();
+        } finally {
+            // autoclosing
+            connection.close();
         }
 
         count = sql2o.createQuery("select count(*) from testTransactionAutoClosable").executeAndFetchFirst(Integer.class);
