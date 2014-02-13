@@ -960,7 +960,9 @@ public class Sql2oTest {
         createAndFillUserTable();
 
         Query q = sql2o.createQuery("select * from User");
-        try (LazyTable lt = q.executeAndFetchTableLazy()) {
+        LazyTable lt = null;
+        try {
+            lt = q.executeAndFetchTableLazy();
             for (Row r : lt.rows()){
                 String name = r.getString("name");
 
@@ -969,9 +971,12 @@ public class Sql2oTest {
 
             // still in autoClosable scope. Expecting connection to be open.
             assertThat(q.getConnection().getJdbcConnection().isClosed(), is(false));
+        } finally {
+            // simulate autoClose.
+            lt.close();
         }
 
-        // autoClosable scope exited. Expecting connection to be closed.
+        // simulated autoClosable scope exited. Expecting connection to be closed.
         assertThat(q.getConnection().getJdbcConnection().isClosed(), is(true));
 
     }
