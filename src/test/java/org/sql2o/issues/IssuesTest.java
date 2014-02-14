@@ -1,6 +1,5 @@
 package org.sql2o.issues;
 
-import junit.framework.TestCase;
 import org.hsqldb.jdbcDriver;
 import org.joda.time.DateTime;
 import org.junit.Test;

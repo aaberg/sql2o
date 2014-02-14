@@ -15,11 +15,13 @@ public class Row {
     
     private Map<Integer, Object> values;
 
-    private Table table;
+    private boolean isCaseSensitive;
+    private Map<String, Integer> columnNameToIdxMap;
 
-    public Row(Table table) {
-        this.table = table;
-        values = new HashMap<Integer, Object>();
+    public Row(Map<String, Integer> columnNameToIdxMap, boolean isCaseSensitive) {
+        this.columnNameToIdxMap = columnNameToIdxMap;
+        this.isCaseSensitive = isCaseSensitive;
+        this.values = new HashMap<Integer, Object>();
     }
 
     void addValue(int columnIndex, Object value){
@@ -31,11 +33,11 @@ public class Row {
     }
     
     public Object getObject(String columnName){
-        String col = table.isCaseSensitive() ? columnName : columnName.toLowerCase();
+        String col = isCaseSensitive ? columnName : columnName.toLowerCase();
 
         Object obj;
         try{
-            obj = getObject(table.getColumnNameToIdxMap().get(col));
+            obj = getObject(columnNameToIdxMap.get(col));
         }
         catch (NullPointerException ex){
             throw new Sql2oException(String.format("Column with name '%s' does not exist", columnName), ex);
