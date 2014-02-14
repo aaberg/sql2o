@@ -16,7 +16,7 @@ import java.util.Properties;
 /**
  * Represents a connection to the database with a transaction.
  */
-public class Connection {
+public class Connection implements AutoCloseable {
     
     private final Logger logger = LocalLoggerFactory.getLogger(Connection.class);
 
@@ -204,5 +204,19 @@ public class Connection {
 
     void setCanGetKeys(boolean canGetKeys) {
         this.canGetKeys = canGetKeys;
+    }
+
+    public void close() {
+        boolean connectionIsClosed = false;
+        try {
+            connectionIsClosed = this.getJdbcConnection().isClosed();
+        } catch (SQLException e) {
+            throw new Sql2oException("Sql2o encountered a problem while trying to determine whether the connection is closed.", e);
+        }
+
+        if (!connectionIsClosed){
+            this.rollback();
+        }
+
     }
 }
