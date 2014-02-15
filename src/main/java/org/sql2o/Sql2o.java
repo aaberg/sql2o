@@ -157,7 +157,7 @@ public class Sql2o {
      * @return the {@link Query} instance
      */
     public Query createQuery(String query, String name, boolean returnGeneratedKeys) {
-        return new Connection(this).createQuery(query, name, returnGeneratedKeys);
+        return new Connection(this, true).createQuery(query, name, returnGeneratedKeys);
     }
 
     /**
@@ -178,7 +178,7 @@ public class Sql2o {
      */
     public Query createQuery(String query, String name){
 
-        Connection connection = new Connection(this);
+        Connection connection = new Connection(this, true);
         return connection.createQuery(query, name);
     }
 
@@ -191,6 +191,10 @@ public class Sql2o {
         return createQuery(query, null);
     }
 
+    public Connection open() {
+        return new Connection(this, false);
+    }
+
     /**
      * Begins a transaction with the given isolation level. Every statement executed on the return {@link Connection}
      * instance, will be executed in the transaction. It is very important to always call either the {@link org.sql2o.Connection#commit()}
@@ -200,7 +204,7 @@ public class Sql2o {
      */
     public Connection beginTransaction(int isolationLevel){
 
-        Connection connection = new Connection(this);
+        Connection connection = new Connection(this, false);
 
         try {
             connection.getJdbcConnection().setAutoCommit(false);
