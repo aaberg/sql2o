@@ -1039,6 +1039,70 @@ public class Sql2oTest {
         assertThat(connection.getJdbcConnection().isClosed(), is(true));
     }
 
+    @Test
+    public void testWithConnection() {
+
+        createAndFillUserTable();
+
+        final String insertsql = "insert into User(name, email, text) values (:name, :email, :text)";
+
+
+        sql2o.withConnection(new StatementRunnable() {
+            public void run(Connection connection, Object argument) throws Throwable {
+
+                connection.createQuery(insertsql)
+                        .addParameter("name", "Sql2o")
+                        .addParameter("email", "sql2o@sql2o.org")
+                        .addParameter("text", "bla bla")
+                        .executeUpdate();
+
+                connection.createQuery(insertsql)
+                        .addParameter("name", "Sql2o2")
+                        .addParameter("email", "sql2o@sql2o.org")
+                        .addParameter("text", "bla bla")
+                        .executeUpdate();
+
+                connection.createQuery(insertsql)
+                        .addParameter("name", "Sql2o3")
+                        .addParameter("email", "sql2o@sql2o.org")
+                        .addParameter("text", "bla bla")
+                        .executeUpdate();
+
+            }
+        });
+
+        List<User> users = sql2o.withConnection(new StatementRunnableWithResult() {
+            public Object run(Connection connection, Object argument) throws Throwable {
+                return sql2o.createQuery("select * from User").executeAndFetch(User.class);
+            }
+        });
+
+        assertThat(users.size(), is(equalTo(10003)));
+
+        try{
+            sql2o.withConnection(new StatementRunnable() {
+                public void run(Connection connection, Object argument) throws Throwable {
+
+                    connection.createQuery(insertsql)
+                            .addParameter("name", "Sql2o")
+                            .addParameter("email", "sql2o@sql2o.org")
+                            .addParameter("text", "bla bla")
+                            .executeUpdate();
+
+                    throw new RuntimeException("whaa!");
+
+                }
+            });
+        } catch (Exception e) {
+            // ignore. expected
+        }
+
+        List<User> users2 = sql2o.createQuery("select * from User").executeAndFetch(User.class);
+
+        // expect that that the last insert was commited, as this should not be run in a transaction.
+        assertThat(users2.size(), is(equalTo(10004)));
+    }
+
     /************** Helper stuff ******************/
 
     private void createAndFillUserTable() {

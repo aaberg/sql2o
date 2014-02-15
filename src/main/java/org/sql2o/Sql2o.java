@@ -191,8 +191,71 @@ public class Sql2o {
         return createQuery(query, null);
     }
 
+    /**
+     * Opens a connection to the database
+     * @return instance of the {@link org.sql2o.Connection} class.
+     */
     public Connection open() {
         return new Connection(this, false);
+    }
+
+    /**
+     * Invokes the run method on the {@link org.sql2o.StatementRunnableWithResult} instance. This method guarantees that
+     * the connection is closed properly, when either the run method completes or if an exception occurs.
+     * @param runnable
+     * @param argument
+     * @param <V>
+     * @return
+     */
+    public <V> V withConnection(StatementRunnableWithResult runnable, Object argument) {
+        Connection connection = null;
+        try{
+            connection = open();
+            return (V)runnable.run(connection, argument);
+        } catch (Throwable t) {
+            throw new Sql2oException("An error occurred while executing StatementRunnable", t);
+        } finally {
+            connection.close();
+        }
+    }
+
+    /**
+     * Invokes the run method on the {@link org.sql2o.StatementRunnableWithResult} instance. This method guarantees that
+     * the connection is closed properly, when either the run method completes or if an exception occurs.
+     * @param runnable
+     * @param <V>
+     * @return
+     */
+    public <V> V withConnection(StatementRunnableWithResult runnable) {
+        return withConnection(runnable, null);
+    }
+
+    /**
+     * Invokes the run method on the {@link org.sql2o.StatementRunnableWithResult} instance. This method guarantees that
+     * the connection is closed properly, when either the run method completes or if an exception occurs.
+     * @param runnable
+     */
+    public void withConnection(StatementRunnable runnable) {
+        withConnection(runnable, null);
+    }
+
+    /**
+     * Invokes the run method on the {@link org.sql2o.StatementRunnableWithResult} instance. This method guarantees that
+     * the connection is closed properly, when either the run method completes or if an exception occurs.
+     * @param runnable
+     * @param argument
+     */
+    public void withConnection(StatementRunnable runnable, Object argument) {
+        Connection connection = null;
+        try{
+            connection = open();
+
+            runnable.run(connection, argument);
+        } catch (Throwable t) {
+            throw new Sql2oException("An error occurred while executing StatementRunnable", t);
+        } finally{
+            connection.close();
+        }
     }
 
     /**
