@@ -5,10 +5,7 @@ import org.joda.time.DateTime;
 import org.joda.time.LocalDate;
 import org.junit.Ignore;
 import org.junit.Test;
-import org.sql2o.Connection;
-import org.sql2o.Query;
-import org.sql2o.Sql2o;
-import org.sql2o.StatementRunnable;
+import org.sql2o.*;
 
 import java.sql.DriverManager;
 import java.sql.SQLException;
@@ -36,7 +33,7 @@ public class OracleTest {
             throw new RuntimeException(e);
         }
         // new oracle developer day VM
-        this.sql2o = new Sql2o("jdbc:oracle:thin:@//localhost:1521/PDB1", "test", "test");
+        this.sql2o = new Sql2o("jdbc:oracle:thin:@//localhost:1521/PDB1", "pmuser", "oracle");
 
         // older oracle developer day VM
         //this.sql2o = new Sql2o("jdbc:oracle:thin:@localhost:1521:orcl", "test", "test");
@@ -77,20 +74,33 @@ public class OracleTest {
     }
 
 
-    // this test requires two objects in the oracle database.
-    // create sequence testseq;
-    // create table testtable(id integer primary key, val varchar2(30))
+    // test is weird. Some versions of Oracle returns a rowid instead of the generated sequence value.
 //    @Test
 //    public void testForIssue13ProblemWithGetGeneratedKeys() {
+//
+//        try{
+//            sql2o.createQuery("drop sequence fooseq", false).executeUpdate();
+//        } catch(Sql2oException ex) {
+//            // ignore errors, if objects doesn't exists already.
+//            int debug = 0;
+//        }
+//
+//        try{
+//            sql2o.createQuery("drop table testtable", false).executeUpdate();
+//        } catch(Sql2oException e) {
+//            // ignore errors, if objects doesn't exists already.
+//            int debug = 0;
+//        }
+//
+//
+//        sql2o.createQuery("create sequence fooseq", false).executeUpdate();
+//        sql2o.createQuery("create table testtable(id integer primary key, val varchar2(30))", false).executeUpdate();
 //
 //        Connection connection = null;
 //        try {
 //            connection = sql2o.beginTransaction();
 //
-//            Query q = connection.createQuery("create sequence fooseq", false);
-//            q.executeUpdate();
-//
-//            String insertSomethingSql = "insert into testtable (id, val) values(testseq.nextval, :val)";
+//            String insertSomethingSql = "insert into testtable (id, val) values(fooseq.nextval, :val)";
 //            Long generatedKey = connection.createQuery(insertSomethingSql, true).addParameter("val", "foo").executeUpdate().getKey(Long.class);
 //
 //            Long fetchedKey = connection.createQuery("select id from test_tbl").executeScalar(Long.class);
@@ -102,6 +112,9 @@ public class OracleTest {
 //            }
 //
 //        }
+//
+//        sql2o.createQuery("drop sequence fooseq", false);
+//        sql2o.createQuery("drop table testtable");
 //
 //
 //    }
