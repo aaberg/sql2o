@@ -4,6 +4,7 @@ import org.hsqldb.jdbcDriver;
 import org.hsqldb.jdbc.JDBCDataSource;
 import org.joda.time.DateTime;
 import org.joda.time.LocalTime;
+import org.joda.time.Period;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.Parameterized;
@@ -791,8 +792,12 @@ public class Sql2oTest {
         String sql = "select current_time as col1 from (values(0))";
 
         Time sqlTime = sql2o.createQuery(sql).executeScalar(Time.class);
+
+        Period p = new Period(new LocalTime(sqlTime), new LocalTime());
+
+
         assertThat(sqlTime, is(notNullValue()));
-        assertTrue(sqlTime.getTime() > 0);
+        assertTrue(p.getMinutes() == 0);
 
         Date date = sql2o.createQuery(sql).executeScalar(Date.class);
         assertThat(date, is(notNullValue()));
@@ -1015,19 +1020,117 @@ public class Sql2oTest {
 
     }
 
+    @Test
+    public void testOpenConnection() throws SQLException {
+
+        Connection connection = sql2o.open();
+
+        createAndFillUserTable(connection);
+
+        assertThat(connection.getJdbcConnection().isClosed(), is(false));
+
+        List<User> users = connection.createQuery("select * from User").executeAndFetch(User.class);
+
+        assertThat(users.size(), is(equalTo(10000)));
+        assertThat(connection.getJdbcConnection().isClosed(), is(false));
+
+        connection.close();
+
+        assertThat(connection.getJdbcConnection().isClosed(), is(true));
+    }
+
+    @Test
+    public void testWithConnection() {
+
+        createAndFillUserTable();
+
+        final String insertsql = "insert into User(name, email, text) values (:name, :email, :text)";
+
+
+        sql2o.withConnection(new StatementRunnable() {
+            public void run(Connection connection, Object argument) throws Throwable {
+
+                connection.createQuery(insertsql)
+                        .addParameter("name", "Sql2o")
+                        .addParameter("email", "sql2o@sql2o.org")
+                        .addParameter("text", "bla bla")
+                        .executeUpdate();
+
+                connection.createQuery(insertsql)
+                        .addParameter("name", "Sql2o2")
+                        .addParameter("email", "sql2o@sql2o.org")
+                        .addParameter("text", "bla bla")
+                        .executeUpdate();
+
+                connection.createQuery(insertsql)
+                        .addParameter("name", "Sql2o3")
+                        .addParameter("email", "sql2o@sql2o.org")
+                        .addParameter("text", "bla bla")
+                        .executeUpdate();
+
+            }
+        });
+
+        List<User> users = sql2o.withConnection(new StatementRunnableWithResult() {
+            public Object run(Connection connection, Object argument) throws Throwable {
+                return sql2o.createQuery("select * from User").executeAndFetch(User.class);
+            }
+        });
+
+        assertThat(users.size(), is(equalTo(10003)));
+
+        try{
+            sql2o.withConnection(new StatementRunnable() {
+                public void run(Connection connection, Object argument) throws Throwable {
+
+                    connection.createQuery(insertsql)
+                            .addParameter("name", "Sql2o")
+                            .addParameter("email", "sql2o@sql2o.org")
+                            .addParameter("text", "bla bla")
+                            .executeUpdate();
+
+                    throw new RuntimeException("whaa!");
+
+                }
+            });
+        } catch (Exception e) {
+            // ignore. expected
+        }
+
+        List<User> users2 = sql2o.createQuery("select * from User").executeAndFetch(User.class);
+
+        // expect that that the last insert was commited, as this should not be run in a transaction.
+        assertThat(users2.size(), is(equalTo(10004)));
+    }
+
     /************** Helper stuff ******************/
 
-    private void createAndFillUserTable(){
+    private void createAndFillUserTable() {
+        Connection connection = sql2o.open();
+
+        createAndFillUserTable(connection);
+
+        connection.close();
+
+    }
+
+    private void createAndFillUserTable(Connection connection){
+
+        try{
+            connection.createQuery("drop table User").executeUpdate();
+        } catch(Sql2oException e) {
+            // if it fails, its because the User table doesn't exists. Just ignore this.
+        }
 
         int rowCount = 10000;
-        sql2o.createQuery(
+        connection.createQuery(
                 "create table User(\n" +
                 "id int identity primary key,\n" +
                 "name varchar(20),\n" +
                 "email varchar(255),\n" +
                 "text varchar(100))").executeUpdate();
 
-        Query insQuery = sql2o.createQuery("insert into User(name, email, text) values (:name, :email, :text)");
+        Query insQuery = connection.createQuery("insert into User(name, email, text) values (:name, :email, :text)");
         Date before = new Date();
         for (int idx = 0; idx < rowCount; idx++){
             insQuery.addParameter("name", "a name " + idx)

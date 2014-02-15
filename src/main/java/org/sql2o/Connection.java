@@ -39,8 +39,11 @@ public class Connection implements AutoCloseable {
         return this;
     }
 
-    public Connection(Sql2o sql2o) {
+    boolean autoclose;
 
+    Connection(Sql2o sql2o, boolean autoclose) {
+
+        this.autoclose = autoclose;
         this.sql2o = sql2o;
         createConnection();
     }
