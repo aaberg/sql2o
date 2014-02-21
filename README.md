@@ -6,11 +6,11 @@ Kind of like an ORM, but without the sql generation capabilities.
 
 ### Examples
 
-Check out the (sql2o website)[http://www.sql2o.org] for examples.
+Check out the [sql2o website](http://www.sql2o.org) for examples.
 
 ### Performance
 
-A key feature of sql2o is performance. Following (Dapper.NET)[https://github.com/SamSaffron/dapper-dot-net#performance],
+A key feature of sql2o is performance. Following [Dapper.NET](https://github.com/SamSaffron/dapper-dot-net#performance),
 the metrics below show how long it takes to execute 500 SELECT statements against a DB and map the data returned to objects.
 
 The performance tests are broken in to 3 lists:
@@ -137,8 +137,8 @@ To run the oracle database tests it is necessary to download the oracle jdbc dri
 Oracle does not have a public repository where maven can download the driver automatically.
 Note that public repositories do exist, but they are all technically illegal.
 
-* Download the ojdbc6.jar version 11.2.0.3 from (here)[http://www.oracle.com/technetwork/database/enterprise-edition/jdbc-112010-090769.html]
+* Download the ojdbc6.jar version 11.2.0.3 from [here](http://www.oracle.com/technetwork/database/enterprise-edition/jdbc-112010-090769.html)
 * Install it into your local maven repo by running this command:
 ```
-    mvn install:install-file -DgroupId=com.oracle -DartifactId=ojdbc6 -Dversion=11.2.0.3 -Dpackaging=jar -Dfile=ojdbc6.jar -DgeneratePom=true
+mvn install:install-file -DgroupId=com.oracle -DartifactId=ojdbc6 -Dversion=11.2.0.3 -Dpackaging=jar -Dfile=ojdbc6.jar -DgeneratePom=true
 ```
