@@ -13,11 +13,10 @@ Check out the [sql2o website](http://www.sql2o.org) for examples.
 A key feature of sql2o is performance. Following [Dapper.NET](https://github.com/SamSaffron/dapper-dot-net#performance),
 the metrics below show how long it takes to execute 500 SELECT statements against a DB and map the data returned to objects.
 
-The performance tests are broken in to 3 lists:
+The performance tests are broken in to 2 lists:
 
-* POCO serialization for frameworks that support pulling static typed objects from the DB. Using raw SQL.
-* Dynamic serialization for frameworks that support returning dynamic lists of objects.
-* Typical framework usage. Often typical framework usage differs from the optimal usage performance wise. Often it will not involve writing SQL.
+1. POCO serialization for frameworks that support pulling static typed objects from the DB. Using raw SQL.
+2. Typical framework usage. Often typical framework usage differs from the optimal usage performance wise. Often it will not involve writing SQL.
 
 #### Performance of SELECT mapping over 500 iterations - POCO serialization
 
@@ -66,30 +65,6 @@ The performance tests are broken in to 3 lists:
 	</tr>
 </table>
 
-#### Performance of SELECT mapping over 500 iterations - dynamic serialization
-
-<table>
-	<tr>
-		<th>Method</th>
-		<th>Duration</th>
-		<th>Remarks</th>
-	</tr>
-	<tr>
-		<td>Dapper <code>ExecuteMapperQuery</code> (dynamic)</td>
-		<td>48ms</td>
-		<td rowspan="3">&nbsp;</td>
-	</tr>
-	<tr>
-		<td><a href="http://blog.wekeroad.com/helpy-stuff/and-i-shall-call-it-massive">Massive</a></td>
-		<td>52ms</td>
-	</tr>
-	<tr>
-		<td><a href="https://github.com/markrendle/Simple.Data">Simple.Data</a></td>
-		<td>95ms</td>
-	</tr>
-</table>
-
-
 #### Performance of SELECT mapping over 500 iterations - typical usage
 
 <table>
@@ -125,7 +100,7 @@ The performance tests are broken in to 3 lists:
 	</tr>
 </table>
 
-Performance benchmarks are available [here](https://github.com/SamSaffron/dapper-dot-net/blob/master/Tests/PerformanceTests.cs)
+Performance benchmarks are available [here](https://github.com/SamSaffron/dapper-dot-net/blob/master/Tests/PerformanceTests.cs).
 
 ## Contributing
 
