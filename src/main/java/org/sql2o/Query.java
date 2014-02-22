@@ -40,14 +40,12 @@ public class Query {
 
         this.setColumnMappings(connection.getSql2o().getDefaultColumnMappings());
         this.caseSensitive = connection.getSql2o().isDefaultCaseSensitive();
-        this.methodsMap = new HashMap<String, Method>();
     }
 
     private Connection connection;
 
     private Map<String, String> caseSensitiveColumnMappings;
     private Map<String, String> columnMappings;
-    private Map<String, Method> methodsMap;
 
     private NamedParameterStatement statement;
 

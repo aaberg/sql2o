@@ -6,7 +6,7 @@ import com.google.common.base.Stopwatch;
 /**
  * Basically a {@link Runnable} with an Integer input.
  */
-public abstract class PerformanceTest implements Function<Integer, Void>, AutoCloseable
+public abstract class PerformanceTestBase implements Function<Integer, Void>, AutoCloseable
 {
     private Stopwatch watch = Stopwatch.createUnstarted();
 
@@ -16,6 +16,13 @@ public abstract class PerformanceTest implements Function<Integer, Void>, AutoCl
         return null;
     }
 
+    public void initialize()
+    {
+        watch.reset();
+        init();
+    }
+
+    public abstract void init();
     public abstract void close();
     public abstract void run(int input);
 

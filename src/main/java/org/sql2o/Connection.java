@@ -6,12 +6,10 @@ import org.sql2o.converters.ConverterException;
 import org.sql2o.logging.LocalLoggerFactory;
 import org.sql2o.logging.Logger;
 
-import java.sql.DriverManager;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Properties;
 
 /**
  * Represents a connection to the database with a transaction.
@@ -79,8 +77,7 @@ public class Connection implements AutoCloseable {
             throw new RuntimeException(e);
         }
 
-        Query q = new Query(this, queryText, name, returnGeneratedKeys);
-        return q;
+        return new Query(this, queryText, name, returnGeneratedKeys);
     }
     
     public Query createQuery(String queryText){
@@ -210,7 +207,7 @@ public class Connection implements AutoCloseable {
     }
 
     public void close() {
-        boolean connectionIsClosed = false;
+        boolean connectionIsClosed;
         try {
             connectionIsClosed = this.getJdbcConnection().isClosed();
         } catch (SQLException e) {
@@ -220,6 +217,5 @@ public class Connection implements AutoCloseable {
         if (!connectionIsClosed){
             this.rollback();
         }
-
     }
 }

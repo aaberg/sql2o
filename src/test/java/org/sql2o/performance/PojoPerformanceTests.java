@@ -1,8 +1,5 @@
 package org.sql2o.performance;
 
-import com.google.common.base.Function;
-import com.google.common.collect.ImmutableList;
-import com.google.common.collect.Ordering;
 import org.hibernate.Session;
 import org.hibernate.SessionFactory;
 import org.hibernate.boot.registry.StandardServiceRegistryBuilder;
@@ -13,21 +10,21 @@ import org.junit.Before;
 import org.junit.Test;
 import org.sql2o.Query;
 import org.sql2o.Sql2o;
+import org.sql2o.tools.FeatureDetector;
 
+import java.lang.reflect.Field;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
-import java.util.List;
 import java.util.Random;
-import java.util.concurrent.TimeUnit;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
 /**
  * @author aldenquimby@gmail.com
  */
-public class PerformanceTests
+public class PojoPerformanceTests
 {
     private final static String DRIVER_CLASS = "org.h2.Driver";
     private final static String DB_URL = "jdbc:h2:mem:test;DB_CLOSE_DELAY=-1";
@@ -39,30 +36,41 @@ public class PerformanceTests
     @Before
     public void setup()
     {
+        Logger.getLogger("org.hibernate").setLevel(Level.OFF);
+
+        createPostTable();
+
+        // turn off oracle because ResultSetUtils slows down with oracle
+        setOracleAvailable(false);
+    }
+
+    private void createPostTable() {
         Sql2o sql2o = new Sql2o(DB_URL, DB_USER, DB_PASSWORD);
 
-        sql2o.createQuery("\n CREATE TABLE IF NOT EXISTS post" +
-                          "\n (" +
-                          "\n     id INT NOT NULL IDENTITY PRIMARY KEY" +
-                          "\n   , text VARCHAR(255)" +
-                          "\n   , creation_date DATETIME" +
-                          "\n   , last_change_date DATETIME" +
-                          "\n   , counter1 INT" +
-                          "\n   , counter2 INT" +
-                          "\n   , counter3 INT" +
-                          "\n   , counter4 INT" +
-                          "\n   , counter5 INT" +
-                          "\n   , counter6 INT" +
-                          "\n   , counter7 INT" +
-                          "\n   , counter8 INT" +
-                          "\n   , counter9 INT" +
-                          "\n )" +
-                          "\n;").executeUpdate();
+        sql2o.createQuery("DROP TABLE IF EXISTS post").executeUpdate();
+
+        sql2o.createQuery("\n CREATE TABLE post" +
+                "\n (" +
+                "\n     id INT NOT NULL IDENTITY PRIMARY KEY" +
+                "\n   , text VARCHAR(255)" +
+                "\n   , creation_date DATETIME" +
+                "\n   , last_change_date DATETIME" +
+                "\n   , counter1 INT" +
+                "\n   , counter2 INT" +
+                "\n   , counter3 INT" +
+                "\n   , counter4 INT" +
+                "\n   , counter5 INT" +
+                "\n   , counter6 INT" +
+                "\n   , counter7 INT" +
+                "\n   , counter8 INT" +
+                "\n   , counter9 INT" +
+                "\n )" +
+                "\n;").executeUpdate();
 
         Random r = new Random();
 
         Query insQuery = sql2o.createQuery("insert into post (text, creation_date, last_change_date, counter1, counter2, counter3, counter4, counter5, counter6, counter7, counter8, counter9) values (:text, :creation_date, :last_change_date, :counter1, :counter2, :counter3, :counter4, :counter5, :counter6, :counter7, :counter8, :counter9)");
-        for (int idx = 0; idx < ITERATIONS*10; idx++)
+        for (int idx = 0; idx < ITERATIONS; idx++)
         {
             insQuery.addParameter("text", "a name " + idx)
                     .addParameter("creation_date", new java.util.Date(idx * 5))
@@ -81,90 +89,52 @@ public class PerformanceTests
         insQuery.executeBatch();
     }
 
+    private void setOracleAvailable(boolean b) {
+        try {
+            Field f = FeatureDetector.class.getDeclaredField("oracleAvailable");
+            f.setAccessible(true);
+            f.set(null, b);
+        } catch (NoSuchFieldException e) {
+            e.printStackTrace();
+        } catch (IllegalAccessException e) {
+            e.printStackTrace();
+        }
+    }
+
+    @SuppressWarnings("MismatchedQueryAndUpdateOfCollection")
     @Test
-    public void run()
+    public void select()
     {
         System.out.println("Running " + ITERATIONS + " iterations that load up a Post entity\n");
 
-        List<PerformanceTest> tests = ImmutableList.of(
-            new Sql2oTest(), new HandCodedTest(), new HibernateTest()
-        );
+        PerformanceTestList tests = new PerformanceTestList();
+        tests.add(new HandCodedSelect());
+        tests.add(new Sql2oOptimizedSelect());
+        tests.add(new Sql2oTypicalSelect());
+        tests.add(new HibernateTypicalSelect());
 
-        run(tests, ITERATIONS);
+        System.out.println("Warming up...");
+        tests.run(ITERATIONS);
+        System.out.println("Done warming up, let's rock and roll!\n");
 
-        printResults(tests);
+        tests.run(ITERATIONS);
+        tests.printResults();
     }
 
-    private void run(List<PerformanceTest> tests, int iterations)
-    {
-        // warm up
-        for (PerformanceTest test : tests)
-        {
-            test.run(iterations + 1);
-        }
+    //----------------------------------------
+    //          performance tests
+    // ---------------------------------------
 
-        final Random rand = new Random();
-
-        for (int i = 1; i <= iterations; i++)
-        {
-            Iterable<PerformanceTest> sortedByRandom = orderBy(tests, new Function<PerformanceTest, Comparable>()
-            {
-                public Comparable apply(PerformanceTest input)
-                {
-                    return rand.nextInt();
-                }
-            });
-
-            for (PerformanceTest test : sortedByRandom)
-            {
-                test.getWatch().start();
-                test.run(i);
-                test.getWatch().stop();
-            }
-        }
-
-        // close up
-        for (PerformanceTest test : tests)
-        {
-            test.close();
-        }
-    }
-
-    private void printResults(Iterable<PerformanceTest> tests)
-    {
-        Iterable<PerformanceTest> sortedByTime = orderBy(tests, new Function<PerformanceTest, Comparable>()
-        {
-            public Comparable apply(PerformanceTest input)
-            {
-                return input.getWatch().elapsed(TimeUnit.MILLISECONDS);
-            }
-        });
-
-        for (PerformanceTest test : sortedByTime)
-        {
-            System.out.println(test.getName() + " took " + test.getWatch().elapsed(TimeUnit.MILLISECONDS) + "ms");
-        }
-    }
-
-    private static <T> Iterable<T> orderBy(Iterable<T> tests, Function<T, ? extends Comparable> selector)
-    {
-        return Ordering.natural().onResultOf(selector).sortedCopy(tests);
-    }
-
-    /*----------------------------------------
-                performance tests
-     ----------------------------------------*/
-
-    class Sql2oTest extends PerformanceTest
+    class Sql2oOptimizedSelect extends PerformanceTestBase
     {
         private org.sql2o.Connection conn;
         private Query query;
 
-        public Sql2oTest()
+        @Override
+        public void init()
         {
             conn = new Sql2o(DB_URL, DB_USER, DB_PASSWORD).open();
-            query = conn.createQuery("SELECT * FROM post WHERE id = :id")
-                        .setAutoDeriveColumnNames(true);
+            query = conn.createQuery("SELECT text, creation_date as creationDate, last_change_date as lastChangeDate, counter1, counter2, counter3, counter4, counter5, counter6, counter7, counter8, counter9 FROM post WHERE id = :id");
         }
 
         @Override
@@ -181,12 +151,40 @@ public class PerformanceTests
         }
     }
 
-    class HandCodedTest extends PerformanceTest
+    class Sql2oTypicalSelect extends PerformanceTestBase
+    {
+        private org.sql2o.Connection conn;
+        private Query query;
+
+        @Override
+        public void init()
+        {
+            conn = new Sql2o(DB_URL, DB_USER, DB_PASSWORD).open();
+            query = conn.createQuery("SELECT * FROM post WHERE id = :id")
+                    .setAutoDeriveColumnNames(true);
+        }
+
+        @Override
+        public void run(int input)
+        {
+            query.addParameter("id", input)
+                 .executeAndFetchFirst(Post.class);
+        }
+
+        @Override
+        public void close()
+        {
+            conn.close();
+        }
+    }
+
+    class HandCodedSelect extends PerformanceTestBase
     {
         private Connection conn = null;
         private PreparedStatement stmt = null;
 
-        public HandCodedTest()
+        @Override
+        public void init()
         {
             try {
                 conn = new Sql2o(DB_URL, DB_USER, DB_PASSWORD).open().getJdbcConnection();
@@ -265,11 +263,12 @@ public class PerformanceTests
         }
     }
 
-    class HibernateTest extends PerformanceTest
+    class HibernateTypicalSelect extends PerformanceTestBase
     {
         private Session session;
 
-        public HibernateTest()
+        @Override
+        public void init()
         {
             Logger.getLogger("org.hibernate").setLevel(Level.OFF);
 
