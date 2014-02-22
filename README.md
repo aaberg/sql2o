@@ -19,28 +19,11 @@ Note that *typical usage* does not involve writing SQL for many frameworks, and 
 
 Execute 1000 SELECT statements against a DB and map the data returned to a POJO.
 
-<table>
-	<tr>
-		<th>Method</th>
-		<th>Duration - Typical</th>
-		<th>Duration - Optimal</th>
-	</tr>
-	<tr>
-		<td>Hand coded (using a <code>ResultSet</code>)</td>
-		<td>143ms</td>
-		<td>143ms</td>
-	</tr>
-	<tr>
-		<td>sql2o</td>
-		<td>388ms</td>
-		<td>388ms</td>
-	</tr>
-	<tr>
-		<td>[Hibernate](http://hibernate.org/)</td>
-		<td>836ms</td>
-		<td>NA</td>
-	</tr>
-</table>
+Method | Duration - Typical | Duration - Optimal
+-------------  | ------------- | -------------
+Hand coded with <code>ResultSet</code> | 143ms | 143ms
+sql2o | 388ms | 388ms
+[Hibernate](http://hibernate.org/) | 836ms | TODO
 
 Performance benchmarks are available [here](/src/test/java/performance/PerformanceTests.cs).
 
