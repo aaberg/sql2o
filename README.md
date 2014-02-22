@@ -10,36 +10,35 @@ Check out the [sql2o website](http://www.sql2o.org) for examples.
 
 ### Performance
 
-A key feature of sql2o is performance. Following [Dapper.NET](https://github.com/SamSaffron/dapper-dot-net#performance),
-the metrics below show how long it takes to execute 500 SELECT statements against a DB and map the data returned to objects.
+A key feature of sql2o is performance. The following metrics were based off the
+[Dapper.NET metrics](https://github.com/SamSaffron/dapper-dot-net#performance).
 
-The performance tests are broken in to 2 lists:
+Note that *typical usage* does not involve writing SQL for many frameworks, and can differ from *optimal usage*.
 
-1. POCO serialization for frameworks that support pulling static typed objects from the DB. Using raw SQL.
-2. Typical framework usage. Often typical framework usage differs from the optimal usage performance wise. Often it will not involve writing SQL.
+#### Performance of SELECT
 
-#### Performance of SELECT mapping over 1000 iterations - POCO serialization
-
-TODO
-
-#### Performance of SELECT mapping over 1000 iterations - typical usage
+Execute 1000 SELECT statements against a DB and map the data returned to a POJO.
 
 <table>
 	<tr>
 		<th>Method</th>
-		<th>Duration</th>
+		<th>Duration - Typical</th>
+		<th>Duration - Optimal</th>
 	</tr>
 	<tr>
 		<td>Hand coded (using a <code>ResultSet</code>)</td>
+		<td>143ms</td>
 		<td>143ms</td>
 	</tr>
 	<tr>
 		<td>sql2o</td>
 		<td>388ms</td>
+		<td>388ms</td>
 	</tr>
 	<tr>
-		<td>Hibernate</td>
+		<td>[Hibernate](http://hibernate.org/)</td>
 		<td>836ms</td>
+		<td>NA</td>
 	</tr>
 </table>
 
