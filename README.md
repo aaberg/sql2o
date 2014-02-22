@@ -21,9 +21,9 @@ Benchmarks are available [here](/src/test/java/org/sql2o/performance/Performance
 
 Method | Duration - Typical | Duration - Optimal
 -------------  | ------------- | -------------
-Hand coded <code>ResultSet</code> | 143ms | 143ms
-sql2o | 388ms | 388ms
-[Hibernate](http://hibernate.org/) | 836ms | TODO
+Hand coded <code>ResultSet</code> | 65ms | 65ms
+sql2o | 79ms | 68ms
+[Hibernate](http://hibernate.org/) | 393ms | TODO
 
 ## Contributing
 
