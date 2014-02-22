@@ -57,9 +57,23 @@ public class PerformanceTestList extends ArrayList<PerformanceTestBase>
             }
         });
 
+        PerformanceTestBase fastest = null;
+
         for (PerformanceTestBase test : sortedByTime)
         {
-            System.out.println(test.getName() + " took " + test.getWatch().elapsed(TimeUnit.MILLISECONDS) + "ms");
+            long millis = test.getWatch().elapsed(TimeUnit.MILLISECONDS);
+
+            if (fastest == null)
+            {
+                fastest = test;
+                System.out.println(String.format("%s took %dms", test.getName(), millis));
+            }
+            else
+            {
+                long fastestMillis = fastest.getWatch().elapsed(TimeUnit.MILLISECONDS);
+                double percentSlower = (double)(millis - fastestMillis)/fastestMillis*100;
+                System.out.println(String.format("%s took %dms (%.2f%% slower)", test.getName(), millis, percentSlower));
+            }
         }
     }
 
