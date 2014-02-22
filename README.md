@@ -24,7 +24,7 @@ Method | Duration - Typical | Duration - Optimal
 -------------  | ------------- | -------------
 Hand coded <code>ResultSet</code> | 65ms | 65ms
 sql2o | 79ms (21.5% slower) | 68ms (4.6% slower)
-[Hibernate](http://hibernate.org/) | 393ms (504.5% slower) | TODO
+[Hibernate](http://hibernate.org/) | 393ms (505% slower) | TODO
 
 ## Contributing
 
