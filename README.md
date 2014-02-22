@@ -12,7 +12,8 @@ Check out the [sql2o website](http://www.sql2o.org) for examples.
 
 A key feature of sql2o is performance. The following metrics were based off the
 [Dapper.NET metrics](https://github.com/SamSaffron/dapper-dot-net#performance).
-Note that *typical usage* does not involve writing SQL for many frameworks, and can differ from *optimal usage*.
+Note that *typical usage* can differ from *optimal usage* for many frameworks. Depending on the framework,
+typical usage may not involve writing any SQL, or it may map underscore case to camel case, etc.
 
 #### Performance of SELECT
 
