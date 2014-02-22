@@ -12,7 +12,6 @@ Check out the [sql2o website](http://www.sql2o.org) for examples.
 
 A key feature of sql2o is performance. The following metrics were based off the
 [Dapper.NET metrics](https://github.com/SamSaffron/dapper-dot-net#performance).
-
 Note that *typical usage* does not involve writing SQL for many frameworks, and can differ from *optimal usage*.
 
 #### Performance of SELECT
@@ -25,7 +24,7 @@ Hand coded <code>ResultSet</code> | 143ms | 143ms
 sql2o | 388ms | 388ms
 [Hibernate](http://hibernate.org/) | 836ms | TODO
 
-Performance benchmarks are available [here](/src/test/java/performance/PerformanceTests.cs).
+Performance benchmarks are available [here](/src/test/java/org/sql2o/performance/PerformanceTests.java).
 
 ## Contributing
 
