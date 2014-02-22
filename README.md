@@ -21,7 +21,7 @@ Execute 1000 SELECT statements against a DB and map the data returned to a POJO.
 
 Method | Duration - Typical | Duration - Optimal
 -------------  | ------------- | -------------
-Hand coded with <code>ResultSet</code> | 143ms | 143ms
+Hand coded <code>ResultSet</code> | 143ms | 143ms
 sql2o | 388ms | 388ms
 [Hibernate](http://hibernate.org/) | 836ms | TODO
 
