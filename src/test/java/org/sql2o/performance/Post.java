@@ -1,12 +1,17 @@
-package org.sql2o.pojos;
+package org.sql2o.performance;
 
+import javax.persistence.Entity;
+import javax.persistence.GeneratedValue;
+import javax.persistence.Id;
 import java.util.Date;
 
 /**
  * @author aldenquimby@gmail.com
  */
+@Entity
 public class Post
 {
+    @Id @GeneratedValue
     private int id;
     private String text;
     private Date creationDate;

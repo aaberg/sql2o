@@ -99,6 +99,14 @@
 
         <dependency>
             <scope>test</scope>
+            <groupId>org.hibernate</groupId>
+            <artifactId>hibernate-core</artifactId>
+            <version>4.3.1.Final</version>
+        </dependency>
+
+        <!-- utility library to make life way easier -->
+        <dependency>
+            <scope>test</scope>
             <groupId>com.google.guava</groupId>
             <artifactId>guava</artifactId>
             <version>15.0</version>

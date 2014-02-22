@@ -18,89 +18,32 @@ The performance tests are broken in to 2 lists:
 1. POCO serialization for frameworks that support pulling static typed objects from the DB. Using raw SQL.
 2. Typical framework usage. Often typical framework usage differs from the optimal usage performance wise. Often it will not involve writing SQL.
 
-#### Performance of SELECT mapping over 500 iterations - POCO serialization
+#### Performance of SELECT mapping over 1000 iterations - POCO serialization
 
-<table>
-  <tr>
-  	<th>Method</th>
-		<th>Duration</th>
-		<th>Remarks</th>
-	</tr>
-	<tr>
-		<td>Hand coded (using a <code>SqlDataReader</code>)</td>
-		<td>47ms</td>
-		<td rowspan="9"><a href="http://www.toptensoftware.com/Articles/94/PetaPoco-More-Speed">Can be faster</a></td>
-	</tr>
-	<tr>
-		<td>Dapper <code>ExecuteMapperQuery<Post></code></td>
-		<td>49ms</td>
-	</tr>
-	<tr>
-		<td><a href="https://github.com/ServiceStack/ServiceStack.OrmLite">ServiceStack.OrmLite</a> (QueryById)</td>
-		<td>50ms</td>
-	</tr>
-	<tr>
-		<td><a href="http://www.toptensoftware.com/petapoco/">PetaPoco</a></td>
-		<td>52ms</td>
-	</tr>
-	<tr>
-		<td>BLToolkit</td>
-		<td>80ms</td>
-	</tr>
-	<tr>
-		<td>SubSonic CodingHorror</td>
-		<td>107ms</td>
-	</tr>
-	<tr>
-		<td>NHibernate SQL</td>
-		<td>104ms</td>
-	</tr>
-	<tr>
-		<td>Linq 2 SQL <code>ExecuteQuery</code></td>
-		<td>181ms</td>
-	</tr>
-	<tr>
-		<td>Entity framework <code>ExecuteStoreQuery</code></td>
-		<td>631ms</td>
-	</tr>
-</table>
+TODO
 
-#### Performance of SELECT mapping over 500 iterations - typical usage
+#### Performance of SELECT mapping over 1000 iterations - typical usage
 
 <table>
 	<tr>
 		<th>Method</th>
 		<th>Duration</th>
-		<th>Remarks</th>
 	</tr>
 	<tr>
-		<td>Linq 2 SQL CompiledQuery</td>
-		<td>81ms</td>
-		<td>Not super typical involves complex code</td>
+		<td>Hand coded (using a <code>ResultSet</code>)</td>
+		<td>143ms</td>
 	</tr>
 	<tr>
-		<td>NHibernate HQL</td>
-		<td>118ms</td>
-		<td>&nbsp;</td>
+		<td>sql2o</td>
+		<td>392ms</td>
 	</tr>
 	<tr>
-		<td>Linq 2 SQL</td>
-		<td>559ms</td>
-		<td>&nbsp;</td>
-	</tr>
-	<tr>
-		<td>Entity framework</td>
-		<td>859ms</td>
-		<td>&nbsp;</td>
-	</tr>
-	<tr>
-		<td>SubSonic ActiveRecord.SingleOrDefault</td>
-		<td>3619ms</td>
-		<td>&nbsp;</td>
+		<td>Hibernate</td>
+		<td>836ms</td>
 	</tr>
 </table>
 
-Performance benchmarks are available [here](https://github.com/SamSaffron/dapper-dot-net/blob/master/Tests/PerformanceTests.cs).
+Performance benchmarks are available [here](/src/test/java/performance/PerformanceTests.cs).
 
 ## Contributing
 

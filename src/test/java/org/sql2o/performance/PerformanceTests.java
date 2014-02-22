@@ -1,0 +1,308 @@
+package org.sql2o.performance;
+
+import com.google.common.base.Function;
+import com.google.common.base.Stopwatch;
+import com.google.common.collect.ImmutableList;
+import com.google.common.collect.Ordering;
+import org.hibernate.Session;
+import org.hibernate.SessionFactory;
+import org.hibernate.boot.registry.StandardServiceRegistryBuilder;
+import org.hibernate.cfg.Configuration;
+import org.hibernate.cfg.ImprovedNamingStrategy;
+import org.hibernate.service.ServiceRegistry;
+import org.junit.Before;
+import org.junit.Test;
+import org.sql2o.Query;
+import org.sql2o.Sql2o;
+
+import java.sql.Connection;
+import java.sql.PreparedStatement;
+import java.sql.ResultSet;
+import java.sql.SQLException;
+import java.util.List;
+import java.util.Random;
+import java.util.concurrent.TimeUnit;
+import java.util.logging.Level;
+import java.util.logging.Logger;
+
+/**
+ * @author aldenquimby@gmail.com
+ */
+public class PerformanceTests
+{
+    private final static String DRIVER_CLASS = "org.h2.Driver";
+    private final static String DB_URL = "jdbc:h2:mem:test;DB_CLOSE_DELAY=-1";
+    private final static String DB_USER = "sa";
+    private final static String DB_PASSWORD = "";
+    private final static String HIBERNATE_DIALECT = "org.hibernate.dialect.H2Dialect";
+    private final int ITERATIONS = 1000;
+
+    @Before
+    public void setup()
+    {
+        Sql2o sql2o = new Sql2o(DB_URL, DB_USER, DB_PASSWORD);
+
+        sql2o.createQuery("\n CREATE TABLE IF NOT EXISTS post" +
+                          "\n (" +
+                          "\n     id INT NOT NULL IDENTITY PRIMARY KEY" +
+                          "\n   , text VARCHAR(255)" +
+                          "\n   , creation_date DATETIME" +
+                          "\n   , last_change_date DATETIME" +
+                          "\n   , counter1 INT" +
+                          "\n   , counter2 INT" +
+                          "\n   , counter3 INT" +
+                          "\n   , counter4 INT" +
+                          "\n   , counter5 INT" +
+                          "\n   , counter6 INT" +
+                          "\n   , counter7 INT" +
+                          "\n   , counter8 INT" +
+                          "\n   , counter9 INT" +
+                          "\n )" +
+                          "\n;").executeUpdate();
+
+        Random r = new Random();
+
+        Query insQuery = sql2o.createQuery("insert into post (text, creation_date, last_change_date, counter1, counter2, counter3, counter4, counter5, counter6, counter7, counter8, counter9) values (:text, :creation_date, :last_change_date, :counter1, :counter2, :counter3, :counter4, :counter5, :counter6, :counter7, :counter8, :counter9)");
+        for (int idx = 0; idx < ITERATIONS*10; idx++)
+        {
+            insQuery.addParameter("text", "a name " + idx)
+                    .addParameter("creation_date", new java.util.Date(idx * 5))
+                    .addParameter("last_change_date", new java.util.Date(idx * 10))
+                    .addParameter("counter1", r.nextDouble() > 0.5 ? r.nextInt() : null)
+                    .addParameter("counter2", r.nextDouble() > 0.5 ? r.nextInt() : null)
+                    .addParameter("counter3", r.nextDouble() > 0.5 ? r.nextInt() : null)
+                    .addParameter("counter4", r.nextDouble() > 0.5 ? r.nextInt() : null)
+                    .addParameter("counter5", r.nextDouble() > 0.5 ? r.nextInt() : null)
+                    .addParameter("counter6", r.nextDouble() > 0.5 ? r.nextInt() : null)
+                    .addParameter("counter7", r.nextDouble() > 0.5 ? r.nextInt() : null)
+                    .addParameter("counter8", r.nextDouble() > 0.5 ? r.nextInt() : null)
+                    .addParameter("counter9", r.nextDouble() > 0.5 ? r.nextInt() : null)
+                    .addToBatch();
+        }
+        insQuery.executeBatch();
+    }
+
+    @Test
+    public void run()
+    {
+        System.out.println("Running " + ITERATIONS + " iterations that load up a post entity");
+
+        List<PerformanceTest> tests = ImmutableList.of(
+            new Sql2oTest(), new HandCodedTest(), new HibernateTest()
+        );
+
+        run(tests, ITERATIONS);
+
+        printResults(tests);
+    }
+
+    private void run(List<PerformanceTest> tests, int iterations)
+    {
+        // warm up
+        for (PerformanceTest test : tests)
+        {
+            test.run(iterations + 1);
+        }
+
+        final Random rand = new Random();
+
+        for (int i = 1; i <= iterations; i++)
+        {
+            Iterable<PerformanceTest> sortedByRandom = orderBy(tests, new Function<PerformanceTest, Comparable>()
+            {
+                public Comparable apply(PerformanceTest input)
+                {
+                    return rand.nextInt();
+                }
+            });
+
+            for (PerformanceTest test : sortedByRandom)
+            {
+                test.getWatch().start();
+                test.run(i);
+                test.getWatch().stop();
+            }
+        }
+
+        // close up
+        for (PerformanceTest test : tests)
+        {
+            test.close();
+        }
+    }
+
+    private void printResults(Iterable<PerformanceTest> tests)
+    {
+        Iterable<PerformanceTest> sortedByTime = orderBy(tests, new Function<PerformanceTest, Comparable>()
+        {
+            public Comparable apply(PerformanceTest input)
+            {
+                return input.getWatch().elapsed(TimeUnit.MILLISECONDS);
+            }
+        });
+
+        for (PerformanceTest test : sortedByTime)
+        {
+            System.out.println(test.getName() + " took " + test.getWatch().elapsed(TimeUnit.MILLISECONDS) + "ms");
+        }
+    }
+
+    private static <T> Iterable<T> orderBy(Iterable<T> tests, Function<T, ? extends Comparable> selector)
+    {
+        return Ordering.natural().onResultOf(selector).sortedCopy(tests);
+    }
+
+    /*----------------------------------------
+                performance tests
+     ----------------------------------------*/
+
+    class Sql2oTest extends PerformanceTest
+    {
+        private org.sql2o.Connection conn;
+        private Query query;
+
+        public Sql2oTest()
+        {
+            conn = new Sql2o(DB_URL, DB_USER, DB_PASSWORD).open();
+            query = conn.createQuery("SELECT * FROM post WHERE id = :id")
+                        .setAutoDeriveColumnNames(true);
+        }
+
+        @Override
+        public void run(int input)
+        {
+            query.addParameter("id", input)
+                 .executeAndFetchFirst(Post.class);
+        }
+
+        @Override
+        public void close()
+        {
+            conn.close();
+        }
+    }
+
+    class HandCodedTest extends PerformanceTest
+    {
+        private Connection conn = null;
+        private PreparedStatement stmt = null;
+
+        public HandCodedTest()
+        {
+            try {
+                conn = new Sql2o(DB_URL, DB_USER, DB_PASSWORD).open().getJdbcConnection();
+                stmt = conn.prepareStatement("SELECT * FROM post WHERE id = ?");
+            }
+            catch(SQLException se) {
+                throw new RuntimeException("error when executing query", se);
+            }
+        }
+
+        private Integer getNullableInt(ResultSet rs, String colName) throws SQLException {
+            Object obj = rs.getObject(colName);
+            return obj == null ? null : (Integer)obj;
+        }
+
+        @Override
+        public void run(int input)
+        {
+            ResultSet rs = null;
+
+            try {
+                stmt.setInt(1, input);
+
+                rs = stmt.executeQuery();
+
+                while(rs.next()) {
+                    Post p = new Post();
+                    p.setId(rs.getInt("id"));
+                    p.setText(rs.getString("text"));
+                    p.setCreationDate(rs.getDate("creation_date"));
+                    p.setLastChangeDate(rs.getDate("last_change_date"));
+                    p.setCounter1(getNullableInt(rs, "counter1"));
+                    p.setCounter2(getNullableInt(rs, "counter2"));
+                    p.setCounter3(getNullableInt(rs, "counter3"));
+                    p.setCounter4(getNullableInt(rs, "counter4"));
+                    p.setCounter5(getNullableInt(rs, "counter5"));
+                    p.setCounter6(getNullableInt(rs, "counter6"));
+                    p.setCounter7(getNullableInt(rs, "counter7"));
+                    p.setCounter8(getNullableInt(rs, "counter8"));
+                    p.setCounter9(getNullableInt(rs, "counter9"));
+                }
+            }
+            catch (SQLException e) {
+                throw new RuntimeException("error when executing query", e);
+            }
+            finally {
+                if (rs != null) {
+                    try {
+                        rs.close();
+                    }
+                    catch (SQLException e) {
+                        e.printStackTrace();
+                    }
+                }
+            }
+        }
+
+        public void close()
+        {
+            if(stmt != null) {
+                try {
+                    stmt.close();
+                }
+                catch (SQLException e) {
+                    e.printStackTrace();
+                }
+            }
+            if (conn != null) {
+                try {
+                    conn.close();
+                }
+                catch (SQLException e) {
+                    e.printStackTrace();
+                }
+            }
+        }
+    }
+
+    class HibernateTest extends PerformanceTest
+    {
+        private Session session;
+
+        public HibernateTest()
+        {
+            Logger.getLogger("org.hibernate").setLevel(Level.OFF);
+
+            Configuration cfg = new Configuration()
+                    .setProperty("hibernate.connection.driver_class", DRIVER_CLASS)
+                    .setProperty("hibernate.connection.url", DB_URL)
+                    .setProperty("hibernate.connection.username", DB_USER)
+                    .setProperty("hibernate.connection.password", DB_PASSWORD)
+                    .setProperty("hibernate.dialect", HIBERNATE_DIALECT)
+                    .setProperty("show_sql", "false")
+                    .setProperty("hbm2ddl.auto", "update")
+                    .setNamingStrategy(ImprovedNamingStrategy.INSTANCE)
+                    .addAnnotatedClass(Post.class);
+
+            ServiceRegistry serviceRegistry = new StandardServiceRegistryBuilder()
+                    .applySettings(cfg.getProperties())
+                    .build();
+
+            SessionFactory sessionFactory = cfg.buildSessionFactory(serviceRegistry);
+            session = sessionFactory.openSession();
+        }
+
+        @Override
+        public void run(int input)
+        {
+            session.get(Post.class, input);
+        }
+
+        @Override
+        public void close()
+        {
+            session.close();
+        }
+    }
+}
