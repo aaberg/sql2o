@@ -17,14 +17,13 @@ Note that *typical usage* does not involve writing SQL for many frameworks, and 
 #### Performance of SELECT
 
 Execute 1000 SELECT statements against a DB and map the data returned to a POJO.
+Benchmarks are available [here](/src/test/java/org/sql2o/performance/PerformanceTests.java).
 
 Method | Duration - Typical | Duration - Optimal
 -------------  | ------------- | -------------
 Hand coded <code>ResultSet</code> | 143ms | 143ms
 sql2o | 388ms | 388ms
 [Hibernate](http://hibernate.org/) | 836ms | TODO
-
-Performance benchmarks are available [here](/src/test/java/org/sql2o/performance/PerformanceTests.java).
 
 ## Contributing
 
