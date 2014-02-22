@@ -35,7 +35,7 @@ TODO
 	</tr>
 	<tr>
 		<td>sql2o</td>
-		<td>392ms</td>
+		<td>388ms</td>
 	</tr>
 	<tr>
 		<td>Hibernate</td>

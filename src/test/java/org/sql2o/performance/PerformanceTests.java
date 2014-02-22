@@ -1,7 +1,6 @@
 package org.sql2o.performance;
 
 import com.google.common.base.Function;
-import com.google.common.base.Stopwatch;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Ordering;
 import org.hibernate.Session;
@@ -85,7 +84,7 @@ public class PerformanceTests
     @Test
     public void run()
     {
-        System.out.println("Running " + ITERATIONS + " iterations that load up a post entity");
+        System.out.println("Running " + ITERATIONS + " iterations that load up a Post entity\n");
 
         List<PerformanceTest> tests = ImmutableList.of(
             new Sql2oTest(), new HandCodedTest(), new HibernateTest()
@@ -280,7 +279,6 @@ public class PerformanceTests
                     .setProperty("hibernate.connection.username", DB_USER)
                     .setProperty("hibernate.connection.password", DB_PASSWORD)
                     .setProperty("hibernate.dialect", HIBERNATE_DIALECT)
-                    .setProperty("show_sql", "false")
                     .setProperty("hbm2ddl.auto", "update")
                     .setNamingStrategy(ImprovedNamingStrategy.INSTANCE)
                     .addAnnotatedClass(Post.class);
