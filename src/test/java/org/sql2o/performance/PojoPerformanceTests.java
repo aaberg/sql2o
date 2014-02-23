@@ -8,15 +8,20 @@ import org.hibernate.cfg.ImprovedNamingStrategy;
 import org.hibernate.service.ServiceRegistry;
 import org.junit.Before;
 import org.junit.Test;
+import org.skife.jdbi.v2.BeanMapper;
+import org.skife.jdbi.v2.DBI;
+import org.skife.jdbi.v2.Handle;
 import org.sql2o.Query;
 import org.sql2o.Sql2o;
 import org.sql2o.tools.FeatureDetector;
 
 import java.lang.reflect.Field;
+import java.lang.reflect.Type;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.util.Map;
 import java.util.Random;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -112,6 +117,7 @@ public class PojoPerformanceTests
         tests.add(new Sql2oOptimizedSelect());
         tests.add(new Sql2oTypicalSelect());
         tests.add(new HibernateTypicalSelect());
+        tests.add(new JDBISelect());
 
         System.out.println("Warming up...");
         tests.run(ITERATIONS);
@@ -175,6 +181,30 @@ public class PojoPerformanceTests
         public void close()
         {
             conn.close();
+        }
+    }
+
+    class JDBISelect extends PerformanceTestBase{
+
+        DBI dbi;
+        Handle h;
+        org.skife.jdbi.v2.Query<Post> q;
+
+        @Override
+        public void init() {
+            dbi = new DBI(DB_URL, DB_USER, DB_PASSWORD);
+            h = dbi.open();
+            q = h.createQuery("SELECT * FROM post WHERE id = :id").map(Post.class);
+        }
+
+        @Override
+        public void run(int input) {
+            q.bind("id", input) .first();
+        }
+
+        @Override
+        public void close() {
+            h.close();
         }
     }
 

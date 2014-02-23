@@ -104,6 +104,13 @@
             <version>4.3.1.Final</version>
         </dependency>
 
+        <dependency>
+            <groupId>org.jdbi</groupId>
+            <artifactId>jdbi</artifactId>
+            <version>2.53</version>
+            <scope>test</scope>
+        </dependency>
+
         <!-- utility library to make life way easier -->
         <dependency>
             <scope>test</scope>
