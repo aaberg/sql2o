@@ -172,7 +172,7 @@ public class PojoPerformanceTests
         @Override
         public void run(int input)
         {
-            Post p = query.addParameter("id", input)
+            query.addParameter("id", input)
                  .executeAndFetchFirst(Post.class);
         }
 
@@ -193,7 +193,7 @@ public class PojoPerformanceTests
         public void init() {
             dbi = new DBI(DB_URL, DB_USER, DB_PASSWORD);
             h = dbi.open();
-            q = h.createQuery("SELECT * FROM post WHERE id = :id").map(Post.class);
+            q = h.createQuery("SELECT text, creation_date as creationDate, last_change_date as lastChangeDate, counter1, counter2, counter3, counter4, counter5, counter6, counter7, counter8, counter9 FROM post WHERE id = :id").map(Post.class);
         }
 
         @Override
