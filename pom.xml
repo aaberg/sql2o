@@ -111,6 +111,13 @@
             <scope>test</scope>
         </dependency>
 
+        <dependency>
+            <groupId>org.jooq</groupId>
+            <artifactId>jooq</artifactId>
+            <version>3.3.0</version>
+            <scope>test</scope>
+        </dependency>
+
         <!-- utility library to make life way easier -->
         <dependency>
             <scope>test</scope>

@@ -6,6 +6,11 @@ import org.hibernate.boot.registry.StandardServiceRegistryBuilder;
 import org.hibernate.cfg.Configuration;
 import org.hibernate.cfg.ImprovedNamingStrategy;
 import org.hibernate.service.ServiceRegistry;
+import org.jooq.DSLContext;
+import org.jooq.Record;
+import org.jooq.Result;
+import org.jooq.ResultQuery;
+import org.jooq.impl.DSL;
 import org.junit.Before;
 import org.junit.Test;
 import org.skife.jdbi.v2.BeanMapper;
@@ -17,10 +22,8 @@ import org.sql2o.tools.FeatureDetector;
 
 import java.lang.reflect.Field;
 import java.lang.reflect.Type;
-import java.sql.Connection;
-import java.sql.PreparedStatement;
-import java.sql.ResultSet;
-import java.sql.SQLException;
+import java.sql.*;
+import java.util.List;
 import java.util.Map;
 import java.util.Random;
 import java.util.logging.Level;
@@ -118,6 +121,7 @@ public class PojoPerformanceTests
         tests.add(new Sql2oTypicalSelect());
         tests.add(new HibernateTypicalSelect());
         tests.add(new JDBISelect());
+        tests.add(new JOOQSelect());
 
         System.out.println("Warming up...");
         tests.run(ITERATIONS);
@@ -173,7 +177,7 @@ public class PojoPerformanceTests
         @Override
         public void run(int input)
         {
-            query.addParameter("id", input)
+            Post p = query.addParameter("id", input)
                  .executeAndFetchFirst(Post.class);
         }
 
@@ -205,6 +209,36 @@ public class PojoPerformanceTests
         @Override
         public void close() {
             h.close();
+        }
+    }
+
+    class JOOQSelect extends PerformanceTestBase{
+
+        DSLContext create;
+        final String sql = "SELECT text, creation_date as creationDate, last_change_date as lastChangeDate, counter1, counter2, counter3, counter4, counter5, counter6, counter7, counter8, counter9 FROM post WHERE id = ?";
+        ResultQuery q;
+        public void init() {
+
+            try {
+                create = DSL.using(DriverManager.getConnection(DB_URL, DB_USER, DB_PASSWORD));
+            } catch (SQLException e) {
+                throw new RuntimeException("Error initializing jOOQ DSLContext", e);
+            }
+
+            q = create.select().from("post").where("id = ?", -1); // the parameter needs an initial value, else future calls the bind() will fail.
+        }
+
+        @Override
+        public void run(int input) {
+            Record rec = q.bind(1, input).fetchAny();
+
+            // can't get the POJO parsing to work. p always just conatains empty fields.
+            Post p = rec.into(Post.class);
+        }
+
+        @Override
+        public void close() {
+            q.close();
         }
     }
 
