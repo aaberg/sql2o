@@ -1,5 +1,6 @@
 package org.sql2o.performance;
 
+import com.google.common.base.CharMatcher;
 import com.google.common.base.Function;
 import com.google.common.collect.Ordering;
 
@@ -47,7 +48,7 @@ public class PerformanceTestList extends ArrayList<PerformanceTestBase>
         }
     }
 
-    public void printResults()
+    public void printResults(String heading)
     {
         Iterable<PerformanceTestBase> sortedByTime = orderBy(this, new Function<PerformanceTestBase, Comparable>()
         {
@@ -57,22 +58,26 @@ public class PerformanceTestList extends ArrayList<PerformanceTestBase>
             }
         });
 
+        System.out.println(heading + " Results");
+        System.out.println("-------------------------");
+
         PerformanceTestBase fastest = null;
 
         for (PerformanceTestBase test : sortedByTime)
         {
             long millis = test.getWatch().elapsed(TimeUnit.MILLISECONDS);
+            String testName = test.getName().replaceAll(heading + "$", "");
 
             if (fastest == null)
             {
                 fastest = test;
-                System.out.println(String.format("%s took %dms", test.getName(), millis));
+                System.out.println(String.format("%s took %dms", testName, millis));
             }
             else
             {
                 long fastestMillis = fastest.getWatch().elapsed(TimeUnit.MILLISECONDS);
                 double percentSlower = (double)(millis - fastestMillis)/fastestMillis*100;
-                System.out.println(String.format("%s took %dms (%.2f%% slower)", test.getName(), millis, percentSlower));
+                System.out.println(String.format("%s took %dms (%.2f%% slower)", testName, millis, percentSlower));
             }
         }
     }

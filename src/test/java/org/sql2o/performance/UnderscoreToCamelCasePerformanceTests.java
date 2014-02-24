@@ -23,7 +23,7 @@ public class UnderscoreToCamelCasePerformanceTests
         tests.add(new GuavaUnderscoreToCamelCase());
 
         tests.run(ITERATIONS);
-        tests.printResults();
+        tests.printResults("");
     }
 
     private List<String> toConvert = ImmutableList.of(

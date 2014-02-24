@@ -1,5 +1,9 @@
 package org.sql2o.performance;
 
+import org.apache.commons.dbutils.DbUtils;
+import org.apache.commons.dbutils.QueryRunner;
+import org.apache.commons.dbutils.ResultSetHandler;
+import org.apache.commons.dbutils.handlers.BeanHandler;
 import org.hibernate.Session;
 import org.hibernate.SessionFactory;
 import org.hibernate.boot.registry.StandardServiceRegistryBuilder;
@@ -117,13 +121,14 @@ public class PojoPerformanceTests
         tests.add(new HibernateTypicalSelect());
         tests.add(new JDBISelect());
         tests.add(new JOOQSelect());
+        tests.add(new ApacheDbUtilsTypicalSelect());
 
         System.out.println("Warming up...");
         tests.run(ITERATIONS);
         System.out.println("Done warming up, let's rock and roll!\n");
 
         tests.run(ITERATIONS);
-        tests.printResults();
+        tests.printResults("Select");
     }
 
     //----------------------------------------
@@ -359,6 +364,47 @@ public class PojoPerformanceTests
         public void close()
         {
             session.close();
+        }
+    }
+
+    class ApacheDbUtilsTypicalSelect extends PerformanceTestBase
+    {
+        private QueryRunner runner;
+        private ResultSetHandler<Post> rsHandler;
+        private Connection conn;
+
+        @Override
+        public void init()
+        {
+            runner = new QueryRunner();
+            rsHandler = new BeanHandler<Post>(Post.class);
+            conn = new Sql2o(DB_URL, DB_USER, DB_PASSWORD).open().getJdbcConnection();
+        }
+
+        @Override
+        public void run(int input)
+        {
+            try
+            {
+                runner.query(conn, "SELECT * FROM post WHERE id = ?", rsHandler, input);
+            }
+            catch (SQLException e)
+            {
+                throw new RuntimeException(e);
+            }
+        }
+
+        @Override
+        public void close()
+        {
+            try
+            {
+                DbUtils.close(conn);
+            }
+            catch (SQLException e)
+            {
+                throw new RuntimeException(e);
+            }
         }
     }
 }

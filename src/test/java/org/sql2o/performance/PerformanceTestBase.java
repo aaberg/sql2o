@@ -23,8 +23,8 @@ public abstract class PerformanceTestBase implements Function<Integer, Void>, Au
     }
 
     public abstract void init();
-    public abstract void close();
     public abstract void run(int input);
+    public abstract void close();
 
     String getName()
     {
