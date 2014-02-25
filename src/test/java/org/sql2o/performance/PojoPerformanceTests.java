@@ -1,29 +1,38 @@
 package org.sql2o.performance;
 
-import org.apache.commons.dbutils.DbUtils;
-import org.apache.commons.dbutils.QueryRunner;
-import org.apache.commons.dbutils.ResultSetHandler;
+import org.apache.commons.dbutils.*;
 import org.apache.commons.dbutils.handlers.BeanHandler;
+import org.apache.ibatis.annotations.Result;
+import org.apache.ibatis.annotations.Results;
+import org.apache.ibatis.annotations.Select;
+import org.apache.ibatis.mapping.Environment;
+import org.apache.ibatis.session.SqlSession;
+import org.apache.ibatis.session.SqlSessionFactory;
+import org.apache.ibatis.session.SqlSessionFactoryBuilder;
+import org.apache.ibatis.transaction.TransactionFactory;
+import org.apache.ibatis.transaction.jdbc.JdbcTransactionFactory;
 import org.hibernate.Session;
 import org.hibernate.SessionFactory;
 import org.hibernate.boot.registry.StandardServiceRegistryBuilder;
 import org.hibernate.cfg.Configuration;
 import org.hibernate.cfg.ImprovedNamingStrategy;
 import org.hibernate.service.ServiceRegistry;
-import org.jooq.DSLContext;
-import org.jooq.Record;
-import org.jooq.ResultQuery;
+import org.joda.time.DateTime;
+import org.jooq.*;
 import org.jooq.impl.DSL;
 import org.junit.Before;
 import org.junit.Test;
 import org.skife.jdbi.v2.DBI;
 import org.skife.jdbi.v2.Handle;
+import org.sql2o.GenericDatasource;
 import org.sql2o.Query;
 import org.sql2o.Sql2o;
 import org.sql2o.tools.FeatureDetector;
 
+import java.beans.PropertyDescriptor;
 import java.lang.reflect.Field;
 import java.sql.*;
+import java.util.Arrays;
 import java.util.Random;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -38,6 +47,7 @@ public class PojoPerformanceTests
     private final static String DB_USER = "sa";
     private final static String DB_PASSWORD = "";
     private final static String HIBERNATE_DIALECT = "org.hibernate.dialect.H2Dialect";
+    private final static SQLDialect JOOQ_DIALECT = SQLDialect.H2;
     private final int ITERATIONS = 1000;
 
     @Before
@@ -80,8 +90,8 @@ public class PojoPerformanceTests
         for (int idx = 0; idx < ITERATIONS; idx++)
         {
             insQuery.addParameter("text", "a name " + idx)
-                    .addParameter("creation_date", new java.util.Date(idx * 5))
-                    .addParameter("last_change_date", new java.util.Date(idx * 10))
+                    .addParameter("creation_date", new DateTime(System.currentTimeMillis() + r.nextInt()).toDate())
+                    .addParameter("last_change_date", new DateTime(System.currentTimeMillis() + r.nextInt()).toDate())
                     .addParameter("counter1", r.nextDouble() > 0.5 ? r.nextInt() : null)
                     .addParameter("counter2", r.nextDouble() > 0.5 ? r.nextInt() : null)
                     .addParameter("counter3", r.nextDouble() > 0.5 ? r.nextInt() : null)
@@ -122,6 +132,7 @@ public class PojoPerformanceTests
         tests.add(new JDBISelect());
         tests.add(new JOOQSelect());
         tests.add(new ApacheDbUtilsTypicalSelect());
+        tests.add(new MyBatisSelect());
 
         System.out.println("Warming up...");
         tests.run(ITERATIONS);
@@ -135,6 +146,20 @@ public class PojoPerformanceTests
     //          performance tests
     // ---------------------------------------
 
+    // TODO I think we should consider making it a REQUIREMENT for the performance tests
+    // that underscore case be mapped to camel case because it is so common.
+    // This would allow us to remove the "optimized" sql2o select, which is not really
+    // too different from the "typical" one...
+    // If not, maybe we should entirely break out the underscore case mapping tests into a different
+    // section in the readme...
+
+    final static String SELECT_TYPICAL = "SELECT * FROM post";
+    final static String SELECT_OPTIMAL = "SELECT id, text, creation_date as creationDate, last_change_date as lastChangeDate, counter1, counter2, counter3, counter4, counter5, counter6, counter7, counter8, counter9 FROM post";
+
+    /**
+     * Considered "optimized" because it uses {@link #SELECT_OPTIMAL} rather
+     * than auto-mapping underscore case to camel case.
+     */
     class Sql2oOptimizedSelect extends PerformanceTestBase
     {
         private org.sql2o.Connection conn;
@@ -144,7 +169,7 @@ public class PojoPerformanceTests
         public void init()
         {
             conn = new Sql2o(DB_URL, DB_USER, DB_PASSWORD).open();
-            query = conn.createQuery("SELECT text, creation_date as creationDate, last_change_date as lastChangeDate, counter1, counter2, counter3, counter4, counter5, counter6, counter7, counter8, counter9 FROM post WHERE id = :id");
+            query = conn.createQuery(SELECT_OPTIMAL + " WHERE id = :id");
         }
 
         @Override
@@ -170,7 +195,7 @@ public class PojoPerformanceTests
         public void init()
         {
             conn = new Sql2o(DB_URL, DB_USER, DB_PASSWORD).open();
-            query = conn.createQuery("SELECT * FROM post WHERE id = :id")
+            query = conn.createQuery(SELECT_TYPICAL + " WHERE id = :id")
                     .setAutoDeriveColumnNames(true);
         }
 
@@ -188,22 +213,24 @@ public class PojoPerformanceTests
         }
     }
 
-    class JDBISelect extends PerformanceTestBase{
-
-        DBI dbi;
+    /**
+     * It appears JDBI does not support mapping underscore to camel case.
+     */
+    class JDBISelect extends PerformanceTestBase
+    {
         Handle h;
         org.skife.jdbi.v2.Query<Post> q;
 
         @Override
         public void init() {
-            dbi = new DBI(DB_URL, DB_USER, DB_PASSWORD);
+            DBI dbi = new DBI(DB_URL, DB_USER, DB_PASSWORD);
             h = dbi.open();
-            q = h.createQuery("SELECT text, creation_date as creationDate, last_change_date as lastChangeDate, counter1, counter2, counter3, counter4, counter5, counter6, counter7, counter8, counter9 FROM post WHERE id = :id").map(Post.class);
+            q = h.createQuery(SELECT_OPTIMAL + " WHERE id = :id").map(Post.class);
         }
 
         @Override
         public void run(int input) {
-            q.bind("id", input) .first();
+            q.bind("id", input).first();
         }
 
         @Override
@@ -212,28 +239,32 @@ public class PojoPerformanceTests
         }
     }
 
-    class JOOQSelect extends PerformanceTestBase{
-
-        DSLContext create;
-        final String sql = "SELECT text, creation_date as creationDate, last_change_date as lastChangeDate, counter1, counter2, counter3, counter4, counter5, counter6, counter7, counter8, counter9 FROM post WHERE id = ?";
+    /**
+     * TODO can this be optimized?
+     */
+    class JOOQSelect extends PerformanceTestBase
+    {
         ResultQuery q;
-        public void init() {
 
+        public void init()
+        {
+            DSLContext create;
             try {
-                create = DSL.using(DriverManager.getConnection(DB_URL, DB_USER, DB_PASSWORD));
+                create = DSL.using(DriverManager.getConnection(DB_URL, DB_USER, DB_PASSWORD), JOOQ_DIALECT);
             } catch (SQLException e) {
                 throw new RuntimeException("Error initializing jOOQ DSLContext", e);
             }
 
-            q = create.select().from("post").where("id = ?", -1); // the parameter needs an initial value, else future calls the bind() will fail.
+            q = create.select()
+                      .from("post")
+                      .where("id = ?", -1); // param needs an initial value, else future calls the bind() will fail.
         }
 
         @Override
-        public void run(int input) {
-            Record rec = q.bind(1, input).fetchAny();
-
-            // can't get the POJO parsing to work. p always just conatains empty fields.
-            Post p = rec.into(Post.class);
+        public void run(int input)
+        {
+            Record r = q.bind(1, input).fetchOne();
+            Post p2 = r.into(Post.class); // TODO this fails for some unknown reason
         }
 
         @Override
@@ -252,7 +283,7 @@ public class PojoPerformanceTests
         {
             try {
                 conn = new Sql2o(DB_URL, DB_USER, DB_PASSWORD).open().getJdbcConnection();
-                stmt = conn.prepareStatement("SELECT * FROM post WHERE id = ?");
+                stmt = conn.prepareStatement(SELECT_TYPICAL + " WHERE id = ?");
             }
             catch(SQLException se) {
                 throw new RuntimeException("error when executing query", se);
@@ -373,11 +404,43 @@ public class PojoPerformanceTests
         private ResultSetHandler<Post> rsHandler;
         private Connection conn;
 
+        /**
+         * This class handles mapping "first_name" column to "firstName" property.
+         * It looks worse than it is, most is copied from {@link org.apache.commons.dbutils.BeanProcessor}
+         * and many people complain online that this isn't built in to Apache DbUtils yet.
+         */
+        class IgnoreUnderscoreBeanProcessor extends BeanProcessor
+        {
+            @Override
+            protected int[] mapColumnsToProperties(ResultSetMetaData md, PropertyDescriptor[] props) throws SQLException
+            {
+                int cols = md.getColumnCount();
+                int[] columnToProperty = new int[cols + 1];
+                Arrays.fill(columnToProperty, PROPERTY_NOT_FOUND);
+
+                for (int col = 1; col <= cols; col++) {
+                    String columnName = md.getColumnLabel(col);
+                    if (null == columnName || 0 == columnName.length()) {
+                        columnName = md.getColumnName(col);
+                    }
+                    String noUnderscoreColName = columnName.replace("_", ""); // this is the addition from BeanProcessor
+                    for (int i = 0; i < props.length; i++) {
+                        if (noUnderscoreColName.equalsIgnoreCase(props[i].getName())) {
+                            columnToProperty[col] = i;
+                            break;
+                        }
+                    }
+                }
+
+                return columnToProperty;
+            }
+        }
+
         @Override
         public void init()
         {
             runner = new QueryRunner();
-            rsHandler = new BeanHandler<Post>(Post.class);
+            rsHandler = new BeanHandler<Post>(Post.class, new BasicRowProcessor(new IgnoreUnderscoreBeanProcessor()));
             conn = new Sql2o(DB_URL, DB_USER, DB_PASSWORD).open().getJdbcConnection();
         }
 
@@ -386,7 +449,7 @@ public class PojoPerformanceTests
         {
             try
             {
-                runner.query(conn, "SELECT * FROM post WHERE id = ?", rsHandler, input);
+                runner.query(conn, SELECT_TYPICAL + " WHERE id = ?", rsHandler, input);
             }
             catch (SQLException e)
             {
@@ -406,5 +469,50 @@ public class PojoPerformanceTests
                 throw new RuntimeException(e);
             }
         }
+    }
+
+    /**
+     * It appears executing raw SQL is not possible with MyBatis.
+     * Therefore "typical" = "optimized", there is no difference.
+     */
+    class MyBatisSelect extends PerformanceTestBase
+    {
+        private SqlSession session;
+
+        @Override
+        public void init()
+        {
+            TransactionFactory transactionFactory = new JdbcTransactionFactory();
+            Environment environment = new Environment("development", transactionFactory, new GenericDatasource(DB_URL, DB_USER, DB_PASSWORD));
+            org.apache.ibatis.session.Configuration config = new org.apache.ibatis.session.Configuration(environment);
+            config.addMapper(MyBatisPostMapper.class);
+            SqlSessionFactory sqlSessionFactory = new SqlSessionFactoryBuilder().build(config);
+            session = sqlSessionFactory.openSession();
+        }
+
+        @Override
+        public void run(int input)
+        {
+            session.getMapper(MyBatisPostMapper.class).selectPost(input);
+        }
+
+        @Override
+        public void close()
+        {
+            session.close();
+        }
+    }
+
+    /**
+     * Mapper interface required for MyBatis performance test
+     */
+    interface MyBatisPostMapper
+    {
+        @Select(SELECT_TYPICAL + " WHERE id = #{id}")
+        @Results({
+            @Result(property = "creationDate", column = "creation_date"),
+            @Result(property = "lastChangeDate", column = "last_change_date")
+        })
+        Post selectPost(int id);
     }
 }

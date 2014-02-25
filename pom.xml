@@ -120,6 +120,12 @@
             <artifactId>commons-dbutils</artifactId>
             <version>1.5</version>
         </dependency>
+        <dependency>
+            <scope>test</scope>
+            <groupId>org.mybatis</groupId>
+            <artifactId>mybatis</artifactId>
+            <version>3.2.4</version>
+        </dependency>
 
         <!-- utilities to make life easier -->
         <dependency>

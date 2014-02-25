@@ -12,7 +12,7 @@ import java.util.Date;
 public class Post
 {
     @Id @GeneratedValue
-    private int id;
+    public int id;
     private String text;
     private Date creationDate;
     private Date lastChangeDate;
