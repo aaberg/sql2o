@@ -530,7 +530,9 @@ public class Query {
     public Connection executeBatch() throws Sql2oException {
         long start = System.currentTimeMillis();
         try {
-            connection.setBatchResult( statement.executeBatch() );
+            connection.setBatchResult(statement.executeBatch());
+            connection.setKeys(this.returnGeneratedKeys ? statement.getStatement().getGeneratedKeys() : null);
+            connection.setCanGetKeys(this.returnGeneratedKeys);
         }
         catch (Throwable e) {
             this.connection.onException();

@@ -47,11 +47,11 @@ public class Sql2oTest {
     }
 
 
-
     private final Sql2o sql2o;// = new Sql2o(this.url, this.user, this.pass);
     private String url;
     private String user;
     private String pass;
+    private boolean isHyperSql;
 
     public Sql2oTest(Driver driverToRegister, String url, String user, String pass, String testName){
 
@@ -77,8 +77,9 @@ public class Sql2oTest {
         this.url = url;
         this.user = user;
         this.pass = pass;
+        this.isHyperSql = "HyperSQL DB test".equals( testName );
 
-        if ("HyperSQL DB test".equals( testName )) {
+        if (this.isHyperSql) {
             sql2o.createQuery("set database sql syntax MSS true").executeUpdate();
         }
     }
@@ -362,11 +363,53 @@ public class Sql2oTest {
         Object[] keys = sql2o.createQuery(multiInsertSql).executeUpdate().getKeys();
 
         assertNotNull(keys);
-        assertTrue(keys.length > 0);
 
-        //The test below fails. H2 will always just return the identity of the last generated column.
-        //todo: test with another database.
-        //assertTrue(keys.length == 2);
+        // return value of auto generated keys is DB dependent.
+        // H2 will always just return the last generated identity.
+        // HyperSQL returns all generated identities (which is more ideal).
+        if (this.isHyperSql) {
+            assertTrue(keys.length == 2);
+        }
+        else {
+            assertTrue(keys.length > 0);
+        }
+    }
+
+    @Test
+    public void testExecuteBatchGetKeys() {
+        sql2o.createQuery("create table get_keys_test(id integer identity primary key, value varchar(20))").executeUpdate();
+
+        String insertSql = "insert into get_keys_test(value) values(:val)";
+
+        List<String> vals = new ArrayList<String>(){{
+            add("something1");
+            add("something2");
+            add("something3");
+        }};
+
+        Query query = sql2o.createQuery(insertSql, true);
+
+        for (String val : vals) {
+            query.addParameter("val", val);
+            query.addToBatch();
+        }
+
+        List<Integer> keys = query.executeBatch().getKeys(Integer.class);
+
+        assertNotNull(keys);
+        for (Integer key : keys) {
+            assertTrue(key >= 0);
+        }
+
+        // return value of auto generated keys is DB dependent.
+        // H2 will always just return the last generated identity.
+        // HyperSQL returns all generated identities (which is more ideal).
+        if (this.isHyperSql) {
+            assertTrue(keys.size() == vals.size());
+        }
+        else {
+            assertTrue(keys.size() > 0);
+        }
     }
 
     @Test
