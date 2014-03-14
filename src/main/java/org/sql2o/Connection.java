@@ -201,6 +201,31 @@ public class Connection implements AutoCloseable {
         return null;
     }
 
+    public <V> List<V> getKeys(Class<V> returnType) {
+        if (!isCanGetKeys()) {
+            throw new Sql2oException("Keys where not fetched from database. Please call executeUpdate() to fetch keys");
+        }
+
+        if (this.keys != null) {
+            try {
+                Converter converter = Convert.getConverter(returnType);
+
+                List<V> convertedKeys = new ArrayList<V>(this.keys.size());
+
+                for (Object key : this.keys) {
+                        convertedKeys.add((V)converter.convert(key));
+                }
+
+                return convertedKeys;
+            }
+            catch (ConverterException e) {
+                throw new Sql2oException("Exception occurred while converting value from database to type " + returnType.toString(), e);
+            }
+        }
+
+        return null;
+    }
+
     public boolean isCanGetKeys() {
         return canGetKeys;
     }
