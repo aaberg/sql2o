@@ -1,17 +1,16 @@
 package org.sql2o.issues;
 
-import oracle.jdbc.driver.OracleDriver;
 import org.joda.time.DateTime;
 import org.joda.time.LocalDate;
-import org.junit.Ignore;
 import org.junit.Test;
-import org.sql2o.*;
+import org.sql2o.Sql2o;
 
+import java.sql.Driver;
 import java.sql.DriverManager;
-import java.sql.SQLException;
 import java.util.Date;
 
-import static org.hamcrest.CoreMatchers.*;
+import static org.hamcrest.CoreMatchers.equalTo;
+import static org.hamcrest.CoreMatchers.is;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertThat;
 
@@ -28,9 +27,10 @@ public class OracleTest {
 
     public OracleTest() {
         try {
-            DriverManager.registerDriver(new OracleDriver());
-        } catch (SQLException e) {
-            throw new RuntimeException(e);
+            Class oracleDriverClass = this.getClass().getClassLoader().loadClass("oracle.jdbc.driver.OracleDriver");
+            DriverManager.registerDriver((Driver)oracleDriverClass.newInstance());
+        } catch (Throwable t) {
+            throw new RuntimeException(t);
         }
         // new oracle developer day VM
         this.sql2o = new Sql2o("jdbc:oracle:thin:@//localhost:1521/PDB1", "pmuser", "oracle");
@@ -51,7 +51,7 @@ public class OracleTest {
      *
      *
      */
-    @Test
+//    @Test
     public void testForIssue8OracleTimestamps() {
         String sql = "select CURRENT_TIMESTAMP from dual";
 
@@ -65,7 +65,7 @@ public class OracleTest {
     }
 
 
-    @Test
+//    @Test
     public void testForIssue12ErrorReadingClobValue() {
         final String sql = "select to_clob('test') val from dual";
 
