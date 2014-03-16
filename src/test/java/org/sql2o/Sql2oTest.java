@@ -377,9 +377,9 @@ public class Sql2oTest {
 
     @Test
     public void testExecuteBatchGetKeys() {
-        sql2o.createQuery("create table get_keys_test(id integer identity primary key, value varchar(20))").executeUpdate();
+        sql2o.createQuery("create table get_keys_test2(id integer identity primary key, value varchar(20))").executeUpdate();
 
-        String insertSql = "insert into get_keys_test(value) values(:val)";
+        String insertSql = "insert into get_keys_test2(value) values(:val)";
 
         List<String> vals = new ArrayList<String>(){{
             add("something1");
