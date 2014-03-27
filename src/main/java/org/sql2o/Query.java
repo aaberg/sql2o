@@ -583,8 +583,8 @@ public class Query {
     /************** private stuff ***************/
     private void closeConnectionIfNecessary(){
         try{
-            if (connection.autoclose && !this.connection.getJdbcConnection().isClosed() && statement != null){
-                statement.close();
+            if (connection.autoclose && !connection.getJdbcConnection().isClosed() && statement != null){
+                this.statement.close();
                 this.connection.getJdbcConnection().close();
             }
         }

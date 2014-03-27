@@ -210,7 +210,7 @@ public class Connection implements AutoCloseable {
                 List<V> convertedKeys = new ArrayList<V>(this.keys.size());
 
                 for (Object key : this.keys) {
-                        convertedKeys.add((V)converter.convert(key));
+                    convertedKeys.add((V)converter.convert(key));
                 }
 
                 return convertedKeys;

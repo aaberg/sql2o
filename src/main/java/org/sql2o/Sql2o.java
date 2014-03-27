@@ -22,7 +22,6 @@ import java.util.Map;
  * When quirksMode is specified, Sql2o will use workarounds to avoid these quirks.
  * @author Lars Aaberg
  */
-
 public class Sql2o {
 
     public Sql2o(String jndiLookup) {
@@ -215,7 +214,9 @@ public class Sql2o {
         } catch (Throwable t) {
             throw new Sql2oException("An error occurred while executing StatementRunnable", t);
         } finally {
-            connection.close();
+            if (connection != null) {
+                connection.close();
+            }
         }
     }
 
@@ -254,7 +255,9 @@ public class Sql2o {
         } catch (Throwable t) {
             throw new Sql2oException("An error occurred while executing StatementRunnable", t);
         } finally{
-            connection.close();
+            if (connection != null) {
+                connection.close();
+            }
         }
     }
 
@@ -363,7 +366,6 @@ public class Sql2o {
         
         connection.commit();
         return (V)result;
-
     }
 
 }
