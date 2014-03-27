@@ -34,8 +34,8 @@ public class Sql2o {
         DataSource datasource = null;
 
         try {
-            InitialContext context = new InitialContext();
-            datasource = (DataSource) context.lookup(jndiLookup);
+            ctx = new InitialContext();
+            datasource = (DataSource) ctx.lookup(jndiLookup);
         }
         catch (NamingException e) {
             throw new RuntimeException(e);

@@ -41,13 +41,13 @@
 
     <dependencies>
 
+        <!-- optional dependencies -->
         <dependency>
             <groupId>joda-time</groupId>
             <artifactId>joda-time</artifactId>
             <version>1.6.2</version>
             <optional>true</optional>
         </dependency>
-
         <dependency>
         	<groupId>org.slf4j</groupId>
         	<artifactId>slf4j-api</artifactId>
@@ -68,7 +68,6 @@
             <artifactId>slf4j-simple</artifactId>
             <version>1.6.4</version>
         </dependency>
-
         <!-- databases for verification -->
         <dependency>
             <scope>test</scope>
@@ -88,13 +87,15 @@
             <artifactId>postgresql</artifactId>
             <version>9.1-901.jdbc4</version>
         </dependency>
+        <!-- Uncomment to run oracle tests.  -->
+        <!--
         <dependency>
             <scope>test</scope>
             <groupId>com.oracle</groupId>
             <artifactId>ojdbc6</artifactId>
             <version>11.2.0.3</version>
         </dependency>
-
+        -->
         <!-- other ORMs for performance testing -->
         <dependency>
             <scope>test</scope>
@@ -126,7 +127,6 @@
             <artifactId>mybatis</artifactId>
             <version>3.2.4</version>
         </dependency>
-
         <!-- utilities to make life easier -->
         <dependency>
             <scope>test</scope>
