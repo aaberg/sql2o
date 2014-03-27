@@ -37,11 +37,11 @@ public class Connection implements AutoCloseable {
         return this;
     }
 
-    boolean autoclose;
+    boolean autoClose;
 
-    Connection(Sql2o sql2o, boolean autoclose) {
+    Connection(Sql2o sql2o, boolean autoClose) {
 
-        this.autoclose = autoclose;
+        this.autoClose = autoClose;
         this.sql2o = sql2o;
         createConnection();
     }
@@ -96,14 +96,7 @@ public class Connection implements AutoCloseable {
             logger.warn("Could not roll back transaction. message: {}", e);
         }
         finally {
-            try {
-                if (!this.getJdbcConnection().isClosed()){
-                    this.getJdbcConnection().close();
-                }
-            }
-            catch (SQLException e) {
-                logger.warn("Could not close connection. message: {}", e);
-            }
+            this.closeJdbcConnection();
         }
         return this.getSql2o();
     }
@@ -116,23 +109,9 @@ public class Connection implements AutoCloseable {
             throw new RuntimeException(e);
         }
         finally {
-            try {
-                this.getJdbcConnection().close();
-            }
-            catch (SQLException e) {
-                throw new RuntimeException(e);
-            }
+            this.closeJdbcConnection();
         }
         return this.getSql2o();
-    }
-
-    private void createConnection(){
-        try{
-            this.jdbcConnection = this.getSql2o().getDataSource().getConnection();
-        }
-        catch(Exception ex){
-            throw new RuntimeException(String.format("Could not aquire a connection from DataSource - ", ex.getMessage()), ex);
-        }
     }
 
     public int getResult(){
@@ -169,7 +148,7 @@ public class Connection implements AutoCloseable {
     }
 
     public Object getKey(){
-        if (!isCanGetKeys()){
+        if (!this.canGetKeys){
             throw new Sql2oException("Keys where not fetched from database. Please call executeUpdate(true) to fetch keys");
         }
         if (this.keys != null && this.keys.size() > 0){
@@ -177,19 +156,20 @@ public class Connection implements AutoCloseable {
         }
         return null;
     }
-    
+
+    @SuppressWarnings("unchecked") // need to change Convert
     public <V> V getKey(Class returnType){
         Object key = getKey();
         try {
-            Converter converter = Convert.getConverter(returnType);
-            return (V)converter.convert(key);
+            Converter<V> converter = Convert.getConverter(returnType);
+            return converter.convert(key);
         } catch (ConverterException e) {
             throw new Sql2oException("Exception occurred while converting value from database to type " + returnType.toString(), e);
         }
     }
 
     public Object[] getKeys(){
-        if (!isCanGetKeys()){
+        if (!this.canGetKeys){
             throw new Sql2oException("Keys where not fetched from database. Please call executeUpdate() to fetch keys");
         }
         if (this.keys != null){
@@ -198,19 +178,20 @@ public class Connection implements AutoCloseable {
         return null;
     }
 
+    @SuppressWarnings("unchecked") // need to change Convert
     public <V> List<V> getKeys(Class<V> returnType) {
-        if (!isCanGetKeys()) {
+        if (!this.canGetKeys) {
             throw new Sql2oException("Keys where not fetched from database. Please call executeUpdate() to fetch keys");
         }
 
         if (this.keys != null) {
             try {
-                Converter converter = Convert.getConverter(returnType);
+                Converter<V> converter = Convert.getConverter(returnType);
 
                 List<V> convertedKeys = new ArrayList<V>(this.keys.size());
 
                 for (Object key : this.keys) {
-                    convertedKeys.add((V)converter.convert(key));
+                    convertedKeys.add(converter.convert(key));
                 }
 
                 return convertedKeys;
@@ -221,10 +202,6 @@ public class Connection implements AutoCloseable {
         }
 
         return null;
-    }
-
-    public boolean isCanGetKeys() {
-        return canGetKeys;
     }
 
     void setCanGetKeys(boolean canGetKeys) {
@@ -239,8 +216,40 @@ public class Connection implements AutoCloseable {
             throw new Sql2oException("Sql2o encountered a problem while trying to determine whether the connection is closed.", e);
         }
 
-        if (!connectionIsClosed){
-            this.rollback();
+        if (!connectionIsClosed) {
+            boolean autoCommit = false;
+            try {
+                autoCommit = this.getJdbcConnection().getAutoCommit();
+            }
+            catch (SQLException e) {
+                logger.warn("Could not determine connection auto commit mode.", e);
+            }
+
+            // if in transaction, rollback, otherwise just close
+            if (autoCommit) {
+                this.closeJdbcConnection();
+            }
+            else {
+                this.rollback();
+            }
+        }
+    }
+
+    private void createConnection(){
+        try{
+            this.jdbcConnection = this.getSql2o().getDataSource().getConnection();
+        }
+        catch(Exception ex){
+            throw new RuntimeException("Could not acquire a connection from DataSource - " + ex.getMessage(), ex);
+        }
+    }
+
+    private void closeJdbcConnection() {
+        try {
+            this.getJdbcConnection().close();
+        }
+        catch (SQLException e) {
+            logger.warn("Could not close connection. message: {}", e);
         }
     }
 }
