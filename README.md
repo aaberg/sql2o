@@ -25,6 +25,11 @@ Method | Duration - Typical | Duration - Optimal
 Hand coded <code>ResultSet</code> | 65ms | 65ms
 sql2o | 79ms (21.5% slower) | 68ms (4.6% slower)
 [Hibernate](http://hibernate.org/) | 393ms (505% slower) | TODO
+[JDBI](http://jdbi.org/) | TODO | TODO
+[jOOQ](http://www.jooq.org) | TODO | TODO
+[Apache DbUtils](http://commons.apache.org/proper/commons-dbutils/) | TODO | TODO
+[MyBatis](http://mybatis.github.io/mybatis-3/) | TODO | TODO
+[Spring JdbcTemplate](http://docs.spring.io/spring/docs/current/spring-framework-reference/html/jdbc.html) | TODO | TODO
 
 ## Contributing
 
