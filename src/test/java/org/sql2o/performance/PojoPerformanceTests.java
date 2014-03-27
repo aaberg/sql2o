@@ -18,13 +18,17 @@ import org.hibernate.cfg.Configuration;
 import org.hibernate.cfg.ImprovedNamingStrategy;
 import org.hibernate.service.ServiceRegistry;
 import org.joda.time.DateTime;
-import org.jooq.*;
+import org.jooq.DSLContext;
+import org.jooq.Record;
+import org.jooq.ResultQuery;
+import org.jooq.SQLDialect;
 import org.jooq.impl.DSL;
 import org.junit.Before;
 import org.junit.Test;
 import org.skife.jdbi.v2.DBI;
 import org.skife.jdbi.v2.Handle;
-import org.sql2o.GenericDatasource;
+import org.springframework.jdbc.core.BeanPropertyRowMapper;
+import org.springframework.jdbc.core.namedparam.NamedParameterJdbcTemplate;
 import org.sql2o.Query;
 import org.sql2o.Sql2o;
 import org.sql2o.tools.FeatureDetector;
@@ -33,6 +37,7 @@ import java.beans.PropertyDescriptor;
 import java.lang.reflect.Field;
 import java.sql.*;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.Random;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -50,10 +55,13 @@ public class PojoPerformanceTests
     private final static SQLDialect JOOQ_DIALECT = SQLDialect.H2;
     private final int ITERATIONS = 1000;
 
+    private Sql2o sql2o;
+
     @Before
-    public void setup()
-    {
+    public void setup() {
         Logger.getLogger("org.hibernate").setLevel(Level.OFF);
+
+        sql2o = new Sql2o(DB_URL, DB_USER, DB_PASSWORD);
 
         createPostTable();
 
@@ -62,7 +70,6 @@ public class PojoPerformanceTests
     }
 
     private void createPostTable() {
-        Sql2o sql2o = new Sql2o(DB_URL, DB_USER, DB_PASSWORD);
 
         sql2o.createQuery("DROP TABLE IF EXISTS post").executeUpdate();
 
@@ -133,6 +140,7 @@ public class PojoPerformanceTests
         tests.add(new JOOQSelect());
         tests.add(new ApacheDbUtilsTypicalSelect());
         tests.add(new MyBatisSelect());
+        tests.add(new SpringJdbcTemplateSelect());
 
         System.out.println("Warming up...");
         tests.run(ITERATIONS);
@@ -168,7 +176,7 @@ public class PojoPerformanceTests
         @Override
         public void init()
         {
-            conn = new Sql2o(DB_URL, DB_USER, DB_PASSWORD).open();
+            conn = sql2o.open();
             query = conn.createQuery(SELECT_OPTIMAL + " WHERE id = :id");
         }
 
@@ -194,7 +202,7 @@ public class PojoPerformanceTests
         @Override
         public void init()
         {
-            conn = new Sql2o(DB_URL, DB_USER, DB_PASSWORD).open();
+            conn = sql2o.open();
             query = conn.createQuery(SELECT_TYPICAL + " WHERE id = :id")
                     .setAutoDeriveColumnNames(true);
         }
@@ -282,7 +290,7 @@ public class PojoPerformanceTests
         public void init()
         {
             try {
-                conn = new Sql2o(DB_URL, DB_USER, DB_PASSWORD).open().getJdbcConnection();
+                conn = sql2o.open().getJdbcConnection();
                 stmt = conn.prepareStatement(SELECT_TYPICAL + " WHERE id = ?");
             }
             catch(SQLException se) {
@@ -441,7 +449,7 @@ public class PojoPerformanceTests
         {
             runner = new QueryRunner();
             rsHandler = new BeanHandler<Post>(Post.class, new BasicRowProcessor(new IgnoreUnderscoreBeanProcessor()));
-            conn = new Sql2o(DB_URL, DB_USER, DB_PASSWORD).open().getJdbcConnection();
+            conn = sql2o.open().getJdbcConnection();
         }
 
         @Override
@@ -483,7 +491,7 @@ public class PojoPerformanceTests
         public void init()
         {
             TransactionFactory transactionFactory = new JdbcTransactionFactory();
-            Environment environment = new Environment("development", transactionFactory, new GenericDatasource(DB_URL, DB_USER, DB_PASSWORD));
+            Environment environment = new Environment("development", transactionFactory, sql2o.getDataSource());
             org.apache.ibatis.session.Configuration config = new org.apache.ibatis.session.Configuration(environment);
             config.addMapper(MyBatisPostMapper.class);
             SqlSessionFactory sqlSessionFactory = new SqlSessionFactoryBuilder().build(config);
@@ -514,5 +522,28 @@ public class PojoPerformanceTests
             @Result(property = "lastChangeDate", column = "last_change_date")
         })
         Post selectPost(int id);
+    }
+
+    class SpringJdbcTemplateSelect extends PerformanceTestBase
+    {
+        private NamedParameterJdbcTemplate jdbcTemplate;
+
+        @Override
+        public void init()
+        {
+            jdbcTemplate = new NamedParameterJdbcTemplate(sql2o.getDataSource());
+        }
+
+        @Override
+        public void run(int input)
+        {
+            jdbcTemplate.queryForObject(SELECT_TYPICAL + " WHERE id = :id",
+                                        Collections.singletonMap("id", input),
+                                        new BeanPropertyRowMapper<Post>(Post.class));
+        }
+
+        @Override
+        public void close()
+        {}
     }
 }

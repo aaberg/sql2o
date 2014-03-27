@@ -127,6 +127,12 @@
             <artifactId>mybatis</artifactId>
             <version>3.2.4</version>
         </dependency>
+        <dependency>
+            <scope>test</scope>
+            <groupId>org.springframework</groupId>
+            <artifactId>spring-jdbc</artifactId>
+            <version>4.0.2.RELEASE</version>
+        </dependency>
         <!-- utilities to make life easier -->
         <dependency>
             <scope>test</scope>
