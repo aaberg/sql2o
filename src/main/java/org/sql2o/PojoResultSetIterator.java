@@ -43,10 +43,10 @@ public class PojoResultSetIterator<T> extends ResultSetIteratorBase<T> {
 
         // otherwise we want executeAndFetch with object mapping
         Pojo pojo = new Pojo(metadata, isCaseSensitive);
-
         for(int colIdx = 1; colIdx <= meta.getColumnCount(); colIdx++) {
             String colName = getColumnName(colIdx);
-            pojo.setProperty(colName, ResultSetUtils.getRSVal(rs, colIdx));
+            Object value = ResultSetUtils.getRSVal(rs, colIdx);
+            pojo.setProperty(colName, value);
         }
 
         return (T)pojo.getObject();

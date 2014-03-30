@@ -1,7 +1,7 @@
 package org.sql2o;
 
-import org.hsqldb.jdbcDriver;
 import org.hsqldb.jdbc.JDBCDataSource;
+import org.hsqldb.jdbcDriver;
 import org.joda.time.DateTime;
 import org.joda.time.LocalTime;
 import org.joda.time.Period;
@@ -14,6 +14,8 @@ import org.sql2o.data.Table;
 import org.sql2o.pojos.*;
 import org.sql2o.tools.IOUtils;
 
+import javax.naming.Context;
+import javax.naming.InitialContext;
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.InputStream;
@@ -21,9 +23,6 @@ import java.math.BigDecimal;
 import java.sql.*;
 import java.util.*;
 import java.util.Date;
-
-import javax.naming.Context;
-import javax.naming.InitialContext;
 
 import static org.hamcrest.CoreMatchers.*;
 import static org.junit.Assert.*;
@@ -1142,7 +1141,7 @@ public class Sql2oTest {
 
         List<User> users2 = sql2o.createQuery("select * from User").executeAndFetch(User.class);
 
-        // expect that that the last insert was commited, as this should not be run in a transaction.
+        // expect that that the last insert was committed, as this should not be run in a transaction.
         assertThat(users2.size(), is(equalTo(10004)));
     }
 
@@ -1154,7 +1153,6 @@ public class Sql2oTest {
         createAndFillUserTable(connection);
 
         connection.close();
-
     }
 
     private void createAndFillUserTable(Connection connection){

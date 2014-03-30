@@ -5,9 +5,6 @@ import org.sql2o.converters.Convert;
 import org.sql2o.converters.Converter;
 import org.sql2o.converters.ConverterException;
 
-import java.util.HashMap;
-import java.util.Map;
-
 /**
  * Used internally to represent a plain old java object.
  */
@@ -36,14 +33,12 @@ public class Pojo {
             throw new Sql2oException("Could not create a new instance of class " + clazz.toString(), e);
         }
     }
-    
-    Map<String, Object> instantiatedObjects = new HashMap<String, Object>();
-    
+
     public void setProperty(String propertyPath, Object value){
-        
+
         String[] pathArr = propertyPath.split("\\.");
         Setter setter = metadata.getPropertySetter(pathArr[0]);
-        
+
         if (pathArr.length > 1){
             int dotIdx = propertyPath.indexOf('.');
             String newPath = propertyPath.substring(dotIdx + 1);
@@ -66,14 +61,13 @@ public class Pojo {
         }
         else{
             
-         
             Converter converter;
             try {
                 converter = Convert.getConverter(setter.getType());
             } catch (ConverterException e) {
                 throw new Sql2oException("Cannot convert column " + propertyPath + " to type " + setter.getType(), e);
             }
-    
+
             try {
                 setter.setProperty(this.object, converter.convert( value ));
             } catch (ConverterException e) {
@@ -83,8 +77,7 @@ public class Pojo {
         
         
     }
-   
-    
+
     public Object getObject(){
         return this.object;
     }

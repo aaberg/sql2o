@@ -1,13 +1,23 @@
 package org.sql2o.tools;
 
+import java.util.HashMap;
+import java.util.Map;
+
 /**
  * Takes a string formatted like: 'my_string_variable' and returns it as: 'myStringVariable'
  * 
  * @author ryancarlson
  */
 public class UnderscoreToCamelCase {
+
+    private final static Map<String, String> cache = new HashMap<String, String>();
+
 	public static String convert(String underscore) {
 		if(underscore == null || underscore.trim().length() == 0) return underscore;
+
+        if (FeatureDetector.isCacheUnderscoreToCamelcaseEnabled() && cache.containsKey(underscore))
+            return cache.get(underscore);
+
 		String[] stringTokens = underscore.split("_");
 		
 		StringBuilder camelCase = new StringBuilder();
@@ -22,7 +32,10 @@ public class UnderscoreToCamelCase {
 				camelCase.append(Character.toUpperCase(stringTokens[i].charAt(0))).append(stringTokens[i].substring(1,stringTokens[i].length()).toLowerCase());
 			}
 		}
+
+        String res = camelCase.toString();
+        if (FeatureDetector.isCacheUnderscoreToCamelcaseEnabled()) cache.put(underscore, res);
 		
-		return camelCase.toString();
+		return res;
 	}
 }
