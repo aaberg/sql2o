@@ -20,16 +20,16 @@ typical usage may not involve writing any SQL, or it may map underscore case to 
 Execute 1000 SELECT statements against a DB and map the data returned to a POJO.
 Benchmarks are available [here](/src/test/java/org/sql2o/performance/PerformanceTests.java).
 
-Method | Duration - Typical | Duration - Optimal
--------------  | ------------- | -------------
-Hand coded <code>ResultSet</code> | 65ms | 65ms
-sql2o | 79ms (21.5% slower) | 68ms (4.6% slower)
-[Hibernate](http://hibernate.org/) | 393ms (505% slower) | TODO
-[JDBI](http://jdbi.org/) | TODO | TODO
-[jOOQ](http://www.jooq.org) | TODO | TODO
-[Apache DbUtils](http://commons.apache.org/proper/commons-dbutils/) | TODO | TODO
-[MyBatis](http://mybatis.github.io/mybatis-3/) | TODO | TODO
-[Spring JdbcTemplate](http://docs.spring.io/spring/docs/current/spring-framework-reference/html/jdbc.html) | TODO | TODO
+Method                                                              | Duration - Typical     |
+------------------------------------------------------------------- | ---------------------- |
+Hand coded <code>ResultSet</code>                                   | 60ms                   |
+Sql2o                                                               | 75ms (25% slower)      |
+[Apache DbUtils](http://commons.apache.org/proper/commons-dbutils/) | 98ms (63% slower)      |
+[JDBI](http://jdbi.org/)                                            | 197ms (228% slower)    |
+[MyBatis](http://mybatis.github.io/mybatis-3/)                      | 293ms (388% slower)    |
+[jOOQ](http://www.jooq.org)                                         | 447ms (645% slower)    |
+[Hibernate](http://hibernate.org/)                                  | 494ms (723% slower)    |
+[Spring JdbcTemplate](http://docs.spring.io/spring/docs/current/spring-framework-reference/html/jdbc.html) | 636ms (960% slower) |
 
 ## Contributing
 
