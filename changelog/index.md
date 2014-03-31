@@ -8,6 +8,35 @@ base_url: ../
 <br/>
 <br/>
 
+## Sql2o 1.4.0 released
+_<small>31 mar 2014 <a href="https://github.com/aaberg">Lars Aaberg</a> </small>_
+
+####- Performance testing against other frameworks <a href="https://github.com/aaberg/sql2o/issues/54"><span class="badge badge-info">#54</span></a>
+>Guess who won! Check out the result [here](https://github.com/aaberg/sql2o)
+>_<small>Mainly contributed by [Alden Quimby](https://github.com/aldenquimby)</small>_
+
+
+####- Added executeAndFetchTableLazy method <a href="https://github.com/aaberg/sql2o/issues/49"><span class="badge badge-info">#49</span></a>
+>_<small>Contributed by [Alden Quimby](https://github.com/aldenquimby)</small>_
+
+####- Made Connection class AutoClosable <a href="https://github.com/aaberg/sql2o/issues/51"><span class="badge badge-info">#51</span></a>
+>_<small>Contributed by [Lars Aaberg](https://github.com/aaberg)</small>_
+
+####- Made it possible to run multiple statements on the same Connection instance <a href="https://github.com/aaberg/sql2o/issues/52"><span class="badge badge-info">#52</span></a>
+>On damn time!
+>_<small>Contributed by [Lars Aaberg](https://github.com/aaberg)</small>_
+
+####- Added ability to return keys from a batch <a href="https://github.com/aaberg/sql2o/issues/57"><span class="badge badge-info">#57</span></a>
+>_<small>Contributed by [Alden Quimby](https://github.com/aldenquimby)</small>_
+
+####- ...And some generel bug fixing.
+> [Full list of fixed issues in this version](https://github.com/aaberg/sql2o/issues?milestone=7&page=1&state=closed)
+
+
+<br/>
+<br/>
+
+
 ## Sql2o 1.3.0 released
 _<small>10 feb 2014 <a href="https://github.com/aaberg">Lars Aaberg</a> </small>_
 
