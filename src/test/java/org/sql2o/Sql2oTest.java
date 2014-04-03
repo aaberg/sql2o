@@ -274,18 +274,27 @@ public class Sql2oTest {
 
     @Test
     public void testUtilDate(){
-        sql2o.createQuery("create table testutildate(id int primary key, d1 datetime, d2 timestamp)").executeUpdate();
+        sql2o.createQuery("create table testutildate(id int primary key, d1 datetime, d2 timestamp, d3 date)").executeUpdate();
 
-        sql2o.createQuery("insert into testutildate(id, d1, d2) values(:id, :d1, :d2)")
-                .addParameter("id", 1).addParameter("d1", new Date()).addParameter("d2", new Date()).addToBatch()
-                .addParameter("id", 2).addParameter("d1", new Date()).addParameter("d2", new Date()).addToBatch()
-                .addParameter("id", 3).addParameter("d1", new Date()).addParameter("d2", new Date()).addToBatch()
+        Date now = new Date();
+
+        sql2o.createQuery("insert into testutildate(id, d1, d2, d3) values(:id, :d1, :d2, :d3)")
+                .addParameter("id", 1).addParameter("d1", now).addParameter("d2", now).addParameter("d3", now).addToBatch()
+                .addParameter("id", 2).addParameter("d1", now).addParameter("d2", now).addParameter("d3", now).addToBatch()
+                .addParameter("id", 3).addParameter("d1", now).addParameter("d2", now).addParameter("d3", now).addToBatch()
                 .executeBatch();
 
         List<UtilDateEntity> list = sql2o.createQuery("select * from testutildate").executeAndFetch(UtilDateEntity.class);
 
         assertTrue(list.size() == 3);
 
+        // make sure d1, d2, d3 were properly inserted and selected
+        for (UtilDateEntity e : list) {
+            assertEquals(now, e.d1);
+            assertEquals(now, e.getD2());
+            Date dateOnly = new DateTime(now).toDateMidnight().toDate();
+            assertEquals(dateOnly, e.getD3());
+        }
     }
 
     @Test

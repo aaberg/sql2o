@@ -161,28 +161,15 @@ public class Query {
     }
 
     public Query addParameter(String name, Date value){
-        if (this.getConnection().getSql2o().quirksMode == QuirksMode.MSSqlServer){
-            Timestamp timestamp = value == null ? null : new Timestamp(value.getTime());
-            return addParameter(name, timestamp);
-        }
-
         if (value != null && this.connection.getSql2o().quirksMode == QuirksMode.DB2){
             // With the DB2 driver you can get an error if trying to put a date value into a timestamp column,
             // but of some reason it works if using setObject().
             return addParameter(name, (Object)value);
         }
 
-        try{
-            if (value == null) {
-                statement.setNull(name, Types.DATE);
-            } else {
-                statement.setDate(name, value);
-            }
-        } catch (Exception ex) {
-            throw new Sql2oException("Error setting parameter '" + name + "'", ex);
-        }
-
-        return this;
+        // by default add a timestamp, because it works with DATE, DATETIME, TIMESTAMP columns
+        Timestamp timestamp = value == null ? null : new Timestamp(value.getTime());
+        return addParameter(name, timestamp);
     }
 
     public Query addParameter(String name, java.util.Date value){
@@ -247,8 +234,10 @@ public class Query {
                             logger.debug("Using addParameter(String, Object)", ex);
                             addParameter(param, res);
                         }
-                    }else
+                    }
+                    else {
                         addParameter(param, res);
+                    }
                 }
             }catch(IllegalArgumentException ex){
                 logger.debug("Ignoring Illegal Arguments", ex);
