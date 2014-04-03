@@ -1,0 +1,26 @@
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+    <modelVersion>4.0.0</modelVersion>
+    <groupId>org.sql2o.extensions</groupId>
+    <artifactId>extensions-parent</artifactId>
+    <name>Sql2o - Extensions</name>
+    <packaging>pom</packaging>
+
+    <parent>
+        <groupId>org.sql2o</groupId>
+        <artifactId>sql2o-parent</artifactId>
+        <version>1.4.1-SNAPSHOT</version>
+    </parent>
+
+    <modules>
+        <module>postgres</module>
+    </modules>
+
+    <dependencies>
+        <!-- All dependencies depends on sql2o core project -->
+        <dependency>
+            <groupId>org.sql2o</groupId>
+            <artifactId>sql2o</artifactId>
+            <version>1.4.1-SNAPSHOT</version>
+        </dependency>
+    </dependencies>
+</project>

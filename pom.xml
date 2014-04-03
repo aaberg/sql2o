@@ -1,29 +1,25 @@
 <project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
     <modelVersion>4.0.0</modelVersion>
     <groupId>org.sql2o</groupId>
-    <artifactId>sql2o</artifactId>
-    <packaging>jar</packaging>
+    <artifactId>sql2o-parent</artifactId>
     <version>1.4.1-SNAPSHOT</version>
-    <name>sql2o</name>
-    <description>Easy database query library</description>
+    <description>
+        Easy database query library
+    </description>
     <url>http://www.sql2o.org</url>
-    <licenses>
-        <license>
-            <name>MIT</name>
-            <url>http://www.opensource.org/licenses/MIT</url>
-            <distribution>repo</distribution>
-        </license>
-    </licenses>
+    <packaging>pom</packaging>
+
     <parent>
         <groupId>org.sonatype.oss</groupId>
         <artifactId>oss-parent</artifactId>
         <version>7</version>
     </parent>
-    <scm>
-        <connection>scm:git:git@github.com:aaberg/sql2o.git</connection>
-        <developerConnection>scm:git:git@github.com:aaberg/sql2o.git</developerConnection>
-        <url>git@github.com:aaberg/sql2o.git</url>
-    </scm>
+
+    <modules>
+        <module>core</module>
+        <module>extensions</module>
+    </modules>
+
     <developers>
         <developer>
             <email>lars@aaberg.cc</email>
@@ -39,100 +35,38 @@
         </developer>
     </developers>
 
-    <dependencies>
 
-        <!-- optional dependencies -->
+    <licenses>
+        <license>
+            <name>MIT</name>
+            <url>http://www.opensource.org/licenses/MIT</url>
+            <distribution>repo</distribution>
+        </license>
+    </licenses>
+
+    <scm>
+        <connection>scm:git:git@github.com:aaberg/sql2o.git</connection>
+        <developerConnection>scm:git:git@github.com:aaberg/sql2o.git</developerConnection>
+        <url>git@github.com:aaberg/sql2o.git</url>
+    </scm>
+
+    <dependencies>
+        <!-- all projects use junit for testing -->
         <dependency>
-            <groupId>joda-time</groupId>
-            <artifactId>joda-time</artifactId>
-            <version>1.6.2</version>
-            <optional>true</optional>
-        </dependency>
-        <dependency>
-        	<groupId>org.slf4j</groupId>
-        	<artifactId>slf4j-api</artifactId>
-        	<version>1.6.4</version>
-            <optional>true</optional>
-        </dependency>
-        
-        <!-- test dependencies -->
-        <dependency>
-            <scope>test</scope>
             <groupId>junit</groupId>
             <artifactId>junit</artifactId>
             <version>4.11</version>
-        </dependency>
-        <dependency>
             <scope>test</scope>
+        </dependency>
+
+        <!-- all projects use slf4j-simple when testing -->
+        <dependency>
             <groupId>org.slf4j</groupId>
             <artifactId>slf4j-simple</artifactId>
             <version>1.6.4</version>
-        </dependency>
-        <!-- databases for verification -->
-        <dependency>
             <scope>test</scope>
-            <groupId>com.h2database</groupId>
-            <artifactId>h2</artifactId>
-            <version>1.3.160</version>
         </dependency>
-        <dependency>
-            <scope>test</scope>
-            <groupId>org.hsqldb</groupId>
-            <artifactId>hsqldb</artifactId>
-            <version>2.2.8</version>
-        </dependency>
-        <dependency>
-            <scope>test</scope>
-            <groupId>postgresql</groupId>
-            <artifactId>postgresql</artifactId>
-            <version>9.1-901.jdbc4</version>
-        </dependency>
-        <!-- Uncomment to run oracle tests.  -->
-        <!--
-        <dependency>
-            <scope>test</scope>
-            <groupId>com.oracle</groupId>
-            <artifactId>ojdbc6</artifactId>
-            <version>11.2.0.3</version>
-        </dependency>
-        -->
-        <!-- other ORMs for performance testing -->
-        <dependency>
-            <scope>test</scope>
-            <groupId>org.hibernate</groupId>
-            <artifactId>hibernate-core</artifactId>
-            <version>4.3.1.Final</version>
-        </dependency>
-        <dependency>
-            <scope>test</scope>
-            <groupId>org.jdbi</groupId>
-            <artifactId>jdbi</artifactId>
-            <version>2.53</version>
-        </dependency>
-        <dependency>
-            <scope>test</scope>
-            <groupId>org.jooq</groupId>
-            <artifactId>jooq</artifactId>
-            <version>3.3.0</version>
-        </dependency>
-        <dependency>
-            <scope>test</scope>
-            <groupId>commons-dbutils</groupId>
-            <artifactId>commons-dbutils</artifactId>
-            <version>1.5</version>
-        </dependency>
-        <dependency>
-            <scope>test</scope>
-            <groupId>org.mybatis</groupId>
-            <artifactId>mybatis</artifactId>
-            <version>3.2.4</version>
-        </dependency>
-        <dependency>
-            <scope>test</scope>
-            <groupId>org.springframework</groupId>
-            <artifactId>spring-jdbc</artifactId>
-            <version>4.0.2.RELEASE</version>
-        </dependency>
+
         <!-- utilities to make life easier -->
         <dependency>
             <scope>test</scope>
@@ -140,59 +74,5 @@
             <artifactId>guava</artifactId>
             <version>15.0</version>
         </dependency>
-
     </dependencies>
-
-    <build>
-        <plugins>
-            <plugin>
-                <groupId>org.apache.maven.plugins</groupId>
-                <artifactId>maven-release-plugin</artifactId>
-                <version>2.2.1</version>
-            </plugin>
-
-            <plugin>
-                <groupId>org.apache.maven.plugins</groupId>
-                <artifactId>maven-compiler-plugin</artifactId>
-                <version>3.1</version>
-                <configuration>
-                    <source>1.5</source>
-                    <target>1.5</target>
-                    <testSource>1.5</testSource>
-                    <testTarget>1.5</testTarget>
-	            </configuration>
-	        </plugin>
-
-            <plugin>
-                <groupId>org.apache.maven.plugins</groupId>
-                <artifactId>maven-source-plugin</artifactId>
-                <version>2.2.1</version>
-                <executions>
-                    <execution>
-                        <id>attach-sources</id>
-                        <goals>
-                            <goal>jar</goal>
-                        </goals>
-                    </execution>
-                </executions>
-            </plugin>
-
-            <plugin>
-                <groupId>org.apache.maven.plugins</groupId>
-                <artifactId>maven-javadoc-plugin</artifactId>
-                <version>2.9</version>
-                <executions>
-                    <execution>
-                        <id>attach-javadoc</id>
-                        <goals>
-                            <goal>jar</goal>
-                        </goals>
-                    </execution>
-                </executions>
-                <configuration>
-                    <stylesheet>java</stylesheet>
-                </configuration>
-            </plugin>
-        </plugins>
-    </build>
 </project>
