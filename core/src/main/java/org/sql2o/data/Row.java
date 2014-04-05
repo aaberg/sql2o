@@ -149,4 +149,14 @@ public class Row {
             throw new Sql2oException("Could not convert column with name " + columnName+ " to " + String.class.getName());
         }
     }
+
+    public Map<String, Object> asMap()
+    {
+        Map<String, Object> map = new HashMap<String, Object>();
+        for (Map.Entry<String, Integer> nameIdx : columnNameToIdxMap.entrySet())
+        {
+            map.put(nameIdx.getKey(), values.get(nameIdx.getValue()));
+        }
+        return map;
+    }
 }

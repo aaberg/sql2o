@@ -1,6 +1,8 @@
 package org.sql2o.data;
 
+import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 
 /**
  * Represents an offline result set with columns and rows and data.
@@ -26,5 +28,15 @@ public class Table {
 
     public List<Column> columns() {
         return columns;
+    }
+
+    public List<Map<String, Object>> toList()
+    {
+        List<Map<String, Object>> simple = new ArrayList<Map<String, Object>>();
+        for (Row row : rows)
+        {
+            simple.add(row.asMap());
+        }
+        return simple;
     }
 }
