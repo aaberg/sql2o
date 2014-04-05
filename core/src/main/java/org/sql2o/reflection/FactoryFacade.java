@@ -5,30 +5,42 @@ import java.lang.reflect.Method;
 
 @SuppressWarnings("Unsafe")
 public class FactoryFacade {
-    private final FieldSetterFactory fieldSetterFactory;
-    private final MethodSetterFactory methodSetterFactory;
-    private final ObjectConstructorFactory objectConstructorFactory;
     private final static FactoryFacade instance;
 
     static {
-        MethodSetterFactory m = new ReflectionMethodSetterFactory();
+        MethodSetterFactory m;
+        try {
+            m = (MethodSetterFactory) Class
+                    .forName("org.sql2o.reflection.MethodAccessorsGenerator")
+                    .newInstance();
+        } catch (Throwable ex) {
+            m = new ReflectionMethodSetterFactory();
+        }
         FieldSetterFactory f;
         ObjectConstructorFactory o;
-        try{
+        try {
             Class cls = Class.forName("org.sql2o.reflection.UnsafeFieldSetterFactory");
             f = (FieldSetterFactory) cls.newInstance();
             o = (ObjectConstructorFactory) f;
-        } catch (Throwable ex){
+        } catch (Throwable ex) {
             f = new ReflectionFieldSetterFactory();
             o = new ReflectionObjectConstructorFactory();
         }
         instance = new FactoryFacade(f, m, o);
     }
 
+    private final FieldSetterFactory fieldSetterFactory;
+    private final MethodSetterFactory methodSetterFactory;
+    private final ObjectConstructorFactory objectConstructorFactory;
+
     public FactoryFacade(FieldSetterFactory fieldSetterFactory, MethodSetterFactory methodSetterFactory, ObjectConstructorFactory objectConstructorFactory) {
         this.fieldSetterFactory = fieldSetterFactory;
         this.methodSetterFactory = methodSetterFactory;
         this.objectConstructorFactory = objectConstructorFactory;
+    }
+
+    public static FactoryFacade getInstance() {
+        return instance;
     }
 
     public Setter newSetter(Field field) {
@@ -41,10 +53,6 @@ public class FactoryFacade {
 
     public ObjectConstructor newConstructor(Class<?> cls) {
         return objectConstructorFactory.newConstructor(cls);
-    }
-
-    public static FactoryFacade getInstance() {
-        return instance;
     }
 }
 
