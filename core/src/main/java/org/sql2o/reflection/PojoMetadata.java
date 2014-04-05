@@ -19,7 +19,8 @@ public class PojoMetadata {
     private boolean caseSensitive;
     private boolean autoDeriveColumnNames;
     private Class clazz;
-    
+    private final FactoryFacade factoryFacade = FactoryFacade.getInstance();
+
     private Map<String,String> columnMappings;
 
     public Map<String, String> getColumnMappings() {
@@ -66,7 +67,7 @@ public class PojoMetadata {
             for (Field f : theClass.getDeclaredFields()){
                 String propertyName = f.getName();
                 propertyName = caseSensitive ? propertyName : propertyName.toLowerCase();
-                propertySetters.put(propertyName, new FieldSetter(f));
+                propertySetters.put(propertyName, factoryFacade.newSetter(f));
                 fields.put(propertyName, f);
             }
 
@@ -81,7 +82,7 @@ public class PojoMetadata {
                         propertyName = propertyName.toLowerCase();
                     }
 
-                    propertySetters.put(propertyName, new MethodSetter(m));
+                    propertySetters.put(propertyName, factoryFacade.newSetter(m));
                 }
             }
             theClass = theClass.getSuperclass();
