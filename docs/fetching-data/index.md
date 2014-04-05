@@ -9,10 +9,9 @@ leftmenu: fetchdata
 ### Retrieve Result as Model
 
 When our sql2o instance is set up in our DAO class, we are ready to run some queries. The first thing we want to do,
-is fetching some data from the database. Sql2o is designed to parse data into POJO obects, so we will first have to
-create out POJO class. In this example, it is assumed that we are developing a task-list application, Therefore we need
-to create a Task class with id, description and dueDate properties. In a real life application we would probably create
-a lot more properties, but as this is only a demonstration we will stick with these 3 properties.
+is fetching some data from the database. Sql2o is designed to parse data into POJO obects, however it can also retrieve result as a generic scalar object. Alternately if more control over the resultset is desired then result can be retrieved as Sql2o "Table" class that can be transformed as per the requirements.
+
+This example focuses on returning result as a Model so we will first have to create out POJO class. In this example, it is assumed that we are developing a task-list application, Therefore we need to create a Task class with id, description and dueDate properties. In a real life application we would probably create a lot more properties, but as this is only a demonstration we will stick with these 3 properties.
 
 {% highlight java %}
 public class Task {
