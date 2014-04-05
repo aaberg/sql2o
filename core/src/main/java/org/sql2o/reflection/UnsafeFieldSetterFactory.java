@@ -1,12 +1,13 @@
 package org.sql2o.reflection;
 
+import org.sql2o.Sql2oException;
 import sun.misc.Unsafe;
 
 import java.lang.reflect.Field;
 import java.lang.reflect.Modifier;
 
 @SuppressWarnings("Unsafe")
-public class UnsafeFieldSetterFactory implements FieldSetterFactory {
+public class UnsafeFieldSetterFactory implements FieldSetterFactory, ObjectConstructorFactory {
     private final static Unsafe theUnsafe;
     static {
         try {
@@ -234,6 +235,18 @@ public class UnsafeFieldSetterFactory implements FieldSetterFactory {
 
             public Class getType() {
                 return type;
+            }
+        };
+    }
+
+    public ObjectConstructor newConstructor(final Class<?> clazz) {
+        return new ObjectConstructor() {
+            public Object newInstance() {
+                try {
+                    return theUnsafe.allocateInstance(clazz);
+                } catch (InstantiationException e) {
+                    throw new Sql2oException("Could not create a new instance of class " + clazz, e);
+                }
             }
         };
     }

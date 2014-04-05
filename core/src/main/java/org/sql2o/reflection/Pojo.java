@@ -23,15 +23,8 @@ public class Pojo {
     public Pojo(PojoMetadata metadata, boolean caseSensitive){
         this.caseSensitive = caseSensitive;
         this.metadata = metadata;
-        Class clazz = metadata.getType();
-
-        try {
-            object = clazz.newInstance();
-        } catch (InstantiationException e) {
-            throw new Sql2oException("Could not create a new instance of class " + clazz.toString(), e);
-        } catch (IllegalAccessException e) {
-            throw new Sql2oException("Could not create a new instance of class " + clazz.toString(), e);
-        }
+        ObjectConstructor objectConstructor = metadata.getObjectConstructor();
+        object = objectConstructor.newInstance();
     }
 
     public void setProperty(String propertyPath, Object value){

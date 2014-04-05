@@ -16,12 +16,17 @@ public class PojoMetadata {
     
     private Map<String, Setter> propertySetters;
     private Map<String, Field> fields;
+    private ObjectConstructor objectConstructor;
     private boolean caseSensitive;
     private boolean autoDeriveColumnNames;
     private Class clazz;
     private final FactoryFacade factoryFacade = FactoryFacade.getInstance();
 
     private Map<String,String> columnMappings;
+
+    public ObjectConstructor getObjectConstructor() {
+        return objectConstructor;
+    }
 
     public Map<String, String> getColumnMappings() {
         return columnMappings;
@@ -63,6 +68,7 @@ public class PojoMetadata {
         fields = new HashMap<String, Field>();
 
         Class theClass = clazz;
+        objectConstructor = factoryFacade.newConstructor(theClass);
         do{
             for (Field f : theClass.getDeclaredFields()){
                 String propertyName = f.getName();
