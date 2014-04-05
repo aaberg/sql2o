@@ -10,4 +10,21 @@
         <artifactId>extensions-parent</artifactId>
         <version>1.4.1-SNAPSHOT</version>
     </parent>
+
+    <build>
+        <plugins>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-compiler-plugin</artifactId>
+                <version>3.1</version>
+                <configuration>
+                    <source>1.5</source>
+                    <target>1.5</target>
+                    <testSource>1.5</testSource>
+                    <testTarget>1.5</testTarget>
+                </configuration>
+            </plugin>
+        </plugins>
+    </build>
+
 </project>
