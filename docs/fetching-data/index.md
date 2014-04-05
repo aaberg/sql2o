@@ -5,6 +5,9 @@ topmenu: docs
 leftmenu: fetchdata
 ---
 
+
+### Retrieve Result as Model
+
 When our sql2o instance is set up in our DAO class, we are ready to run some queries. The first thing we want to do,
 is fetching some data from the database. Sql2o is designed to parse data into POJO obects, so we will first have to
 create out POJO class. In this example, it is assumed that we are developing a task-list application, Therefore we need
@@ -51,3 +54,9 @@ public List<Task> getTasksBetweenDates(Date fromDate, Date toDate){
     return sql2o.createQuery(sql).addParameter("fromDate", fromDate).addParameter("toDate", toDate).executeAndFetch(Task.class);
 }
 {% endhighlight %}
+
+
+### Retrieve Result as Scalar
+
+
+### Retrieve Result from Arbitrary Query
