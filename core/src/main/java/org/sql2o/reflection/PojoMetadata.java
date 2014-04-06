@@ -14,17 +14,13 @@ import java.util.Map;
  * Stores metadata for a POJO.
  */
 public class PojoMetadata {
-    
-    private final PropertyAndFieldInfo propertyInfo;
-    private boolean caseSensitive;
-    private boolean autoDeriveColumnNames;
-    private Class clazz;
-    
-    private Map<String,String> columnMappings;
-    public Map<String, String> getColumnMappings() {
-        return columnMappings;
-    }
 
+    private final PropertyAndFieldInfo propertyInfo;
+    private final boolean caseSensitive;
+    private final boolean autoDeriveColumnNames;
+    private final Class clazz;
+    
+    private final Map<String,String> columnMappings;
 
     public PojoMetadata(Class clazz, boolean caseSensitive, Map<String,String> columnMappings) {
         this(clazz, caseSensitive, false, columnMappings);
@@ -86,6 +82,10 @@ public class PojoMetadata {
 
         return new PropertyAndFieldInfo(propertySetters, fields);
 
+    }
+
+    public Map<String, String> getColumnMappings() {
+        return columnMappings;
     }
 
     public Setter getPropertySetter(String propertyName){
