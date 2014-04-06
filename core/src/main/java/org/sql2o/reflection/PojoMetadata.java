@@ -16,11 +16,17 @@ public class PojoMetadata {
     
     private Map<String, Setter> propertySetters;
     private Map<String, Field> fields;
+    private ObjectConstructor objectConstructor;
     private boolean caseSensitive;
     private boolean autoDeriveColumnNames;
     private Class clazz;
-    
+    private final FactoryFacade factoryFacade = FactoryFacade.getInstance();
+
     private Map<String,String> columnMappings;
+
+    public ObjectConstructor getObjectConstructor() {
+        return objectConstructor;
+    }
 
     public Map<String, String> getColumnMappings() {
         return columnMappings;
@@ -40,6 +46,7 @@ public class PojoMetadata {
 
     private void initialize() {
         if (FeatureDetector.isCachePojoMetaDataEnabled()) {
+            //TODO: use thread-safe code!
             if (cache == null) {
                 cache = new HashMap<CacheKey, PojoMetadata>();
             }
@@ -51,6 +58,7 @@ public class PojoMetadata {
             PojoMetadata cached = cache.get(key);
             propertySetters = cached.propertySetters;
             fields = cached.fields;
+            objectConstructor = cached.objectConstructor;
         }
         else {
             reflectionInitialization();
@@ -62,11 +70,12 @@ public class PojoMetadata {
         fields = new HashMap<String, Field>();
 
         Class theClass = clazz;
+        objectConstructor = factoryFacade.newConstructor(theClass);
         do{
             for (Field f : theClass.getDeclaredFields()){
                 String propertyName = f.getName();
                 propertyName = caseSensitive ? propertyName : propertyName.toLowerCase();
-                propertySetters.put(propertyName, new FieldSetter(f));
+                propertySetters.put(propertyName, factoryFacade.newSetter(f));
                 fields.put(propertyName, f);
             }
 
@@ -81,7 +90,7 @@ public class PojoMetadata {
                         propertyName = propertyName.toLowerCase();
                     }
 
-                    propertySetters.put(propertyName, new MethodSetter(m));
+                    propertySetters.put(propertyName, factoryFacade.newSetter(m));
                 }
             }
             theClass = theClass.getSuperclass();
