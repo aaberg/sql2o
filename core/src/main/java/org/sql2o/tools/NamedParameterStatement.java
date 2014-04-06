@@ -37,7 +37,7 @@ address=:address";
 *
 * @author adam_crume
 */
-public class NamedParameterStatement implements StatementParameterSetter {
+public class NamedParameterStatement {
     /** The statement this object is wrapping. */
     private final PreparedStatement statement;
 

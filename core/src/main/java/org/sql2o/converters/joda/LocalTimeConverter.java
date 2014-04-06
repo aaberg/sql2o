@@ -1,14 +1,10 @@
 package org.sql2o.converters.joda;
 
 import org.joda.time.LocalTime;
-import org.sql2o.SqlParameter;
 import org.sql2o.converters.Converter;
 import org.sql2o.converters.ConverterException;
-import org.sql2o.tools.StatementParameterSetter;
 
-import java.sql.SQLException;
 import java.sql.Time;
-import java.sql.Types;
 
 /**
  * Created by lars on 12/18/13.
@@ -29,15 +25,5 @@ public class LocalTimeConverter implements Converter<LocalTime> {
 
     public Object toDatabaseParam(LocalTime val) {
         return new Time(val.toDateTimeToday().getMillis());
-    }
-
-    public void addParameter(StatementParameterSetter stmt, String name, LocalTime val) throws SQLException {
-        if (val == null) {
-            stmt.setNull(name, Types.TIME);
-        }
-        else {
-            Time sqlTime = new Time(val.toDateTimeToday().getMillis());
-            stmt.setTime(name, sqlTime);
-        }
     }
 }

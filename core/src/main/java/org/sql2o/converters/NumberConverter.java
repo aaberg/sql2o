@@ -3,7 +3,7 @@ package org.sql2o.converters;
 /**
  * Base class for numeric converters.
  */
-public abstract class NumberConverter<V extends Number> extends BuiltInConverterBase<V>{
+public abstract class NumberConverter<V extends Number> extends ConverterBase<V> {
 
     private boolean isPrimitive;
 

@@ -130,9 +130,6 @@ public class Sql2o {
         else if (quirksMode == QuirksMode.PostgreSQL) {
             return new PostgresQuirks();
         }
-        else if (quirksMode == QuirksMode.MSSqlServer) {
-            return new SqlServerQuirks();
-        }
         else {
             return new NoQuirks();
         }

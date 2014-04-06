@@ -1,11 +1,5 @@
 package org.sql2o.converters;
 
-import org.sql2o.SqlParameter;
-import org.sql2o.tools.StatementParameterSetter;
-
-import java.sql.SQLException;
-import java.sql.Types;
-
 /**
  * Created with IntelliJ IDEA.
  * User: lars
@@ -13,7 +7,7 @@ import java.sql.Types;
  * Time: 10:54 PM
  * To change this template use File | Settings | File Templates.
  */
-public class BooleanConverter extends BuiltInConverterBase<Boolean> {
+public class BooleanConverter extends ConverterBase<Boolean> {
 
     public Boolean convert(Object val) throws ConverterException {
         if (val == null) return null;
@@ -33,14 +27,5 @@ public class BooleanConverter extends BuiltInConverterBase<Boolean> {
         }
 
         throw new ConverterException("Don't know how to convert type " + val.getClass().getName() + " to " + Boolean.class.getName());
-    }
-
-    public void addParameter(StatementParameterSetter stmt, String name, Boolean val) throws SQLException {
-        if (val == null) {
-            stmt.setNull(name, Types.BOOLEAN);
-        }
-        else {
-            stmt.setObject(name, val);
-        }
     }
 }

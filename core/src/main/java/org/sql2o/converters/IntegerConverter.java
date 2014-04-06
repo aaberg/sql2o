@@ -1,11 +1,5 @@
 package org.sql2o.converters;
 
-import org.sql2o.SqlParameter;
-import org.sql2o.tools.StatementParameterSetter;
-
-import java.sql.SQLException;
-import java.sql.Types;
-
 /**
  * Used by sql2o to convert a value from the database into an {@link Integer}.
  */
@@ -28,14 +22,5 @@ public class IntegerConverter extends NumberConverter<Integer>{
     @Override
     protected String getTypeDescription() {
         return Integer.class.toString();
-    }
-
-    public void addParameter(StatementParameterSetter stmt, String name, Integer val) throws SQLException {
-        if (val == null) {
-            stmt.setNull(name, Types.INTEGER);
-        }
-        else {
-            stmt.setInt(name, val);
-        }
     }
 }
