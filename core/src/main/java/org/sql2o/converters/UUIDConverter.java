@@ -16,7 +16,7 @@ public class UUIDConverter extends ConverterBase<UUID> {
             return (UUID)val;
         }
 
-        throw new ConverterException("Cannot convert type " + val.getClass().toString() + " to java.util.UUID");
+        throw new ConverterException("Cannot convert type " + val.getClass() + " " + UUID.class);
     }
 }
 
