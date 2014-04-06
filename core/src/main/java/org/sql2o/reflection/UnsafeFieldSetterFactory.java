@@ -21,7 +21,7 @@ public class UnsafeFieldSetterFactory implements FieldSetterFactory, ObjectConst
     }
 
     public Setter newSetter(final Field field) {
-        final Class type = field.getClass();
+        final Class type = field.getType();
         final long offset = theUnsafe.objectFieldOffset(field);
 
         if (!Modifier.isVolatile(field.getModifiers())) {
