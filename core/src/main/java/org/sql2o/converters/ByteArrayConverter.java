@@ -1,6 +1,7 @@
 package org.sql2o.converters;
 
 import org.sql2o.tools.IOUtils;
+import org.sql2o.tools.StatementParameterSetter;
 
 import java.io.IOException;
 import java.sql.Blob;
@@ -13,7 +14,8 @@ import java.sql.SQLException;
  * Time: 11:36 PM
  * To change this template use File | Settings | File Templates.
  */
-public class ByteArrayConverter implements Converter<byte[]> {
+public class ByteArrayConverter extends BuiltInConverterBase<byte[]> {
+
     public byte[] convert(Object val) throws ConverterException {
         if (val == null) return null;
 
@@ -33,5 +35,9 @@ public class ByteArrayConverter implements Converter<byte[]> {
         }
 
         throw new RuntimeException("could not convert " + val.getClass().getName() + " to byte[]");
+    }
+
+    public void addParameter(StatementParameterSetter stmt, String name, byte[] val) throws SQLException {
+        stmt.setObject(name, val);
     }
 }

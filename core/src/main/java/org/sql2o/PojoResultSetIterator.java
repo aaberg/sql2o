@@ -3,6 +3,7 @@ package org.sql2o;
 import org.sql2o.converters.Convert;
 import org.sql2o.converters.Converter;
 import org.sql2o.converters.ConverterException;
+import org.sql2o.quirks.Quirks;
 import org.sql2o.reflection.Pojo;
 import org.sql2o.reflection.PojoMetadata;
 import org.sql2o.tools.ResultSetUtils;
@@ -21,8 +22,8 @@ public class PojoResultSetIterator<T> extends ResultSetIteratorBase<T> {
     private Converter converter;
     private boolean useExecuteScalar;
 
-    public PojoResultSetIterator(ResultSet rs, boolean isCaseSensitive, QuirksMode quirksMode, PojoMetadata metadata) {
-        super(rs, isCaseSensitive, quirksMode);
+    public PojoResultSetIterator(ResultSet rs, boolean isCaseSensitive, Quirks quirks, PojoMetadata metadata) {
+        super(rs, isCaseSensitive, quirks);
 
         this.metadata = metadata;
         this.converter = Convert.getConverterIfExists(metadata.getType());

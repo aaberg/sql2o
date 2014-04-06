@@ -1,5 +1,9 @@
 package org.sql2o;
 
+import org.sql2o.converters.Convert;
+import org.sql2o.converters.Converter;
+import org.sql2o.quirks.*;
+
 import javax.naming.Context;
 import javax.naming.InitialContext;
 import javax.naming.NamingException;
@@ -18,11 +22,16 @@ import java.util.Map;
  * was specified in the constructor, a simple data source is created, which works as a simple wrapper around the jdbc
  * driver.
  * <p>
- * Some jdbc implementations has quirks, therefor it may be necessary to use a constructor with the quirksMode parameter.
- * When quirksMode is specified, Sql2o will use workarounds to avoid these quirks.
+ * Some jdbc implementations have quirks, therefore it may be necessary to use a constructor with the quirks parameter.
+ * When quirks are specified, Sql2o will use workarounds to avoid these quirks.
  * @author Lars Aaberg
  */
 public class Sql2o {
+
+    private Quirks quirks;
+    private final DataSource dataSource;
+    private Map<String, String> defaultColumnMappings;
+    private boolean defaultCaseSensitive;
 
     public Sql2o(String jndiLookup) {
         this(_getJndiDatasource(jndiLookup));
@@ -61,19 +70,27 @@ public class Sql2o {
      * @param pass  database password
      */
     public Sql2o(String url, String user, String pass){
-        this(url,user,pass,QuirksMode.None);
+        this(url, user, pass, new NoQuirks());
+    }
+
+    /**
+     * Use {@link #Sql2o(String, String, String, org.sql2o.quirks.Quirks)}.
+     */
+    @Deprecated
+    public Sql2o(String url, String user, String pass, QuirksMode quirksMode) {
+        this(new GenericDatasource(url, user, pass), quirksMode);
     }
 
     /**
      * Created a new instance of the Sql2o class. Internally this constructor will create a {@link GenericDatasource},
      * and call the {@link Sql2o#Sql2o(javax.sql.DataSource)} constructor which takes a DataSource as parameter.
-     * @param url   JDBC database url
-     * @param user  database username
-     * @param pass  database password
-     * @param quirksMode    @{link QuirksMode} allows sql2o to work around known quirks and issues in different JDBC drivers.
+     * @param url    JDBC database url
+     * @param user   database username
+     * @param pass   database password
+     * @param quirks {@link org.sql2o.quirks.Quirks} allows sql2o to work around known quirks and issues in different JDBC drivers.
      */
-    public Sql2o(String url, String user, String pass, QuirksMode quirksMode) {
-        this(new GenericDatasource(url, user, pass), quirksMode);
+    public Sql2o(String url, String user, String pass, Quirks quirks) {
+        this(new GenericDatasource(url, user, pass), quirks);
     }
 
     /**
@@ -81,27 +98,58 @@ public class Sql2o {
      * @param dataSource    The DataSource Sql2o uses to acquire connections to the database.
      */
     public Sql2o(DataSource dataSource) {
-        this(dataSource, QuirksMode.None);
+        this(dataSource, new NoQuirks());
+    }
+
+    /**
+     * Use {@link #Sql2o(javax.sql.DataSource, org.sql2o.quirks.Quirks)}.
+     */
+    @Deprecated
+    public Sql2o(DataSource dataSource, QuirksMode quirksMode) {
+        this.dataSource = dataSource;
+        this.setQuirks(getQuirksForMode(quirksMode));
+        this.defaultColumnMappings = new HashMap<String, String>();
     }
 
     /**
      * Creates a new instance of the Sql2o class, which uses the given DataSource to acquire connections to the database.
-     * @param dataSource    The DataSource Sql2o uses to acquire connections to the database.
-     * @param quirksMode    @{link QuirksMode} allows sql2o to work around known quirks and issues in different JDBC drivers.
+     * @param dataSource The DataSource Sql2o uses to acquire connections to the database.
+     * @param quirks     {@link org.sql2o.quirks.Quirks} allows sql2o to work around known quirks and issues in different JDBC drivers.
      */
-    public Sql2o(DataSource dataSource, QuirksMode quirksMode){
+    public Sql2o(DataSource dataSource, Quirks quirks){
         this.dataSource = dataSource;
-        this.quirksMode = quirksMode;
-
+        this.setQuirks(quirks);
         this.defaultColumnMappings = new HashMap<String, String>();
     }
 
-    private final DataSource dataSource;
-    QuirksMode quirksMode;
+    // TODO delete this method when {@link org.sql2o.QuirksMode} removed.
+    private Quirks getQuirksForMode(QuirksMode quirksMode) {
+        if (quirksMode == QuirksMode.DB2) {
+            return new Db2Quirks();
+        }
+        else if (quirksMode == QuirksMode.PostgreSQL) {
+            return new PostgresQuirks();
+        }
+        else if (quirksMode == QuirksMode.MSSqlServer) {
+            return new SqlServerQuirks();
+        }
+        else {
+            return new NoQuirks();
+        }
+    }
 
-    private Map<String, String> defaultColumnMappings;
+    Quirks getQuirks() {
+        return quirks;
+    }
 
-    private boolean defaultCaseSensitive = false;
+    private void setQuirks(Quirks quirks) {
+        this.quirks = quirks;
+
+        // register custom converters
+        for (Map.Entry<Class, Converter> entry : quirks.customConverters().entrySet()) {
+            Convert.registerConverter(entry.getKey(), entry.getValue());
+        }
+    }
 
     /**
      * Gets the DataSource that Sql2o uses internally to acquire database connections.
