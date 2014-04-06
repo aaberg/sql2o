@@ -9,6 +9,7 @@ import java.lang.reflect.Method;
 import java.util.HashMap;
 import java.util.Hashtable;
 import java.util.Map;
+import java.util.concurrent.locks.ReentrantReadWriteLock;
 
 /**
  * Stores metadata for a POJO.
@@ -21,6 +22,9 @@ public class PojoMetadata {
     private final Class clazz;
     
     private final Map<String,String> columnMappings;
+
+    private final static Hashtable<CacheKey, PropertyAndFieldInfo> cache = new Hashtable<CacheKey, PropertyAndFieldInfo>();
+    private final static ReentrantReadWriteLock cacheLock = new ReentrantReadWriteLock();
 
     public PojoMetadata(Class clazz, boolean caseSensitive, Map<String,String> columnMappings) {
         this(clazz, caseSensitive, false, columnMappings);
@@ -41,11 +45,28 @@ public class PojoMetadata {
 
     private PropertyAndFieldInfo getPropertyInfoThroughCache() {
         final CacheKey key = new CacheKey(clazz, caseSensitive);
-        synchronized (cache) {
-            if (!cache.contains(key)) {
-                cache.put(key, initializePropertyInfo());
+
+        PropertyAndFieldInfo pfi = null;
+
+        cacheLock.readLock().lock();
+        if (!cache.contains(key)) {
+            cacheLock.readLock().unlock();
+            cacheLock.writeLock().lock();
+            try {
+                if (!cache.contains(key)) {
+                    cache.put(key, initializePropertyInfo());
+                }
+                cacheLock.readLock().lock();
+
+            } finally {
+                cacheLock.writeLock().unlock();
             }
+        }
+
+        try {
             return cache.get(key);
+        } finally {
+            cacheLock.readLock().unlock();
         }
     }
 
@@ -140,8 +161,6 @@ public class PojoMetadata {
     }
 
     // CACHING
-
-    private final static Hashtable<CacheKey, PropertyAndFieldInfo> cache = new Hashtable<CacheKey, PropertyAndFieldInfo>();
 
     private class CacheKey {
         private Class clazz;
