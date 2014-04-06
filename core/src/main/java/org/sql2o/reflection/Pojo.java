@@ -28,14 +28,16 @@ public class Pojo {
     }
 
     public void setProperty(String propertyPath, Object value){
-
-        String[] pathArr = propertyPath.split("\\.",2);
-        Setter setter = metadata.getPropertySetter(pathArr[0]);
-
-        if (pathArr.length > 1){
-            String newPath = pathArr[1];
+        // String.split uses RegularExpression
+        // this is overkill for every column for every row
+        int index = propertyPath.indexOf('.');
+        Setter setter;
+        if (index > 0){
+            final String substring = propertyPath.substring(0, index);
+            setter = metadata.getPropertySetter(substring);
+            String newPath = propertyPath.substring(index+1);
             
-            Object subValue = this.metadata.getValueOfProperty(pathArr[0], this.object);
+            Object subValue = this.metadata.getValueOfProperty(substring, this.object);
             if (subValue == null){
                 try {
                     subValue = setter.getType().newInstance();
@@ -52,7 +54,7 @@ public class Pojo {
             subPojo.setProperty(newPath, value);
         }
         else{
-            
+            setter = metadata.getPropertySetter(propertyPath);
             Converter converter;
             try {
                 converter = Convert.getConverter(setter.getType());
