@@ -9,6 +9,7 @@ import org.sql2o.reflection.Setter;
 import org.sql2o.tools.ResultSetUtils;
 
 import java.sql.ResultSet;
+import java.sql.ResultSetMetaData;
 import java.sql.SQLException;
 
 /**
@@ -18,12 +19,14 @@ import java.sql.SQLException;
  * @author aldenquimby@gmail.com
  */
 public class PojoResultSetIterator<T> extends ResultSetIteratorBase<T> {
-    private PojoMetadata metadata;
-    private Converter converter;
-    private boolean useExecuteScalar;
-    private Setter[] setters;
+    private ResultSetHandler<T> handler;
 
-    private Setter getSetter(final String propertyPath){
+
+
+    private static Setter getSetter(
+            final String propertyPath,
+            final PojoMetadata metadata,
+            final boolean isCaseSensitive){
         int index = propertyPath.indexOf('.');
         if(index<=0){
             // Simple path - fast way
@@ -62,53 +65,64 @@ public class PojoResultSetIterator<T> extends ResultSetIteratorBase<T> {
         };
     }
 
-    public PojoResultSetIterator(ResultSet rs, boolean isCaseSensitive, QuirksMode quirksMode, PojoMetadata metadata) {
-        super(rs, isCaseSensitive, quirksMode);
+    private <T> ResultSetHandler<T> newResultSetHandler(final ResultSetMetaData meta, boolean isCaseSensitive, QuirksMode quirksMode, final PojoMetadata metadata){
+        final Setter[] setters;
+        final Converter converter;
+        final boolean useExecuteScalar;
         //TODO: it's possible to cache converter/setters
         // cache key is ResultSetMetadata + Bean type
 
-        this.metadata = metadata;
-        this.converter = Convert.getConverterIfExists(metadata.getType());
+        converter = Convert.getConverterIfExists(metadata.getType());
         try {
             int colCount = meta.getColumnCount();
             setters=new Setter[colCount+1];   // setters[0] is always null
             for (int i = 1; i <= colCount; i++) {
                 String colName = getColumnName(i);
                 // behavior change: do not throw if POJO contains less properties
-                setters[i] = getSetter(colName);
+                setters[i] = getSetter(colName, metadata, isCaseSensitive);
             }
             /**
              * Fallback to executeScalar if converter exists,
              * we're selecting 1 column, and no property setter exists for the column.
              */
-            this.useExecuteScalar = converter !=null && colCount==1 && setters[1]==null;
+            useExecuteScalar = converter !=null && colCount==1 && setters[1]==null;
         } catch (SQLException ex) {
             throw new Sql2oException("Database error: " + ex.getMessage(), ex);
         }
+        return new ResultSetHandler<T>() {
+            @SuppressWarnings("unchecked")
+            public T handle(ResultSet resultSet) throws SQLException {
+                if (useExecuteScalar) {
+                    try {
+                        return (T)converter.convert(ResultSetUtils.getRSVal(rs, 1));
+                    }
+                    catch (ConverterException e) {
+                        throw new Sql2oException("Error occurred while converting value from database to type " + metadata.getType(), e);
+                    }
+                }
+
+                // otherwise we want executeAndFetch with object mapping
+                Object pojo = metadata.getObjectConstructor().newInstance();
+                for(int colIdx = 1; colIdx <= meta.getColumnCount(); colIdx++) {
+                    Setter setter = setters[colIdx];
+                    if(setter==null) continue;
+                    setter.setProperty(pojo,ResultSetUtils.getRSVal(rs, colIdx));
+                }
+
+                return (T)pojo;
+            }
+        };
 
     }
 
-    @SuppressWarnings("unchecked") // Convert should be refactored so that this isn't needed
+    public PojoResultSetIterator(ResultSet rs, boolean isCaseSensitive, QuirksMode quirksMode, PojoMetadata metadata) {
+        super(rs, isCaseSensitive, quirksMode);
+        this.handler = newResultSetHandler(meta,isCaseSensitive, quirksMode, metadata);
+    }
+
     @Override
     protected T readNext() throws SQLException {
-        if (useExecuteScalar) {
-            try {
-                return (T)converter.convert(ResultSetUtils.getRSVal(rs, 1));
-            }
-            catch (ConverterException e) {
-                throw new Sql2oException("Error occurred while converting value from database to type " + metadata.getType(), e);
-            }
-        }
-
-        // otherwise we want executeAndFetch with object mapping
-        Object pojo = metadata.getObjectConstructor().newInstance();
-        for(int colIdx = 1; colIdx <= meta.getColumnCount(); colIdx++) {
-            Setter setter = setters[colIdx];
-            if(setter==null) continue;
-            setter.setProperty(pojo,ResultSetUtils.getRSVal(rs, colIdx));
-        }
-
-        return (T)pojo;
+        return handler.handle(rs);
     }
 
 }

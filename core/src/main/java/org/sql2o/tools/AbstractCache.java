@@ -39,6 +39,7 @@ public abstract class AbstractCache<K,V,E> {
     public V get(K key,E param){
         V value;
         if(tl.get()){
+            // evaluate implementation can re-enter into the cache
             // current thread has exclusive cache lock
             value = map.get(key);
             if(value==null){
