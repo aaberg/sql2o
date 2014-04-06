@@ -29,7 +29,7 @@ public abstract class AbstractCache<K,V,E> {
         this(new HashMap<K, V>());
     }
 
-    private ThreadLocal<Boolean> tl = new ThreadLocal<Boolean>(){
+    private final ThreadLocal<Boolean> tl = new ThreadLocal<Boolean>(){
         @Override
         protected Boolean initialValue() {
             return Boolean.FALSE;
@@ -59,8 +59,11 @@ public abstract class AbstractCache<K,V,E> {
         wl.lock();
         tl.set(Boolean.TRUE);
         try {
-            value = evaluate(key, param);
-            map.put(key,value);
+            value = map.get(key);
+            if(value==null){
+                value = evaluate(key, param);
+                map.put(key,value);
+            }
         } finally {
             tl.set(Boolean.FALSE);
             wl.unlock();
