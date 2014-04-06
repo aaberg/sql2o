@@ -29,12 +29,11 @@ public class Pojo {
 
     public void setProperty(String propertyPath, Object value){
 
-        String[] pathArr = propertyPath.split("\\.");
+        String[] pathArr = propertyPath.split("\\.",2);
         Setter setter = metadata.getPropertySetter(pathArr[0]);
 
         if (pathArr.length > 1){
-            int dotIdx = propertyPath.indexOf('.');
-            String newPath = propertyPath.substring(dotIdx + 1);
+            String newPath = pathArr[1];
             
             Object subValue = this.metadata.getValueOfProperty(pathArr[0], this.object);
             if (subValue == null){

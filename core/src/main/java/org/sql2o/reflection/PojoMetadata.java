@@ -46,6 +46,7 @@ public class PojoMetadata {
 
     private void initialize() {
         if (FeatureDetector.isCachePojoMetaDataEnabled()) {
+            //TODO: use thread-safe code!
             if (cache == null) {
                 cache = new HashMap<CacheKey, PojoMetadata>();
             }
@@ -57,6 +58,7 @@ public class PojoMetadata {
             PojoMetadata cached = cache.get(key);
             propertySetters = cached.propertySetters;
             fields = cached.fields;
+            objectConstructor = cached.objectConstructor;
         }
         else {
             reflectionInitialization();
