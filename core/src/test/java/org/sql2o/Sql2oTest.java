@@ -524,6 +524,27 @@ public class Sql2oTest {
     }
 
     @Test
+    public void testTable_asList() {
+        createAndFillUserTable();
+
+        Table table = sql2o.createQuery("select * from user").executeAndFetchTable();
+
+        List<Map<String, Object>> rows = table.asList();
+
+        assertEquals(insertIntoUsers, rows.size());
+
+        for (Map<String, Object> row : rows) {
+            assertEquals(4, row.size());
+            assertTrue(row.containsKey("id"));
+            assertTrue(row.containsKey("name"));
+            assertTrue(row.containsKey("email"));
+            assertTrue(row.containsKey("text"));
+        }
+
+        deleteUserTable();
+    }
+
+    @Test
     public void testStringConversion(){
         StringConversionPojo pojo = sql2o.createQuery("select '1' val1, '2  ' val2, '' val3, '' val4, null val5 from (values(0))").executeAndFetchFirst(StringConversionPojo.class);
 
@@ -532,8 +553,6 @@ public class Sql2oTest {
         assertNull(pojo.val3);
         assertEquals(0, pojo.val4);
         assertNull(pojo.val5);
-
-
     }
 
     @Test
