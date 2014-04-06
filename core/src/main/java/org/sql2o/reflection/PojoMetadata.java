@@ -1,6 +1,7 @@
 package org.sql2o.reflection;
 
 import org.sql2o.Sql2oException;
+import org.sql2o.tools.AbstractCache;
 import org.sql2o.tools.FeatureDetector;
 import org.sql2o.tools.UnderscoreToCamelCase;
 
@@ -23,14 +24,13 @@ public class PojoMetadata {
     private final static Hashtable<CacheKey, PropertyAndFieldInfo> cache = new Hashtable<CacheKey, PropertyAndFieldInfo>();
     private final static ReentrantReadWriteLock cacheLock = new ReentrantReadWriteLock();
 
-    private ObjectConstructor objectConstructor;
     private boolean caseSensitive;
     private boolean autoDeriveColumnNames;
     private Class clazz;
     private final FactoryFacade factoryFacade = FactoryFacade.getInstance();
 
     public ObjectConstructor getObjectConstructor() {
-        return objectConstructor;
+        return this.propertyInfo.getObjectConstructor();
     }
 
     public PojoMetadata(Class clazz, boolean caseSensitive, Map<String,String> columnMappings) {
@@ -56,11 +56,11 @@ public class PojoMetadata {
         PropertyAndFieldInfo pfi = null;
 
         cacheLock.readLock().lock();
-        if (!cache.contains(key)) {
+        if (!cache.containsKey(key)) {
             cacheLock.readLock().unlock();
             cacheLock.writeLock().lock();
             try {
-                if (!cache.contains(key)) {
+                if (!cache.containsKey(key)) {
                     cache.put(key, initializePropertyInfo());
                 }
                 cacheLock.readLock().lock();
@@ -83,7 +83,7 @@ public class PojoMetadata {
         HashMap<String, Field> fields = new HashMap<String, Field>();
 
         Class theClass = clazz;
-        objectConstructor = factoryFacade.newConstructor(theClass);
+        ObjectConstructor objectConstructor = factoryFacade.newConstructor(theClass);
         do{
             for (Field f : theClass.getDeclaredFields()){
                 String propertyName = f.getName();
@@ -109,7 +109,7 @@ public class PojoMetadata {
             theClass = theClass.getSuperclass();
         }while(!theClass.equals(Object.class));
 
-        return new PropertyAndFieldInfo(propertySetters, fields);
+        return new PropertyAndFieldInfo(propertySetters, fields, objectConstructor);
 
     }
 
@@ -201,10 +201,12 @@ public class PojoMetadata {
     private class PropertyAndFieldInfo {
         private final Map<String, Setter> propertySetters;
         private final Map<String, Field> fields;
+        private final ObjectConstructor objectConstructor;
 
-        private PropertyAndFieldInfo(Map<String, Setter> propertySetters, Map<String, Field> fields) {
+        private PropertyAndFieldInfo(Map<String, Setter> propertySetters, Map<String, Field> fields, ObjectConstructor objectConstructor) {
             this.propertySetters = propertySetters;
             this.fields = fields;
+            this.objectConstructor = objectConstructor;
         }
 
         public Map<String, Setter> getPropertySetters() {
@@ -213,6 +215,10 @@ public class PojoMetadata {
 
         public Map<String, Field> getFields() {
             return fields;
+        }
+
+        public ObjectConstructor getObjectConstructor() {
+            return objectConstructor;
         }
     }
 }
