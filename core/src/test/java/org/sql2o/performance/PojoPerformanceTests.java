@@ -44,6 +44,9 @@ import java.util.logging.Logger;
 
 /**
  * @author aldenquimby@gmail.com
+ *
+ * TODO: must read 10-100 rows instead 1
+ *
  */
 public class PojoPerformanceTests
 {
