@@ -7,29 +7,30 @@ import org.sql2o.tools.UnderscoreToCamelCase;
 import java.lang.reflect.Field;
 import java.lang.reflect.Method;
 import java.util.HashMap;
+import java.util.Hashtable;
 import java.util.Map;
+import java.util.concurrent.locks.ReentrantReadWriteLock;
 
 /**
  * Stores metadata for a POJO.
  */
 public class PojoMetadata {
-    
-    private Map<String, Setter> propertySetters;
-    private Map<String, Field> fields;
+
+    private final PropertyAndFieldInfo propertyInfo;
+
+    private final Map<String,String> columnMappings;
+
+    private final static Hashtable<CacheKey, PropertyAndFieldInfo> cache = new Hashtable<CacheKey, PropertyAndFieldInfo>();
+    private final static ReentrantReadWriteLock cacheLock = new ReentrantReadWriteLock();
+
     private ObjectConstructor objectConstructor;
     private boolean caseSensitive;
     private boolean autoDeriveColumnNames;
     private Class clazz;
     private final FactoryFacade factoryFacade = FactoryFacade.getInstance();
 
-    private Map<String,String> columnMappings;
-
     public ObjectConstructor getObjectConstructor() {
         return objectConstructor;
-    }
-
-    public Map<String, String> getColumnMappings() {
-        return columnMappings;
     }
 
     public PojoMetadata(Class clazz, boolean caseSensitive, Map<String,String> columnMappings) {
@@ -41,33 +42,45 @@ public class PojoMetadata {
         this.autoDeriveColumnNames = autoDeriveColumnNames;
         this.clazz = clazz;
         this.columnMappings = columnMappings == null ? new HashMap<String, String>() : columnMappings;
-        initialize();
-    }
 
-    private void initialize() {
         if (FeatureDetector.isCachePojoMetaDataEnabled()) {
-            //TODO: use thread-safe code!
-            if (cache == null) {
-                cache = new HashMap<CacheKey, PojoMetadata>();
-            }
-            CacheKey key = new CacheKey(clazz, caseSensitive);
-            if (!cache.containsKey(key)) {
-                reflectionInitialization();
-                cache.put(key, this);
-            }
-            PojoMetadata cached = cache.get(key);
-            propertySetters = cached.propertySetters;
-            fields = cached.fields;
-            objectConstructor = cached.objectConstructor;
-        }
-        else {
-            reflectionInitialization();
+            this.propertyInfo = getPropertyInfoThroughCache();
+        } else {
+            this.propertyInfo = initializePropertyInfo();
         }
     }
 
-    private void reflectionInitialization() {
-        propertySetters = new HashMap<String, Setter>();
-        fields = new HashMap<String, Field>();
+    private PropertyAndFieldInfo getPropertyInfoThroughCache() {
+        final CacheKey key = new CacheKey(clazz, caseSensitive);
+
+        PropertyAndFieldInfo pfi = null;
+
+        cacheLock.readLock().lock();
+        if (!cache.contains(key)) {
+            cacheLock.readLock().unlock();
+            cacheLock.writeLock().lock();
+            try {
+                if (!cache.contains(key)) {
+                    cache.put(key, initializePropertyInfo());
+                }
+                cacheLock.readLock().lock();
+
+            } finally {
+                cacheLock.writeLock().unlock();
+            }
+        }
+
+        try {
+            return cache.get(key);
+        } finally {
+            cacheLock.readLock().unlock();
+        }
+    }
+
+    private PropertyAndFieldInfo initializePropertyInfo() {
+
+        HashMap<String, Setter> propertySetters = new HashMap<String, Setter>();
+        HashMap<String, Field> fields = new HashMap<String, Field>();
 
         Class theClass = clazz;
         objectConstructor = factoryFacade.newConstructor(theClass);
@@ -95,6 +108,13 @@ public class PojoMetadata {
             }
             theClass = theClass.getSuperclass();
         }while(!theClass.equals(Object.class));
+
+        return new PropertyAndFieldInfo(propertySetters, fields);
+
+    }
+
+    public Map<String, String> getColumnMappings() {
+        return columnMappings;
     }
 
     public Setter getPropertySetter(String propertyName){
@@ -126,8 +146,8 @@ public class PojoMetadata {
             if(!this.caseSensitive) name = name.toLowerCase();
         }
 
-        if (propertySetters.containsKey(name)){
-            return propertySetters.get(name);
+        if (propertyInfo.getPropertySetters().containsKey(name)){
+            return propertyInfo.getPropertySetters().get(name);
         }
 
         return null;
@@ -140,7 +160,7 @@ public class PojoMetadata {
     public Object getValueOfProperty(String propertyName, Object object){
         String name = this.caseSensitive ? propertyName : propertyName.toLowerCase();
         
-        Field field = this.fields.get(name);
+        Field field = this.propertyInfo.getFields().get(name);
         try {
             return field.get(object);
         } catch (IllegalAccessException e) {
@@ -149,8 +169,6 @@ public class PojoMetadata {
     }
 
     // CACHING
-
-    private static Map<CacheKey, PojoMetadata> cache;
 
     private class CacheKey {
         private Class clazz;
@@ -176,6 +194,25 @@ public class PojoMetadata {
             int result = clazz.hashCode();
             result = 31 * result + (caseSensitive ? 1 : 0);
             return result;
+        }
+    }
+
+
+    private class PropertyAndFieldInfo {
+        private final Map<String, Setter> propertySetters;
+        private final Map<String, Field> fields;
+
+        private PropertyAndFieldInfo(Map<String, Setter> propertySetters, Map<String, Field> fields) {
+            this.propertySetters = propertySetters;
+            this.fields = fields;
+        }
+
+        public Map<String, Setter> getPropertySetters() {
+            return propertySetters;
+        }
+
+        public Map<String, Field> getFields() {
+            return fields;
         }
     }
 }
