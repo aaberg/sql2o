@@ -1,6 +1,6 @@
 package org.sql2o.data;
 
-import java.util.List;
+import java.util.*;
 
 /**
  * Represents an offline result set with columns and rows and data.
@@ -26,5 +26,20 @@ public class Table {
 
     public List<Column> columns() {
         return columns;
+    }
+
+    public List<Map<String, Object>> asList()
+    {
+        return new AbstractList<Map<String, Object>>() {
+            @Override
+            public Map<String, Object> get(int index) {
+                return rows.get(index).asMap();
+            }
+
+            @Override
+            public int size() {
+                return rows.size();
+            }
+        };
     }
 }
