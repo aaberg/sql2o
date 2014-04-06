@@ -11,14 +11,16 @@ import java.lang.reflect.Method;
 public class MethodSetter implements  Setter{
     
     private Method method;
+    private Class<?> type;
 
     public MethodSetter(Method method) {
         this.method = method;
         this.method.setAccessible(true);
+        type = method.getParameterTypes()[0];
     }
 
     public void setProperty(Object obj, Object value) {
-        if (value == null && this.method.getParameterTypes().length == 1 && this.method.getParameterTypes()[0].isPrimitive()){
+        if (value == null && type.isPrimitive()){
             return; // dont try to set null to a setter to a primitive type.
         }
         try {
@@ -31,6 +33,6 @@ public class MethodSetter implements  Setter{
     }
 
     public Class getType() {
-        return method.getParameterTypes()[0];
+        return type;
     }
 }

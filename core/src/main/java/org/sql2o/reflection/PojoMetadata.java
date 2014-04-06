@@ -17,14 +17,21 @@ import java.util.concurrent.locks.ReentrantReadWriteLock;
 public class PojoMetadata {
 
     private final PropertyAndFieldInfo propertyInfo;
-    private final boolean caseSensitive;
-    private final boolean autoDeriveColumnNames;
-    private final Class clazz;
-    
+
     private final Map<String,String> columnMappings;
 
     private final static Hashtable<CacheKey, PropertyAndFieldInfo> cache = new Hashtable<CacheKey, PropertyAndFieldInfo>();
     private final static ReentrantReadWriteLock cacheLock = new ReentrantReadWriteLock();
+
+    private ObjectConstructor objectConstructor;
+    private boolean caseSensitive;
+    private boolean autoDeriveColumnNames;
+    private Class clazz;
+    private final FactoryFacade factoryFacade = FactoryFacade.getInstance();
+
+    public ObjectConstructor getObjectConstructor() {
+        return objectConstructor;
+    }
 
     public PojoMetadata(Class clazz, boolean caseSensitive, Map<String,String> columnMappings) {
         this(clazz, caseSensitive, false, columnMappings);
@@ -76,11 +83,12 @@ public class PojoMetadata {
         HashMap<String, Field> fields = new HashMap<String, Field>();
 
         Class theClass = clazz;
+        objectConstructor = factoryFacade.newConstructor(theClass);
         do{
             for (Field f : theClass.getDeclaredFields()){
                 String propertyName = f.getName();
                 propertyName = caseSensitive ? propertyName : propertyName.toLowerCase();
-                propertySetters.put(propertyName, new FieldSetter(f));
+                propertySetters.put(propertyName, factoryFacade.newSetter(f));
                 fields.put(propertyName, f);
             }
 
@@ -95,7 +103,7 @@ public class PojoMetadata {
                         propertyName = propertyName.toLowerCase();
                     }
 
-                    propertySetters.put(propertyName, new MethodSetter(m));
+                    propertySetters.put(propertyName, factoryFacade.newSetter(m));
                 }
             }
             theClass = theClass.getSuperclass();
