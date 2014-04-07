@@ -1,5 +1,6 @@
 package org.sql2o;
 
+import org.sql2o.quirks.Quirks;
 import org.sql2o.reflection.PojoMetadata;
 
 import java.util.Map;
@@ -8,7 +9,7 @@ public class DefaultResultSetHandlerFactoryBuilder implements ResultSetHandlerFa
     private boolean caseSensitive;
     private boolean autoDeriveColumnNames;
     private Map<String, String> columnMappings;
-    private QuirksMode quirksMode;
+    private Quirks quirks;
 
     public boolean isCaseSensitive() {
         return caseSensitive;
@@ -34,17 +35,17 @@ public class DefaultResultSetHandlerFactoryBuilder implements ResultSetHandlerFa
         this.columnMappings = columnMappings;
     }
 
-    public QuirksMode getQuirksMode() {
-        return quirksMode;
+    public Quirks getQuirks() {
+        return quirks;
     }
 
-    public void setQuirksMode(QuirksMode quirksMode) {
-        this.quirksMode = quirksMode;
+    public void setQuirks(Quirks quirks) {
+        this.quirks = quirks;
     }
 
     public ResultSetHandlerFactory newFactory(Class clazz) {
         PojoMetadata pojoMetadata = new PojoMetadata(clazz, caseSensitive, autoDeriveColumnNames, columnMappings);
-        return new DefaultResultSetHandlerFactory(pojoMetadata, quirksMode);
+        return new DefaultResultSetHandlerFactory(pojoMetadata, quirks);
     }
 
 }

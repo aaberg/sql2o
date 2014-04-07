@@ -1,15 +1,8 @@
 package org.sql2o;
 
-import org.sql2o.converters.Convert;
-import org.sql2o.converters.Converter;
-import org.sql2o.converters.ConverterException;
-import org.sql2o.reflection.Pojo;
-import org.sql2o.reflection.PojoMetadata;
-import org.sql2o.reflection.Setter;
-import org.sql2o.tools.ResultSetUtils;
+import org.sql2o.quirks.Quirks;
 
 import java.sql.ResultSet;
-import java.sql.ResultSetMetaData;
 import java.sql.SQLException;
 
 /**
@@ -22,8 +15,8 @@ public class PojoResultSetIterator<T> extends ResultSetIteratorBase<T> {
     private ResultSetHandler<T> handler;
 
     @SuppressWarnings("unchecked")
-    public PojoResultSetIterator(ResultSet rs, boolean isCaseSensitive, QuirksMode quirksMode, ResultSetHandlerFactory<T> factory) {
-        super(rs, isCaseSensitive, quirksMode);
+    public PojoResultSetIterator(ResultSet rs, boolean isCaseSensitive, Quirks quirks, ResultSetHandlerFactory<T> factory) {
+        super(rs, isCaseSensitive, quirks);
         try {
             this.handler = factory.newResultSetHandler(rs.getMetaData());
         } catch (SQLException e) {
@@ -31,8 +24,8 @@ public class PojoResultSetIterator<T> extends ResultSetIteratorBase<T> {
         }
     }
 
-    public PojoResultSetIterator(ResultSet rs, boolean isCaseSensitive, QuirksMode quirksMode, ResultSetHandler<T> handler) {
-        super(rs, isCaseSensitive, quirksMode);
+    public PojoResultSetIterator(ResultSet rs, boolean isCaseSensitive, Quirks quirks, ResultSetHandler<T> handler) {
+        super(rs, isCaseSensitive, quirks);
         this.handler = handler;
     }
 

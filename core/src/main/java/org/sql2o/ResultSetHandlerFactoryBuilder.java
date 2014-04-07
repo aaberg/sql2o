@@ -1,5 +1,7 @@
 package org.sql2o;
 
+import org.sql2o.quirks.Quirks;
+
 import java.util.Map;
 
 /**
@@ -22,9 +24,9 @@ public interface ResultSetHandlerFactoryBuilder {
 
     public void setColumnMappings(Map<String, String> columnMappings);
 
-    public QuirksMode getQuirksMode();
+    public Quirks getQuirks();
 
-    public void setQuirksMode(QuirksMode quirksMode);
+    public void setQuirks(Quirks quirksMode);
 
     public <E> ResultSetHandlerFactory<E> newFactory(Class<E> clazz);
 }

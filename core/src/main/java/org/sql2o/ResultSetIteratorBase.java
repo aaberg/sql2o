@@ -1,5 +1,7 @@
 package org.sql2o;
 
+import org.sql2o.quirks.Quirks;
+
 import java.sql.ResultSet;
 import java.sql.ResultSetMetaData;
 import java.sql.SQLException;
@@ -16,13 +18,13 @@ public abstract class ResultSetIteratorBase<T> implements Iterator<T> {
     // fields needed to read result set
     protected ResultSet rs;
     protected boolean isCaseSensitive;
-    protected QuirksMode quirksMode;
+    protected Quirks quirks;
     protected ResultSetMetaData meta;
 
-    public ResultSetIteratorBase(ResultSet rs, boolean isCaseSensitive, QuirksMode quirksMode) {
+    public ResultSetIteratorBase(ResultSet rs, boolean isCaseSensitive, Quirks quirks) {
         this.rs = rs;
         this.isCaseSensitive = isCaseSensitive;
-        this.quirksMode = quirksMode;
+        this.quirks = quirks;
         try {
             meta = rs.getMetaData();
         }
@@ -92,14 +94,6 @@ public abstract class ResultSetIteratorBase<T> implements Iterator<T> {
     protected abstract T readNext() throws SQLException;
 
     protected String getColumnName(int colIdx) throws SQLException {
-        return getColumnName(colIdx, quirksMode, meta);
-    }
-    static String getColumnName(int colIdx, QuirksMode quirksMode, ResultSetMetaData meta) throws SQLException {
-        if (quirksMode == QuirksMode.DB2){
-            return meta.getColumnName(colIdx);
-        }
-        else {
-            return meta.getColumnLabel(colIdx);
-        }
+        return quirks.getColumnName(meta, colIdx);
     }
 }
