@@ -6,6 +6,7 @@ import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.SQLException;
 import java.sql.SQLFeatureNotSupportedException;
+import java.util.Properties;
 
 /**
  * Used internally by sql2o, if the {@link Sql2o#Sql2o(String, String, String)} constructor overload.
@@ -13,8 +14,7 @@ import java.sql.SQLFeatureNotSupportedException;
 public class GenericDatasource implements DataSource {
 
     private final String url;
-    private final String user;
-    private final String password;
+    private final Properties properties;
 
     public GenericDatasource(String url, String user, String password) {
 
@@ -23,8 +23,27 @@ public class GenericDatasource implements DataSource {
         }
 
         this.url = url;
-        this.user = user;
-        this.password = password;
+        this.properties = new Properties();
+        set(properties,user,password);
+    }
+
+    private void set(Properties info, String user, String password) {
+        if (user != null) {
+            info.put("user", user);
+        }
+        if (password != null) {
+            info.put("password", password);
+        }
+    }
+
+    public GenericDatasource(String url, Properties properties) {
+
+        if (!url.startsWith("jdbc")){
+            url = "jdbc:" + url;
+        }
+
+        this.url = url;
+        this.properties = properties;
     }
 
     public String getUrl() {
@@ -32,46 +51,48 @@ public class GenericDatasource implements DataSource {
     }
 
     public String getUser() {
-        return user;
+        return properties.getProperty("user");
     }
 
     public String getPassword() {
-        return password;
+        return properties.getProperty("password");
     }
 
     public Connection getConnection() throws SQLException {
-        return DriverManager.getConnection(this.getUrl(), this.getUser(), this.getPassword());
+        return DriverManager.getConnection(this.getUrl(), properties);
     }
 
     public Connection getConnection(String username, String password) throws SQLException {
-        return DriverManager.getConnection(this.getUrl(), username, password);
+        Properties info = new Properties(this.properties);
+        set(info,username,password);
+        return DriverManager.getConnection(this.getUrl(), info);
     }
 
     public PrintWriter getLogWriter() throws SQLException {
-        return null;
+        return DriverManager.getLogWriter();
     }
 
     public void setLogWriter(PrintWriter printWriter) throws SQLException {
-        //To change body of implemented methods use File | Settings | File Templates.
+        DriverManager.setLogWriter(printWriter);
     }
 
     public void setLoginTimeout(int i) throws SQLException {
-        //To change body of implemented methods use File | Settings | File Templates.
+        DriverManager.setLoginTimeout(i);
     }
 
     public int getLoginTimeout() throws SQLException {
-        return 0;  //To change body of implemented methods use File | Settings | File Templates.
+        return DriverManager.getLoginTimeout();
     }
 
     public java.util.logging.Logger getParentLogger() throws SQLFeatureNotSupportedException {
-        return null;  //To change body of implemented methods use File | Settings | File Templates.
+        throw new SQLFeatureNotSupportedException();
     }
 
     public <T> T unwrap(Class<T> tClass) throws SQLException {
-        return null;  //To change body of implemented methods use File | Settings | File Templates.
+        throw new SQLFeatureNotSupportedException();
     }
 
     public boolean isWrapperFor(Class<?> aClass) throws SQLException {
-        return false;  //To change body of implemented methods use File | Settings | File Templates.
+        return false;
     }
 }
