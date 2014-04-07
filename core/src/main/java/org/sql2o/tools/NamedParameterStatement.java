@@ -71,7 +71,7 @@ public class NamedParameterStatement {
      * @param paramMap map to hold parameter-index mappings
      * @return the parsed query
      */
-    private static final String parse(String query, Map paramMap) {
+    private static String parse(String query, Map paramMap) {
         // I was originally using regular expressions, but they didn't work well for ignoring
         // parameter-like strings inside quotes.
         int length=query.length();
@@ -180,7 +180,7 @@ public class NamedParameterStatement {
      * @throws IllegalArgumentException if the parameter does not exist
      * @see PreparedStatement#setBinaryStream(int, java.io.InputStream inputStream)
      */
-    public void setInputStream( String name, InputStream value ) throws SQLException {
+    public void setInputStream(String name, InputStream value) throws SQLException {
         int[] indexes=getIndexes(name);
         for (int i = 0; i < indexes.length; i++){
             statement.setBinaryStream( indexes[i], value );

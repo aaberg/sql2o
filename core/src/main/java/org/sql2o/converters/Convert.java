@@ -2,6 +2,8 @@ package org.sql2o.converters;
 
 import org.joda.time.DateTime;
 import org.joda.time.LocalTime;
+import org.sql2o.converters.joda.DateTimeConverter;
+import org.sql2o.converters.joda.LocalTimeConverter;
 import org.sql2o.tools.FeatureDetector;
 
 import java.io.ByteArrayInputStream;
@@ -63,7 +65,7 @@ public class Convert {
         registerConverter(UUID.class, new UUIDConverter());
 
         if (FeatureDetector.isJodaTimeAvailable()) {
-            registerConverter(DateTime.class, new JodaTimeConverter());
+            registerConverter(DateTime.class, new DateTimeConverter());
             registerConverter(LocalTime.class, new LocalTimeConverter());
         }
     }

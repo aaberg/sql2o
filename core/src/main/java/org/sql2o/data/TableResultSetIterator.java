@@ -1,8 +1,8 @@
 package org.sql2o.data;
 
-import org.sql2o.QuirksMode;
 import org.sql2o.ResultSetIteratorBase;
 import org.sql2o.Sql2oException;
+import org.sql2o.quirks.Quirks;
 
 import java.sql.ResultSet;
 import java.sql.SQLException;
@@ -18,8 +18,8 @@ public class TableResultSetIterator extends ResultSetIteratorBase<Row> {
     private Map<String, Integer> columnNameToIdxMap;
     private List<Column> columns;
 
-    public TableResultSetIterator(ResultSet rs, boolean isCaseSensitive, QuirksMode quirksMode, LazyTable lt) {
-        super(rs, isCaseSensitive, quirksMode);
+    public TableResultSetIterator(ResultSet rs, boolean isCaseSensitive, Quirks quirks, LazyTable lt) {
+        super(rs, isCaseSensitive, quirks);
 
         this.columnNameToIdxMap = new HashMap<String, Integer>();
         this.columns = new ArrayList<Column>();

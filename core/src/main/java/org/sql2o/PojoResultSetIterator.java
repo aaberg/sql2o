@@ -3,6 +3,7 @@ package org.sql2o;
 import org.sql2o.converters.Convert;
 import org.sql2o.converters.Converter;
 import org.sql2o.converters.ConverterException;
+import org.sql2o.quirks.Quirks;
 import org.sql2o.reflection.Pojo;
 import org.sql2o.reflection.PojoMetadata;
 import org.sql2o.reflection.Setter;
@@ -21,7 +22,14 @@ import java.sql.SQLException;
 public class PojoResultSetIterator<T> extends ResultSetIteratorBase<T> {
     private ResultSetHandler<T> handler;
 
-
+    public PojoResultSetIterator(ResultSet rs, boolean isCaseSensitive, Quirks quirks, PojoMetadata metadata) {
+        super(rs, isCaseSensitive, quirks);
+        try {
+            this.handler = newResultSetHandler(rs.getMetaData(), isCaseSensitive, metadata);
+        } catch (SQLException e) {
+            throw new RuntimeException(e);
+        }
+    }
 
     private static Setter getSetter(
             final String propertyPath,
@@ -65,7 +73,7 @@ public class PojoResultSetIterator<T> extends ResultSetIteratorBase<T> {
         };
     }
 
-    private <T> ResultSetHandler<T> newResultSetHandler(final ResultSetMetaData meta, boolean isCaseSensitive, QuirksMode quirksMode, final PojoMetadata metadata){
+    private <T> ResultSetHandler<T> newResultSetHandler(final ResultSetMetaData meta, boolean isCaseSensitive, final PojoMetadata metadata){
         final Setter[] setters;
         final Converter converter;
         final boolean useExecuteScalar;
@@ -113,11 +121,6 @@ public class PojoResultSetIterator<T> extends ResultSetIteratorBase<T> {
             }
         };
 
-    }
-
-    public PojoResultSetIterator(ResultSet rs, boolean isCaseSensitive, QuirksMode quirksMode, PojoMetadata metadata) {
-        super(rs, isCaseSensitive, quirksMode);
-        this.handler = newResultSetHandler(meta,isCaseSensitive, quirksMode, metadata);
     }
 
     @Override

@@ -9,7 +9,7 @@ import java.io.ByteArrayInputStream;
  * Time: 11:40 PM
  * To change this template use File | Settings | File Templates.
  */
-public class InputStreamConverter implements Converter<ByteArrayInputStream> {
+public class InputStreamConverter extends ConverterBase<ByteArrayInputStream> {
     public ByteArrayInputStream convert(Object val) throws ConverterException {
         if (val == null) return null;
 

@@ -1,14 +1,15 @@
 package org.sql2o;
 
-import org.joda.time.DateTime;
 import org.sql2o.converters.Convert;
 import org.sql2o.converters.Converter;
 import org.sql2o.converters.ConverterException;
-import org.sql2o.data.*;
+import org.sql2o.data.LazyTable;
+import org.sql2o.data.Row;
+import org.sql2o.data.Table;
+import org.sql2o.data.TableResultSetIterator;
 import org.sql2o.logging.LocalLoggerFactory;
 import org.sql2o.logging.Logger;
 import org.sql2o.reflection.PojoMetadata;
-import org.sql2o.tools.FeatureDetector;
 import org.sql2o.tools.NamedParameterStatement;
 import org.sql2o.tools.ResultSetUtils;
 
@@ -16,7 +17,6 @@ import java.io.InputStream;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.sql.*;
-import java.sql.Date;
 import java.util.*;
 
 /**
@@ -25,6 +25,15 @@ import java.util.*;
 public class Query {
 
     private final Logger logger = LocalLoggerFactory.getLogger(Query.class);
+
+    private Connection connection;
+    private Map<String, String> caseSensitiveColumnMappings;
+    private Map<String, String> columnMappings;
+    private NamedParameterStatement statement;
+    private boolean caseSensitive;
+    private boolean autoDeriveColumnNames;
+    private String name;
+    private boolean returnGeneratedKeys;
 
     public Query(Connection connection, String queryText, String name, boolean returnGeneratedKeys) {
         this.connection = connection;
@@ -42,215 +51,9 @@ public class Query {
         this.caseSensitive = connection.getSql2o().isDefaultCaseSensitive();
     }
 
-    private Connection connection;
-
-    private Map<String, String> caseSensitiveColumnMappings;
-    private Map<String, String> columnMappings;
-
-    private NamedParameterStatement statement;
-
-    private boolean caseSensitive;
-    private boolean autoDeriveColumnNames;
-
-    private final String name;
-    private boolean returnGeneratedKeys;
-
     // ------------------------------------------------
-    // ------------- Add Parameters -------------------
+    // ------------- Getter/Setters -------------------
     // ------------------------------------------------
-
-    public Query addParameter(String name, Object value){
-
-        if (tryAddJodaDateTimeParameter(name, value)) {
-            return this;
-        }
-
-        try{
-            statement.setObject(name, value);
-        }
-        catch(SQLException ex){
-            throw new RuntimeException(ex);
-        }
-        return this;
-    }
-
-    public Query addParameter(String name, InputStream value){
-        try{
-            statement.setInputStream(name, value);
-        }
-        catch(SQLException ex){
-            throw new RuntimeException(ex);
-        }
-        return this;
-    }
-
-    public Query addParameter(String name, int value){
-        try{
-            statement.setInt(name, value);
-        }
-        catch (SQLException ex){
-            throw new Sql2oException(ex);
-        }
-        return this;
-    }
-
-    public Query addParameter(String name, Integer value){
-        try{
-            if (value == null){
-                statement.setNull(name, Types.INTEGER);
-            }else{
-                statement.setInt(name, value);
-            }
-        }
-        catch(SQLException ex){
-            throw new RuntimeException(ex);
-        }
-        return this;
-    }
-
-    public Query addParameter(String name, long value){
-        try{
-            statement.setLong(name, value);
-        }
-        catch(SQLException ex){
-            throw new RuntimeException(ex);
-        }
-        return this;
-    }
-
-    public Query addParameter(String name, Long value){
-        try{
-            if (value == null){
-                statement.setNull(name, Types.INTEGER);
-            } else {
-                statement.setLong(name, value);
-            }
-        }
-        catch (SQLException ex){
-            throw new Sql2oException(ex);
-        }
-        return this;
-    }
-
-    public Query addParameter(String name, String value){
-        try{
-            if (value == null){
-                statement.setNull(name, Types.VARCHAR);
-            }else{
-                statement.setString(name, value);
-            }
-        }
-        catch(Exception ex){
-            throw new RuntimeException(ex);
-        }
-        return this;
-    }
-
-    public Query addParameter(String name, Timestamp value){
-        try{
-            if (value == null){
-                statement.setNull(name, Types.TIMESTAMP);
-            } else {
-                statement.setTimestamp(name, value);
-            }
-        }
-        catch(Exception ex){
-            throw new RuntimeException(ex);
-        }
-        return this;
-    }
-
-    public Query addParameter(String name, Date value){
-        if (value != null && this.connection.getSql2o().quirksMode == QuirksMode.DB2){
-            // With the DB2 driver you can get an error if trying to put a date value into a timestamp column,
-            // but of some reason it works if using setObject().
-            return addParameter(name, (Object)value);
-        }
-
-        // by default add a timestamp, because it works with DATE, DATETIME, TIMESTAMP columns
-        Timestamp timestamp = value == null ? null : new Timestamp(value.getTime());
-        return addParameter(name, timestamp);
-    }
-
-    public Query addParameter(String name, java.util.Date value){
-        Date sqlDate = value == null ? null : new Date(value.getTime());
-        return addParameter(name, sqlDate);
-
-    }
-
-    public Query addParameter(String name, Time value){
-        try {
-            if (value == null){
-                statement.setNull(name, Types.TIME);
-            } else {
-                statement.setTime(name,value);
-            }
-        } catch (SQLException e) {
-            throw new RuntimeException(e);
-        }
-        return this;
-    }
-
-    public Query addParameter(String name, Enum value) {
-        String strVal = value == null ? null : value.toString();
-        return addParameter(name, strVal);
-    }
-
-    /**
-     * @return {@code true} if {@code value} is type DateTime and parameter added.
-     */
-    private boolean tryAddJodaDateTimeParameter(String name, Object value) {
-
-        if (FeatureDetector.isJodaTimeAvailable() && value != null) {
-            if (DateTime.class.isAssignableFrom(value.getClass())) {
-                Timestamp timestamp = new Timestamp(((DateTime)value).toDate().getTime());
-                addParameter(name, timestamp);
-                return true;
-            }
-        }
-
-        return false;
-    }
-
-    public Query bind(Object bean){
-        Class clazz = bean.getClass();
-        Method[] methods = clazz.getDeclaredMethods();
-        for(Method method : methods){
-            try{
-                method.setAccessible(true);
-                String methodName = method.getName();
-                /*
-                It looks in the class for all the methods that start with get
-                */
-                if(methodName.startsWith("get") && method.getParameterTypes().length == 0){
-                    String param = methodName.substring(3);//remove the get prefix
-                    param = param.substring(0, 1).toLowerCase() + param.substring(1);//set the first letter in Lowercase => so getItem produces item
-                    Object res = method.invoke(bean);
-                    if( res!= null){
-                        try {
-                            Method addParam = this.getClass().getDeclaredMethod("addParameter", param.getClass(), method.getReturnType());
-                            addParam.invoke(this, param, res);
-                        } catch (NoSuchMethodException ex) {
-                            logger.debug("Using addParameter(String, Object)", ex);
-                            addParameter(param, res);
-                        }
-                    }
-                    else {
-                        addParameter(param, res);
-                    }
-                }
-            }catch(IllegalArgumentException ex){
-                logger.debug("Ignoring Illegal Arguments", ex);
-            }catch(IllegalAccessException ex){
-                throw new RuntimeException(ex);
-            } catch (SecurityException ex) {
-                throw new RuntimeException(ex);
-            } catch (InvocationTargetException ex) {
-                throw new RuntimeException(ex);
-            }
-        }
-        return this;
-    }
 
     public boolean isCaseSensitive() {
         return caseSensitive;
@@ -277,6 +80,172 @@ public class Query {
     public String getName() {
         return name;
     }
+
+    // ------------------------------------------------
+    // ------------- Add Parameters -------------------
+    // ------------------------------------------------
+
+    public Query addParameter(String name, Object value) {
+        value = convertParameter(value);
+
+        try {
+            statement.setObject(name, value);
+        }
+        catch(SQLException ex) {
+            throw new RuntimeException(ex);
+        }
+        return this;
+    }
+
+    private Object convertParameter(Object value) {
+        if (value == null) {
+            return null;
+        }
+        Converter converter = Convert.getConverterIfExists(value.getClass());
+        if (converter == null) {
+            return null;
+        }
+        //noinspection unchecked
+        return converter.toDatabaseParam(value);
+    }
+
+    public Query addParameter(String name, InputStream value){
+        try{
+            statement.setInputStream(name, value);
+        }
+        catch(SQLException ex){
+            throw new RuntimeException(ex);
+        }
+        return this;
+    }
+
+    public Query addParameter(String name, int value){
+        try {
+            statement.setInt(name, value);
+        }
+        catch(SQLException ex) {
+            throw new RuntimeException(ex);
+        }
+        return this;
+    }
+
+    public Query addParameter(String name, Integer value) {
+        try {
+            if (value == null) {
+                statement.setNull(name, Types.INTEGER);
+            }
+            else {
+                statement.setInt(name, value);
+            }
+        }
+        catch(SQLException ex){
+            throw new RuntimeException(ex);
+        }
+        return this;
+    }
+
+    public Query addParameter(String name, long value){
+        try {
+            statement.setLong(name, value);
+        }
+        catch(SQLException ex) {
+            throw new RuntimeException(ex);
+        }
+        return this;
+    }
+
+    public Query addParameter(String name, Long value){
+        try {
+            if (value == null) {
+                statement.setNull(name, Types.BIGINT);
+            }
+            else {
+                statement.setLong(name, value);
+            }
+        }
+        catch (SQLException ex){
+            throw new Sql2oException(ex);
+        }
+        return this;
+    }
+
+    public Query addParameter(String name, String value) {
+        try {
+            if (value == null) {
+                statement.setNull(name, Types.VARCHAR);
+            }
+            else {
+                statement.setString(name, value);
+            }
+        }
+        catch (SQLException ex) {
+            throw new RuntimeException(ex);
+        }
+        return this;
+    }
+
+    public Query addParameter(String name, Timestamp value){
+        try {
+            if (value == null) {
+                statement.setNull(name, Types.TIMESTAMP);
+            }
+            else {
+                statement.setTimestamp(name, value);
+            }
+        }
+        catch(SQLException ex) {
+            throw new RuntimeException(ex);
+        }
+        return this;
+    }
+
+    public Query addParameter(String name, Time value) {
+        try {
+            if (value == null){
+                statement.setNull(name, Types.TIME);
+            }
+            else {
+                statement.setTime(name,value);
+            }
+        }
+        catch (SQLException e) {
+            throw new RuntimeException(e);
+        }
+        return this;
+    }
+
+    public Query bind(Object bean) {
+        Class clazz = bean.getClass();
+        Method[] methods = clazz.getDeclaredMethods();
+        for(Method method : methods) {
+            try {
+                method.setAccessible(true);
+                String methodName = method.getName();
+
+                // look in the class for all the methods that start with get
+                if(methodName.startsWith("get") && method.getParameterTypes().length == 0){
+                    String param = methodName.substring(3);//remove the get prefix
+                    param = param.substring(0, 1).toLowerCase() + param.substring(1);//set the first letter in Lowercase => so getItem produces item
+                    Object res = method.invoke(bean);
+                    this.addParameter(param, res);
+                }
+            }
+            catch(IllegalArgumentException ex) {
+                logger.debug("Ignoring Illegal Arguments", ex);
+            }
+            catch(IllegalAccessException ex) {
+                throw new RuntimeException(ex);
+            }
+            catch (InvocationTargetException ex) {
+                throw new RuntimeException(ex);
+            }
+        }
+        return this;
+    }
+
+    // ------------------------------------------------
+    // -------------------- Execute -------------------
+    // ------------------------------------------------
 
     /**
      * Iterable {@link java.sql.ResultSet} that wraps {@link PojoResultSetIterator}.
@@ -336,7 +305,7 @@ public class Query {
             private PojoMetadata pojoMetadata = new PojoMetadata(returnType, isCaseSensitive(), isAutoDeriveColumnNames(), getColumnMappings());
 
             public Iterator<T> iterator() {
-                return new PojoResultSetIterator<T>(rs, isCaseSensitive(), getConnection().getSql2o().quirksMode, pojoMetadata);
+                return new PojoResultSetIterator<T>(rs, isCaseSensitive(), getConnection().getSql2o().getQuirks(), pojoMetadata);
             }
         };
     }
@@ -381,7 +350,7 @@ public class Query {
 
         lt.setRows(new ResultSetIterableBase<Row>() {
             public Iterator<Row> iterator() {
-                return new TableResultSetIterator(rs, isCaseSensitive(), getConnection().getSql2o().quirksMode, lt);
+                return new TableResultSetIterator(rs, isCaseSensitive(), getConnection().getSql2o().getQuirks(), lt);
             }
         });
 
@@ -399,11 +368,14 @@ public class Query {
             for (Row item : lt.rows()) {
                 rows.add(item);
             }
-        } finally {
-            lt.close();
+        }
+        finally {
+            if (lt != null) {
+                lt.close();
+            }
         }
 
-        return new Table(lt.getName(), rows, lt.columns());
+        return lt == null ? null : new Table(lt.getName(), rows, lt.columns());
     }
 
     public Connection executeUpdate(){
@@ -461,10 +433,11 @@ public class Query {
 
     public <V> V executeScalar(Class<V> returnType){
         Object value = executeScalar();
-        Converter converter;
+        Converter<V> converter;
         try {
+            //noinspection unchecked
             converter = Convert.getConverter(returnType);
-            return (V)converter.convert(value);
+            return converter.convert(value);
         } catch (ConverterException e) {
             throw new Sql2oException("Error occured while converting value from database to type " + returnType.toString(), e);
         }
@@ -475,11 +448,12 @@ public class Query {
         long start = System.currentTimeMillis();
         List<T> list = new ArrayList<T>();
         try{
-            Converter converter = Convert.getConverter(returnType);
+            //noinspection unchecked
+            Converter<T> converter = Convert.getConverter(returnType);
             ResultSet rs = this.statement.executeQuery();
             while(rs.next()){
                 Object value = ResultSetUtils.getRSVal(rs, 1);
-                list.add((T)converter.convert(value));
+                list.add(converter.convert(value));
             }
 
             long end = System.currentTimeMillis();
@@ -570,6 +544,7 @@ public class Query {
     }
 
     /************** private stuff ***************/
+
     private void closeConnectionIfNecessary(){
         try{
             if (connection.autoClose && !connection.getJdbcConnection().isClosed() && statement != null){
