@@ -16,7 +16,7 @@ import java.sql.SQLException;
 
 import static org.sql2o.ResultSetIteratorBase.getColumnName;
 
-public class DefaultResultSetHandlerFactory implements ResultSetHandlerFactory {
+public class DefaultResultSetHandlerFactory<T> implements ResultSetHandlerFactory<T> {
     private final PojoMetadata metadata;
     private final QuirksMode quirksMode;
 
@@ -67,23 +67,25 @@ public class DefaultResultSetHandlerFactory implements ResultSetHandlerFactory {
         };
     }
 
-    private class Key {
+    private static class Key {
         final String stringKey;
+        final DefaultResultSetHandlerFactory f;
 
         DefaultResultSetHandlerFactory factory(){
-            return DefaultResultSetHandlerFactory.this;
+            return f;
         }
 
         private PojoMetadata getMetadata() {
-            return metadata;
+            return f.metadata;
         }
 
         private QuirksMode getQuirksMode() {
-            return quirksMode;
+            return f.quirksMode;
         }
 
-        private Key(String stringKey) {
+        private Key(String stringKey, DefaultResultSetHandlerFactory f) {
             this.stringKey = stringKey;
+            this.f = f;
         }
 
         @Override
@@ -93,8 +95,8 @@ public class DefaultResultSetHandlerFactory implements ResultSetHandlerFactory {
 
             Key key = (Key) o;
 
-            if (!metadata.equals(key.getMetadata())) return false;
-            if (quirksMode != key.getQuirksMode()) return false;
+            if (!f.metadata.equals(key.getMetadata())) return false;
+            if (f.quirksMode != key.getQuirksMode()) return false;
             if (!stringKey.equals(key.stringKey)) return false;
 
             return true;
@@ -102,8 +104,8 @@ public class DefaultResultSetHandlerFactory implements ResultSetHandlerFactory {
 
         @Override
         public int hashCode() {
-            int result = metadata.hashCode();
-            result = 31 * result + quirksMode.hashCode();
+            int result = f.metadata.hashCode();
+            result = 31 * result + f.quirksMode.hashCode();
             result = 31 * result + stringKey.hashCode();
             return result;
         }
@@ -123,14 +125,13 @@ public class DefaultResultSetHandlerFactory implements ResultSetHandlerFactory {
     };
 
     @SuppressWarnings("unchecked")
-    public <T> ResultSetHandler<T> newResultSetHandler(Class<T> type, final ResultSetMetaData meta) throws SQLException {
-        if (!type.isAssignableFrom(metadata.getType())) throw new IllegalArgumentException();
+    public ResultSetHandler<T> newResultSetHandler(final ResultSetMetaData meta) throws SQLException {
         if(FeatureDetector.isCachePojoMetaDataEnabled()){
             StringBuilder stringBuilder = new StringBuilder();
             for (int i = 1; i <= meta.getColumnCount(); i++) {
                 stringBuilder.append(getColumnName(i, quirksMode, meta)).append("\n");
             }
-            return c.get(new Key(stringBuilder.toString()),meta);
+            return c.get(new Key(stringBuilder.toString(), this),meta);
         } else {
             return newResultSetHandler0(meta);
         }

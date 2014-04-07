@@ -26,6 +26,10 @@ public class PojoMetadata {
         return caseSensitive;
     }
 
+    public boolean isAutoDeriveColumnNames() {
+        return autoDeriveColumnNames;
+    }
+
     private boolean caseSensitive;
     private boolean autoDeriveColumnNames;
     private Class clazz;
@@ -51,10 +55,6 @@ public class PojoMetadata {
         int result = (caseSensitive ? 1 : 0);
         result = 31 * result + clazz.hashCode();
         return result;
-    }
-
-    public PojoMetadata(Class clazz, boolean caseSensitive, Map<String, String> columnMappings) {
-        this(clazz, caseSensitive, false, columnMappings);
     }
 
     public PojoMetadata(Class clazz, boolean caseSensitive, boolean autoDeriveColumnNames, Map<String, String> columnMappings) {

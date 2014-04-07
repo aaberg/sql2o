@@ -55,6 +55,8 @@ public class Query {
     private final String name;
     private boolean returnGeneratedKeys;
 
+    private ResultSetHandlerFactoryBuilder resultSetHandlerFactoryBuilder;
+
     // ------------------------------------------------
     // ------------- Add Parameters -------------------
     // ------------------------------------------------
@@ -252,6 +254,14 @@ public class Query {
         return this;
     }
 
+    public ResultSetHandlerFactoryBuilder getResultSetHandlerFactoryBuilder() {
+        return resultSetHandlerFactoryBuilder;
+    }
+
+    public void setResultSetHandlerFactoryBuilder(ResultSetHandlerFactoryBuilder resultSetHandlerFactoryBuilder) {
+        this.resultSetHandlerFactoryBuilder = resultSetHandlerFactoryBuilder;
+    }
+
     public boolean isCaseSensitive() {
         return caseSensitive;
     }
@@ -332,11 +342,17 @@ public class Query {
      * @return iterable results
      */
     public <T> ResultSetIterable<T> executeAndFetchLazy(final Class<T> returnType) {
+        final QuirksMode quirksMode = getConnection().getSql2o().quirksMode;
+        ResultSetHandlerFactoryBuilder builder = getResultSetHandlerFactoryBuilder();
+        if(builder==null) builder=new DefaultResultSetHandlerFactoryBuilder();
+        builder.setAutoDeriveColumnNames(autoDeriveColumnNames);
+        builder.setCaseSensitive(caseSensitive);
+        builder.setColumnMappings(columnMappings);
+        builder.setQuirksMode(quirksMode);
+        final ResultSetHandlerFactory<T> resultSetHandlerFactory = builder.newFactory(returnType);
         return new ResultSetIterableBase<T>() {
-            private PojoMetadata pojoMetadata = new PojoMetadata(returnType, isCaseSensitive(), isAutoDeriveColumnNames(), getColumnMappings());
-
             public Iterator<T> iterator() {
-                return new PojoResultSetIterator<T>(rs, isCaseSensitive(), getConnection().getSql2o().quirksMode, pojoMetadata);
+                return new PojoResultSetIterator<T>(rs, isCaseSensitive(), quirksMode, resultSetHandlerFactory);
             }
         };
     }

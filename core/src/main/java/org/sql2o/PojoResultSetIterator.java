@@ -22,11 +22,10 @@ public class PojoResultSetIterator<T> extends ResultSetIteratorBase<T> {
     private ResultSetHandler<T> handler;
 
     @SuppressWarnings("unchecked")
-    public PojoResultSetIterator(ResultSet rs, boolean isCaseSensitive, QuirksMode quirksMode, PojoMetadata metadata) {
+    public PojoResultSetIterator(ResultSet rs, boolean isCaseSensitive, QuirksMode quirksMode, ResultSetHandlerFactory<T> factory) {
         super(rs, isCaseSensitive, quirksMode);
         try {
-            this.handler = new DefaultResultSetHandlerFactory(metadata, quirksMode)
-                    .<T>newResultSetHandler(metadata.getType(), meta);
+            this.handler = factory.newResultSetHandler(rs.getMetaData());
         } catch (SQLException e) {
             throw new Sql2oException("Database error: " + e.getMessage(), e);
         }
