@@ -1,29 +1,36 @@
 package org.sql2o.reflection;
 
 import org.sql2o.Sql2oException;
+import org.sql2o.tools.AbstractCache;
 import org.sql2o.tools.FeatureDetector;
 import org.sql2o.tools.UnderscoreToCamelCase;
 
 import java.lang.reflect.Field;
 import java.lang.reflect.Method;
 import java.util.HashMap;
+import java.util.Hashtable;
 import java.util.Map;
+import java.util.concurrent.locks.ReentrantReadWriteLock;
 
 /**
  * Stores metadata for a POJO.
  */
 public class PojoMetadata {
-    
-    private Map<String, Setter> propertySetters;
-    private Map<String, Field> fields;
+
+    private final PropertyAndFieldInfo propertyInfo;
+
+    private final Map<String,String> columnMappings;
+
+    private final static Hashtable<CacheKey, PropertyAndFieldInfo> cache = new Hashtable<CacheKey, PropertyAndFieldInfo>();
+    private final static ReentrantReadWriteLock cacheLock = new ReentrantReadWriteLock();
+
     private boolean caseSensitive;
     private boolean autoDeriveColumnNames;
     private Class clazz;
-    
-    private Map<String,String> columnMappings;
+    private final FactoryFacade factoryFacade = FactoryFacade.getInstance();
 
-    public Map<String, String> getColumnMappings() {
-        return columnMappings;
+    public ObjectConstructor getObjectConstructor() {
+        return this.propertyInfo.getObjectConstructor();
     }
 
     public PojoMetadata(Class clazz, boolean caseSensitive, Map<String,String> columnMappings) {
@@ -35,38 +42,53 @@ public class PojoMetadata {
         this.autoDeriveColumnNames = autoDeriveColumnNames;
         this.clazz = clazz;
         this.columnMappings = columnMappings == null ? new HashMap<String, String>() : columnMappings;
-        initialize();
-    }
 
-    private void initialize() {
         if (FeatureDetector.isCachePojoMetaDataEnabled()) {
-            if (cache == null) {
-                cache = new HashMap<CacheKey, PojoMetadata>();
-            }
-            CacheKey key = new CacheKey(clazz, caseSensitive);
-            if (!cache.containsKey(key)) {
-                reflectionInitialization();
-                cache.put(key, this);
-            }
-            PojoMetadata cached = cache.get(key);
-            propertySetters = cached.propertySetters;
-            fields = cached.fields;
-        }
-        else {
-            reflectionInitialization();
+            this.propertyInfo = getPropertyInfoThroughCache();
+        } else {
+            this.propertyInfo = initializePropertyInfo();
         }
     }
 
-    private void reflectionInitialization() {
-        propertySetters = new HashMap<String, Setter>();
-        fields = new HashMap<String, Field>();
+    private PropertyAndFieldInfo getPropertyInfoThroughCache() {
+        final CacheKey key = new CacheKey(clazz, caseSensitive);
+
+        PropertyAndFieldInfo pfi = null;
+
+        cacheLock.readLock().lock();
+        if (!cache.containsKey(key)) {
+            cacheLock.readLock().unlock();
+            cacheLock.writeLock().lock();
+            try {
+                if (!cache.containsKey(key)) {
+                    cache.put(key, initializePropertyInfo());
+                }
+                cacheLock.readLock().lock();
+
+            } finally {
+                cacheLock.writeLock().unlock();
+            }
+        }
+
+        try {
+            return cache.get(key);
+        } finally {
+            cacheLock.readLock().unlock();
+        }
+    }
+
+    private PropertyAndFieldInfo initializePropertyInfo() {
+
+        HashMap<String, Setter> propertySetters = new HashMap<String, Setter>();
+        HashMap<String, Field> fields = new HashMap<String, Field>();
 
         Class theClass = clazz;
+        ObjectConstructor objectConstructor = factoryFacade.newConstructor(theClass);
         do{
             for (Field f : theClass.getDeclaredFields()){
                 String propertyName = f.getName();
                 propertyName = caseSensitive ? propertyName : propertyName.toLowerCase();
-                propertySetters.put(propertyName, new FieldSetter(f));
+                propertySetters.put(propertyName, factoryFacade.newSetter(f));
                 fields.put(propertyName, f);
             }
 
@@ -81,11 +103,18 @@ public class PojoMetadata {
                         propertyName = propertyName.toLowerCase();
                     }
 
-                    propertySetters.put(propertyName, new MethodSetter(m));
+                    propertySetters.put(propertyName, factoryFacade.newSetter(m));
                 }
             }
             theClass = theClass.getSuperclass();
         }while(!theClass.equals(Object.class));
+
+        return new PropertyAndFieldInfo(propertySetters, fields, objectConstructor);
+
+    }
+
+    public Map<String, String> getColumnMappings() {
+        return columnMappings;
     }
 
     public Setter getPropertySetter(String propertyName){
@@ -117,8 +146,8 @@ public class PojoMetadata {
             if(!this.caseSensitive) name = name.toLowerCase();
         }
 
-        if (propertySetters.containsKey(name)){
-            return propertySetters.get(name);
+        if (propertyInfo.getPropertySetters().containsKey(name)){
+            return propertyInfo.getPropertySetters().get(name);
         }
 
         return null;
@@ -131,7 +160,7 @@ public class PojoMetadata {
     public Object getValueOfProperty(String propertyName, Object object){
         String name = this.caseSensitive ? propertyName : propertyName.toLowerCase();
         
-        Field field = this.fields.get(name);
+        Field field = this.propertyInfo.getFields().get(name);
         try {
             return field.get(object);
         } catch (IllegalAccessException e) {
@@ -140,8 +169,6 @@ public class PojoMetadata {
     }
 
     // CACHING
-
-    private static Map<CacheKey, PojoMetadata> cache;
 
     private class CacheKey {
         private Class clazz;
@@ -167,6 +194,31 @@ public class PojoMetadata {
             int result = clazz.hashCode();
             result = 31 * result + (caseSensitive ? 1 : 0);
             return result;
+        }
+    }
+
+
+    private class PropertyAndFieldInfo {
+        private final Map<String, Setter> propertySetters;
+        private final Map<String, Field> fields;
+        private final ObjectConstructor objectConstructor;
+
+        private PropertyAndFieldInfo(Map<String, Setter> propertySetters, Map<String, Field> fields, ObjectConstructor objectConstructor) {
+            this.propertySetters = propertySetters;
+            this.fields = fields;
+            this.objectConstructor = objectConstructor;
+        }
+
+        public Map<String, Setter> getPropertySetters() {
+            return propertySetters;
+        }
+
+        public Map<String, Field> getFields() {
+            return fields;
+        }
+
+        public ObjectConstructor getObjectConstructor() {
+            return objectConstructor;
         }
     }
 }

@@ -4,9 +4,7 @@ import org.sql2o.Sql2oException;
 import org.sql2o.converters.*;
 
 import java.math.BigDecimal;
-import java.util.Date;
-import java.util.HashMap;
-import java.util.Map;
+import java.util.*;
 
 /**
  * Represents a result set row.
@@ -148,5 +146,61 @@ public class Row {
         } catch (ConverterException e) {
             throw new Sql2oException("Could not convert column with name " + columnName+ " to " + String.class.getName());
         }
+    }
+
+    /**
+     * View row as a simple map.
+     */
+    public Map<String, Object> asMap()
+    {
+        return new Map<String, Object>() {
+            public int size() {
+                return values.size();
+            }
+
+            public boolean isEmpty() {
+                return values.isEmpty();
+            }
+
+            public boolean containsKey(Object key) {
+                return columnNameToIdxMap.containsKey(key);
+            }
+
+            public boolean containsValue(Object value) {
+                return values.containsValue(value);
+            }
+
+            public Object get(Object key) {
+                return values.get(columnNameToIdxMap.get(key));
+            }
+
+            public Object put(String key, Object value) {
+                throw new UnsupportedOperationException("Row map is immutable.");
+            }
+
+            public Object remove(Object key) {
+                throw new UnsupportedOperationException("Row map is immutable.");
+            }
+
+            public void putAll(Map<? extends String, ?> m) {
+                throw new UnsupportedOperationException("Row map is immutable.");
+            }
+
+            public void clear() {
+                throw new UnsupportedOperationException("Row map is immutable.");
+            }
+
+            public Set<String> keySet() {
+                return columnNameToIdxMap.keySet();
+            }
+
+            public Collection<Object> values() {
+                return values.values();
+            }
+
+            public Set<Entry<String, Object>> entrySet() {
+                throw new UnsupportedOperationException("Row map does not support entrySet.");
+            }
+        };
     }
 }
