@@ -92,6 +92,9 @@ public abstract class ResultSetIteratorBase<T> implements Iterator<T> {
     protected abstract T readNext() throws SQLException;
 
     protected String getColumnName(int colIdx) throws SQLException {
+        return getColumnName(colIdx, quirksMode, meta);
+    }
+    static String getColumnName(int colIdx, QuirksMode quirksMode, ResultSetMetaData meta) throws SQLException {
         if (quirksMode == QuirksMode.DB2){
             return meta.getColumnName(colIdx);
         }
