@@ -32,6 +32,7 @@ public class PojoResultSetIterator<T> extends ResultSetIteratorBase<T> {
     @Override
     protected T readNext() throws SQLException {
         return handler.handle(rs);
+
     }
 
 }
