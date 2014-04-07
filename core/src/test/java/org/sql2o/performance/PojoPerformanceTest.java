@@ -48,7 +48,7 @@ import java.util.logging.Logger;
  * TODO: must read 10-100 rows instead 1
  *
  */
-public class PojoPerformanceTests
+public class PojoPerformanceTest
 {
     private final static String DRIVER_CLASS = "org.h2.Driver";
     private final static String DB_URL = "jdbc:h2:mem:test;DB_CLOSE_DELAY=-1";

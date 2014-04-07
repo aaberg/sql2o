@@ -7,7 +7,7 @@ package org.sql2o.converters;
  * Time: 10:54 PM
  * To change this template use File | Settings | File Templates.
  */
-public class BooleanConverter implements Converter<Boolean> {
+public class BooleanConverter extends ConverterBase<Boolean> {
 
     public Boolean convert(Object val) throws ConverterException {
         if (val == null) return null;

@@ -1,6 +1,8 @@
-package org.sql2o.converters;
+package org.sql2o.converters.joda;
 
 import org.joda.time.LocalTime;
+import org.sql2o.converters.Converter;
+import org.sql2o.converters.ConverterException;
 
 import java.sql.Time;
 
@@ -8,6 +10,7 @@ import java.sql.Time;
  * Created by lars on 12/18/13.
  */
 public class LocalTimeConverter implements Converter<LocalTime> {
+
     public LocalTime convert(Object val) throws ConverterException {
         if (val == null) {
             return null;
@@ -18,5 +21,9 @@ public class LocalTimeConverter implements Converter<LocalTime> {
         }
 
         return new LocalTime(val);
+    }
+
+    public Object toDatabaseParam(LocalTime val) {
+        return new Time(val.toDateTimeToday().getMillis());
     }
 }

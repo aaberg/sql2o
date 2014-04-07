@@ -6,7 +6,7 @@ import java.sql.SQLException;
 /**
  * Used by sql2o to convert a value from the database into a {@link String}.
  */
-public class StringConverter implements Converter<String>{
+public class StringConverter extends ConverterBase<String> {
 
     public String convert(Object val) throws ConverterException {
         if (val == null){

@@ -13,7 +13,8 @@ import java.sql.SQLException;
  * Time: 11:36 PM
  * To change this template use File | Settings | File Templates.
  */
-public class ByteArrayConverter implements Converter<byte[]> {
+public class ByteArrayConverter extends ConverterBase<byte[]> {
+
     public byte[] convert(Object val) throws ConverterException {
         if (val == null) return null;
 

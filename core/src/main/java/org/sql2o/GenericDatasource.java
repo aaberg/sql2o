@@ -1,12 +1,11 @@
 package org.sql2o;
 
-import org.sql2o.logging.LocalLoggerFactory;
-import org.sql2o.logging.Logger;
-
 import javax.sql.DataSource;
 import java.io.PrintWriter;
-import java.sql.*;
 import java.sql.Connection;
+import java.sql.DriverManager;
+import java.sql.SQLException;
+import java.sql.SQLFeatureNotSupportedException;
 
 /**
  * Used internally by sql2o, if the {@link Sql2o#Sql2o(String, String, String)} constructor overload.
@@ -17,8 +16,6 @@ public class GenericDatasource implements DataSource {
     private final String user;
     private final String password;
 
-    private final Logger logger;
-
     public GenericDatasource(String url, String user, String password) {
 
         if (!url.startsWith("jdbc")){
@@ -28,8 +25,6 @@ public class GenericDatasource implements DataSource {
         this.url = url;
         this.user = user;
         this.password = password;
-
-        this.logger = LocalLoggerFactory.getLogger(GenericDatasource.class);
     }
 
     public String getUrl() {

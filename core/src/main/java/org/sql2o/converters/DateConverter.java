@@ -1,7 +1,6 @@
 package org.sql2o.converters;
 
-import org.sql2o.Sql2oException;
-
+import java.sql.Timestamp;
 import java.util.Date;
 
 /**
@@ -19,5 +18,9 @@ public class DateConverter implements Converter<Date> {
         }
         
         throw new ConverterException("Cannot convert type " + val.getClass().toString() + " to java.util.Date");
+    }
+
+    public Object toDatabaseParam(Date val) {
+        return new Timestamp(val.getTime());
     }
 }

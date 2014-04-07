@@ -9,7 +9,6 @@ public class Column {
     private Integer index;
     private String type;
 
-
     public Column(String name, Integer index, String type) {
         this.name = name;
         this.index = index;

@@ -1,10 +1,5 @@
 package org.sql2o.converters;
 
-import org.sql2o.Sql2oException;
-
-import java.math.BigDecimal;
-import java.math.BigInteger;
-
 /**
  * Used by sql2o to convert a value from the database into an {@link Integer}.
  */
