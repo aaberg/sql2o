@@ -9,7 +9,7 @@ import org.sql2o.data.Table;
 import org.sql2o.data.TableResultSetIterator;
 import org.sql2o.logging.LocalLoggerFactory;
 import org.sql2o.logging.Logger;
-import org.sql2o.reflection.PojoMetadata;
+import org.sql2o.quirks.Quirks;
 import org.sql2o.tools.NamedParameterStatement;
 import org.sql2o.tools.ResultSetUtils;
 
@@ -22,6 +22,7 @@ import java.util.*;
 /**
  * Represents a sql2o statement. With sql2o, all statements are instances of the Query class.
  */
+@SuppressWarnings("UnusedDeclaration")
 public class Query {
 
     private final Logger logger = LocalLoggerFactory.getLogger(Query.class);
@@ -80,6 +81,8 @@ public class Query {
     public String getName() {
         return name;
     }
+
+    private ResultSetHandlerFactoryBuilder resultSetHandlerFactoryBuilder;
 
     // ------------------------------------------------
     // ------------- Add Parameters -------------------
@@ -243,6 +246,14 @@ public class Query {
         return this;
     }
 
+    public ResultSetHandlerFactoryBuilder getResultSetHandlerFactoryBuilder() {
+        return resultSetHandlerFactoryBuilder;
+    }
+
+    public void setResultSetHandlerFactoryBuilder(ResultSetHandlerFactoryBuilder resultSetHandlerFactoryBuilder) {
+        this.resultSetHandlerFactoryBuilder = resultSetHandlerFactoryBuilder;
+    }
+
     // ------------------------------------------------
     // -------------------- Execute -------------------
     // ------------------------------------------------
@@ -301,11 +312,17 @@ public class Query {
      * @return iterable results
      */
     public <T> ResultSetIterable<T> executeAndFetchLazy(final Class<T> returnType) {
+        final Quirks quirks = getConnection().getSql2o().getQuirks();
+        ResultSetHandlerFactoryBuilder builder = getResultSetHandlerFactoryBuilder();
+        if(builder==null) builder=new DefaultResultSetHandlerFactoryBuilder();
+        builder.setAutoDeriveColumnNames(autoDeriveColumnNames);
+        builder.setCaseSensitive(caseSensitive);
+        builder.setColumnMappings(columnMappings);
+        builder.setQuirks(quirks);
+        final ResultSetHandlerFactory<T> resultSetHandlerFactory = builder.newFactory(returnType);
         return new ResultSetIterableBase<T>() {
-            private PojoMetadata pojoMetadata = new PojoMetadata(returnType, isCaseSensitive(), isAutoDeriveColumnNames(), getColumnMappings());
-
             public Iterator<T> iterator() {
-                return new PojoResultSetIterator<T>(rs, isCaseSensitive(), getConnection().getSql2o().getQuirks(), pojoMetadata);
+                return new PojoResultSetIterator<T>(rs, isCaseSensitive(), quirks, resultSetHandlerFactory);
             }
         };
     }
