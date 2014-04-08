@@ -11,7 +11,6 @@ public final class FeatureDetector {
     {}
 
     static {
-        cachePojoMetaDataEnabled(true); // enabled by default
         setCacheUnderscoreToCamelcaseEnabled(true); // enabled by default
     }
 
@@ -49,20 +48,6 @@ public final class FeatureDetector {
             oracleAvailable = ClassUtils.isPresent("oracle.sql.TIMESTAMP");
         }
         return oracleAvailable;
-    }
-
-    /**
-     * @return {@code true} if class metadata caching is enabled, {@code false} otherwise.
-     */
-    public static boolean isCachePojoMetaDataEnabled() {
-        return cachePojoMetaDataEnabled;
-    }
-
-    /**
-     * Turn class metadata caching on or off.
-     */
-    public static void cachePojoMetaDataEnabled(boolean b) {
-        cachePojoMetaDataEnabled = b;
     }
 
     /**

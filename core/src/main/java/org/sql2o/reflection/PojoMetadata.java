@@ -63,11 +63,8 @@ public class PojoMetadata {
         this.clazz = clazz;
         this.columnMappings = columnMappings == null ? Collections.<String,String>emptyMap() : columnMappings;
 
-        if (FeatureDetector.isCachePojoMetaDataEnabled()) {
-            this.propertyInfo = getPropertyInfoThroughCache();
-        } else {
-            this.propertyInfo = initializePropertyInfo();
-        }
+        this.propertyInfo = getPropertyInfoThroughCache();
+
     }
 
     public ObjectConstructor getObjectConstructor() {

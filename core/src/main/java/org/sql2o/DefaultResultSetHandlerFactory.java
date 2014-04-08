@@ -126,15 +126,12 @@ public class DefaultResultSetHandlerFactory<T> implements ResultSetHandlerFactor
 
     @SuppressWarnings("unchecked")
     public ResultSetHandler<T> newResultSetHandler(final ResultSetMetaData meta) throws SQLException {
-        if(FeatureDetector.isCachePojoMetaDataEnabled()){
-            StringBuilder stringBuilder = new StringBuilder();
-            for (int i = 1; i <= meta.getColumnCount(); i++) {
-                stringBuilder.append(quirks.getColumnName(meta,i)).append("\n");
-            }
-            return c.get(new Key(stringBuilder.toString(), this),meta);
-        } else {
-            return newResultSetHandler0(meta);
+        StringBuilder stringBuilder = new StringBuilder();
+        for (int i = 1; i <= meta.getColumnCount(); i++) {
+            stringBuilder.append(quirks.getColumnName(meta,i)).append("\n");
         }
+        return c.get(new Key(stringBuilder.toString(), this),meta);
+
     }
 
 
