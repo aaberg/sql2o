@@ -3,6 +3,8 @@ package org.sql2o.issues;
 import org.junit.Test;
 import org.sql2o.Connection;
 import org.sql2o.Sql2o;
+import org.sql2o.converters.Convert;
+import org.sql2o.converters.UUIDConverter;
 import org.sql2o.data.Row;
 import org.sql2o.data.Table;
 import org.sql2o.quirks.PostgresQuirks;
@@ -146,6 +148,8 @@ public class PostgresTest {
     @Test
     public void testUUID() {
 
+        // make sure we use default UUID converter.
+        Convert.registerConverter(UUID.class, new UUIDConverter());
         Connection connection = null;
 
         try {
