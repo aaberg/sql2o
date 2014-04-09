@@ -878,23 +878,18 @@ public class Sql2oTest {
     }
 
     public static class BindablePojo{
-        private String data1;
+        String data1;
         private Timestamp data2;
         private Long data3;
         private Float data4;
-        public String getData1() {
-            return data1;
-        }
         public Timestamp getData2() {
             return data2;
         }
+
         public Long getData3() {
             return data3;
         }
         public Float getData4() { return data4; }
-        public void setData1(String data1) {
-            this.data1 = data1;
-        }
         public void setData2(Timestamp data2) {
             this.data2 = data2;
         }
@@ -922,11 +917,16 @@ public class Sql2oTest {
         String createSql = "create table bindtbl(id int identity primary key, data1 varchar(10), data2 timestamp, data3 bigint)";
         sql2o.createQuery(createSql).executeUpdate();
 
-        BindablePojo pojo1 = new BindablePojo();
-        pojo1.setData1("Foo");
-        pojo1.setData2(new Timestamp(new Date().getTime()));
-        pojo1.setData3(789456123L);
-        pojo1.setData4(4.5f);
+        // Anonymous class inherits POJO
+        BindablePojo pojo1 = new BindablePojo(){
+            {
+                // Field access
+                data1="Foo";
+                setData2(new Timestamp(new Date().getTime()));
+                setData3(789456123L);
+                setData4(4.5f);
+            }
+        };
 
         String insertSql = "insert into bindtbl(data1, data2, data3) values(:data1, :data2, :data3)";
         sql2o.createQuery(insertSql).bind(pojo1).executeUpdate();

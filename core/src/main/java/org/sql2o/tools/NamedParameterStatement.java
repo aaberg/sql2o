@@ -44,6 +44,10 @@ public class NamedParameterStatement {
     /** Maps parameter names to arrays of ints which are the parameter indices. */
     private final Map indexMap;
 
+    public final boolean containsParameter(String name){
+        return indexMap.containsKey(name);
+    }
+
 
     /**
      * Creates a NamedParameterStatement.  Wraps a call to

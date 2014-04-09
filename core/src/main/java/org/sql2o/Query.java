@@ -10,6 +10,7 @@ import org.sql2o.data.TableResultSetIterator;
 import org.sql2o.logging.LocalLoggerFactory;
 import org.sql2o.logging.Logger;
 import org.sql2o.quirks.Quirks;
+import org.sql2o.reflection.PojoIntrospector;
 import org.sql2o.tools.NamedParameterStatement;
 import org.sql2o.tools.ResultSetUtils;
 
@@ -217,21 +218,13 @@ public class Query {
         return this;
     }
 
-    public Query bind(Object bean) {
-        Class clazz = bean.getClass();
-        Method[] methods = clazz.getDeclaredMethods();
-        for(Method method : methods) {
+    public Query bind(Object pojo) {
+        Class clazz = pojo.getClass();
+        Map<String, PojoIntrospector.ReadableProperty> propertyMap = PojoIntrospector.readableProperties(clazz);
+        for (PojoIntrospector.ReadableProperty property : propertyMap.values()) {
             try {
-                method.setAccessible(true);
-                String methodName = method.getName();
-
-                // look in the class for all the methods that start with get
-                if(methodName.startsWith("get") && method.getParameterTypes().length == 0){
-                    String param = methodName.substring(3);//remove the get prefix
-                    param = param.substring(0, 1).toLowerCase() + param.substring(1);//set the first letter in Lowercase => so getItem produces item
-                    Object res = method.invoke(bean);
-                    this.addParameter(param, res);
-                }
+                if(statement.containsParameter(property.name))
+                    this.addParameter(property.name, property.get(pojo));
             }
             catch(IllegalArgumentException ex) {
                 logger.debug("Ignoring Illegal Arguments", ex);
