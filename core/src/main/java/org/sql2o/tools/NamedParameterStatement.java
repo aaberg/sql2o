@@ -37,6 +37,7 @@ address=:address";
 *
 * @author adam_crume
 */
+@SuppressWarnings({"unchecked", "UnnecessaryUnboxing", "ForLoopReplaceableByForEach", "UnusedDeclaration", "UnnecessaryBoxing"})
 public class NamedParameterStatement {
     /** The statement this object is wrapping. */
     private final PreparedStatement statement;
@@ -79,13 +80,15 @@ public class NamedParameterStatement {
         // I was originally using regular expressions, but they didn't work well for ignoring
         // parameter-like strings inside quotes.
         int length=query.length();
-        StringBuffer parsedQuery=new StringBuffer(length);
+        StringBuilder parsedQuery=new StringBuilder(length);
         boolean inSingleQuote=false;
         boolean inDoubleQuote=false;
         int index=1;
 
+        char c=' ';
         for(int i=0;i<length;i++) {
-            char c=query.charAt(i);
+            char previousChar=c;
+            c = query.charAt(i);
             if(inSingleQuote) {
                 if(c=='\'') {
                     inSingleQuote=false;
@@ -99,7 +102,7 @@ public class NamedParameterStatement {
                     inSingleQuote=true;
                 } else if(c=='"') {
                     inDoubleQuote=true;
-                } else if(c==':' && i+1<length &&
+                } else if(previousChar!=':' && c==':' && i+1<length &&
                         Character.isJavaIdentifierStart(query.charAt(i+1))) {
                     int j=i+2;
                     while(j<length && Character.isJavaIdentifierPart(query.charAt(j))) {
@@ -114,7 +117,7 @@ public class NamedParameterStatement {
                         indexList=new LinkedList();
                         paramMap.put(name, indexList);
                     }
-                    indexList.add(new Integer(index));
+                    indexList.add(Integer.valueOf(index));
 
                     index++;
                 }
