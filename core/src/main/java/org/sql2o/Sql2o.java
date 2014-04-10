@@ -3,6 +3,8 @@ package org.sql2o;
 import org.sql2o.converters.Convert;
 import org.sql2o.converters.Converter;
 import org.sql2o.quirks.*;
+import org.sql2o.tools.DefaultNamedParameterHandlerFactory;
+import org.sql2o.tools.NamedParameterHandlerFactory;
 
 import javax.naming.Context;
 import javax.naming.InitialContext;
@@ -32,6 +34,7 @@ public class Sql2o {
     private final DataSource dataSource;
     private Map<String, String> defaultColumnMappings;
     private boolean defaultCaseSensitive;
+    private NamedParameterHandlerFactory namedParameterHandlerFactory;
 
     public Sql2o(String jndiLookup) {
         this(_getJndiDatasource(jndiLookup));
@@ -146,6 +149,17 @@ public class Sql2o {
         for (Map.Entry<Class, Converter> entry : quirks.customConverters().entrySet()) {
             Convert.registerConverter(entry.getKey(), entry.getValue());
         }
+    }
+
+    public NamedParameterHandlerFactory getNamedParameterHandlerFactory() {
+        if (namedParameterHandlerFactory == null) {
+            namedParameterHandlerFactory = new DefaultNamedParameterHandlerFactory();
+        }
+        return namedParameterHandlerFactory;
+    }
+
+    public void setNamedParameterHandlerFactory(NamedParameterHandlerFactory namedParameterHandlerFactory) {
+        this.namedParameterHandlerFactory = namedParameterHandlerFactory;
     }
 
     /**

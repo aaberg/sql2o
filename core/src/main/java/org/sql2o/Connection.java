@@ -5,6 +5,7 @@ import org.sql2o.converters.Converter;
 import org.sql2o.converters.ConverterException;
 import org.sql2o.logging.LocalLoggerFactory;
 import org.sql2o.logging.Logger;
+import org.sql2o.tools.NamedParameterHandler;
 
 import java.sql.ResultSet;
 import java.sql.SQLException;
@@ -75,7 +76,7 @@ public class Connection implements AutoCloseable {
             throw new RuntimeException(e);
         }
 
-        return new Query(this, queryText, name, returnGeneratedKeys);
+        return new Query(this, this.getSql2o().getNamedParameterHandlerFactory(), queryText, name, returnGeneratedKeys);
     }
     
     public Query createQuery(String queryText){

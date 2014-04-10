@@ -11,12 +11,12 @@ import org.sql2o.logging.LocalLoggerFactory;
 import org.sql2o.logging.Logger;
 import org.sql2o.quirks.Quirks;
 import org.sql2o.reflection.PojoIntrospector;
-import org.sql2o.tools.NamedParameterStatement;
+import org.sql2o.tools.NamedParameterHandler;
+import org.sql2o.tools.NamedParameterHandlerFactory;
 import org.sql2o.tools.ResultSetUtils;
 
 import java.io.InputStream;
 import java.lang.reflect.InvocationTargetException;
-import java.lang.reflect.Method;
 import java.sql.*;
 import java.util.*;
 
@@ -31,26 +31,35 @@ public class Query {
     private Connection connection;
     private Map<String, String> caseSensitiveColumnMappings;
     private Map<String, String> columnMappings;
-    private NamedParameterStatement statement;
+    private final PreparedStatement statement;
     private boolean caseSensitive;
     private boolean autoDeriveColumnNames;
     private String name;
     private boolean returnGeneratedKeys;
 
-    public Query(Connection connection, String queryText, String name, boolean returnGeneratedKeys) {
+    private ResultSetHandlerFactoryBuilder resultSetHandlerFactoryBuilder;
+
+    private final NamedParameterHandler namedParameterHandler;
+    private final String parsedQuery;
+
+    public Query(Connection connection, NamedParameterHandlerFactory namedParameterHandlerFactory, String queryText, String name, boolean returnGeneratedKeys) {
         this.connection = connection;
         this.name = name;
         this.returnGeneratedKeys = returnGeneratedKeys;
-
-        try{
-            statement = new NamedParameterStatement(connection.getJdbcConnection(), queryText, returnGeneratedKeys);
-        }
-        catch(Exception ex){
-            throw new RuntimeException(ex);
-        }
-
         this.setColumnMappings(connection.getSql2o().getDefaultColumnMappings());
         this.caseSensitive = connection.getSql2o().isDefaultCaseSensitive();
+        this.namedParameterHandler = namedParameterHandlerFactory.newParameterHandler();
+
+        parsedQuery = getNamedParameterHandler().parseStatement(queryText);
+        try {
+            if (returnGeneratedKeys) {
+                statement = getConnection().getJdbcConnection().prepareStatement(parsedQuery, Statement.RETURN_GENERATED_KEYS);
+            } else {
+                statement = getConnection().getJdbcConnection().prepareStatement(parsedQuery);
+            }
+        } catch(SQLException ex) {
+            throw new RuntimeException(String.format("Error preparing statement - %s", ex.getMessage()), ex);
+        }
     }
 
     // ------------------------------------------------
@@ -83,21 +92,44 @@ public class Query {
         return name;
     }
 
-    private ResultSetHandlerFactoryBuilder resultSetHandlerFactoryBuilder;
+    public NamedParameterHandler getNamedParameterHandler() {
+        return namedParameterHandler;
+    }
+
+    public ResultSetHandlerFactoryBuilder getResultSetHandlerFactoryBuilder() {
+        if (resultSetHandlerFactoryBuilder == null) {
+            resultSetHandlerFactoryBuilder = new DefaultResultSetHandlerFactoryBuilder();
+        }
+        return resultSetHandlerFactoryBuilder;
+    }
+
+    public void setResultSetHandlerFactoryBuilder(ResultSetHandlerFactoryBuilder resultSetHandlerFactoryBuilder) {
+        this.resultSetHandlerFactoryBuilder = resultSetHandlerFactoryBuilder;
+    }
 
     // ------------------------------------------------
     // ------------- Add Parameters -------------------
     // ------------------------------------------------
 
-    public Query addParameter(String name, Object value) {
-        value = convertParameter(value);
+    private void addParameterInternal(String name, ParameterSetter parameterSetter) {
+        for (int paramIdx : this.getNamedParameterHandler().getParameterIndices(name)) {
+            try {
+                parameterSetter.setParameter(paramIdx);
+            } catch (SQLException e) {
+                throw new RuntimeException(String.format("Error adding parameter '%s' - %s", name, e.getMessage()), e);
+            }
+        }
+    }
 
-        try {
-            statement.setObject(name, value);
-        }
-        catch(SQLException ex) {
-            throw new RuntimeException(ex);
-        }
+    public Query addParameter(final String name, final Object value) {
+        final Object convertedValue = convertParameter(value);
+
+        addParameterInternal(name, new ParameterSetter() {
+            public void setParameter(int paramIdx) throws SQLException {
+                statement.setObject(paramIdx, convertedValue);
+            }
+        });
+
         return this;
     }
 
@@ -113,117 +145,112 @@ public class Query {
         return converter.toDatabaseParam(value);
     }
 
-    public Query addParameter(String name, InputStream value){
-        try{
-            statement.setInputStream(name, value);
-        }
-        catch(SQLException ex){
-            throw new RuntimeException(ex);
-        }
+    public Query addParameter(final String name, final InputStream value){
+        addParameterInternal(name, new ParameterSetter() {
+            public void setParameter(int paramIdx) throws SQLException {
+                statement.setBinaryStream(paramIdx, value);
+            }
+        });
+
         return this;
     }
 
-    public Query addParameter(String name, int value){
-        try {
-            statement.setInt(name, value);
-        }
-        catch(SQLException ex) {
-            throw new RuntimeException(ex);
-        }
+    public Query addParameter(String name, final int value){
+        addParameterInternal(name, new ParameterSetter() {
+            public void setParameter(int paramIdx) throws SQLException {
+                statement.setInt(paramIdx, value);
+            }
+        });
+
         return this;
     }
 
-    public Query addParameter(String name, Integer value) {
-        try {
-            if (value == null) {
-                statement.setNull(name, Types.INTEGER);
+    public Query addParameter(String name, final Integer value) {
+        addParameterInternal(name, new ParameterSetter() {
+            public void setParameter(int paramIdx) throws SQLException {
+                if (value == null) {
+                    statement.setNull(paramIdx, Types.INTEGER);
+                } else {
+                    statement.setInt(paramIdx, value);
+                }
             }
-            else {
-                statement.setInt(name, value);
-            }
-        }
-        catch(SQLException ex){
-            throw new RuntimeException(ex);
-        }
+        });
+
         return this;
     }
 
-    public Query addParameter(String name, long value){
-        try {
-            statement.setLong(name, value);
-        }
-        catch(SQLException ex) {
-            throw new RuntimeException(ex);
-        }
+    public Query addParameter(String name, final long value){
+        addParameterInternal(name, new ParameterSetter() {
+            public void setParameter(int paramIdx) throws SQLException {
+                statement.setLong(paramIdx, value);
+            }
+        });
+
         return this;
     }
 
-    public Query addParameter(String name, Long value){
-        try {
-            if (value == null) {
-                statement.setNull(name, Types.BIGINT);
+    public Query addParameter(String name, final Long value){
+        addParameterInternal(name, new ParameterSetter() {
+            public void setParameter(int paramIdx) throws SQLException {
+                if (value == null) {
+                    statement.setNull(paramIdx, Types.BIGINT);
+                } else {
+                    statement.setLong(paramIdx, value);
+                }
             }
-            else {
-                statement.setLong(name, value);
-            }
-        }
-        catch (SQLException ex){
-            throw new Sql2oException(ex);
-        }
+        });
+
         return this;
     }
 
-    public Query addParameter(String name, String value) {
-        try {
-            if (value == null) {
-                statement.setNull(name, Types.VARCHAR);
+    public Query addParameter(String name, final String value) {
+        addParameterInternal(name, new ParameterSetter() {
+            public void setParameter(int paramIdx) throws SQLException {
+                if (value == null) {
+                    statement.setNull(paramIdx, Types.VARCHAR);
+                } else {
+                    statement.setString(paramIdx, value);
+                }
             }
-            else {
-                statement.setString(name, value);
-            }
-        }
-        catch (SQLException ex) {
-            throw new RuntimeException(ex);
-        }
+        });
+
         return this;
     }
 
-    public Query addParameter(String name, Timestamp value){
-        try {
-            if (value == null) {
-                statement.setNull(name, Types.TIMESTAMP);
+    public Query addParameter(final String name, final Timestamp value){
+        addParameterInternal(name, new ParameterSetter() {
+            public void setParameter(int paramIdx) throws SQLException {
+                if (value == null) {
+                    statement.setNull(paramIdx, Types.TIMESTAMP);
+                } else {
+                    statement.setTimestamp(paramIdx, value);
+                }
             }
-            else {
-                statement.setTimestamp(name, value);
-            }
-        }
-        catch(SQLException ex) {
-            throw new RuntimeException(ex);
-        }
+        });
+
         return this;
     }
 
-    public Query addParameter(String name, Time value) {
-        try {
-            if (value == null){
-                statement.setNull(name, Types.TIME);
+    public Query addParameter(final String name, final Time value) {
+        addParameterInternal(name, new ParameterSetter() {
+            public void setParameter(int paramIdx) throws SQLException {
+                if (value == null) {
+                    statement.setNull(paramIdx, Types.TIME);
+                } else {
+                    statement.setTime(paramIdx, value);
+                }
             }
-            else {
-                statement.setTime(name,value);
-            }
-        }
-        catch (SQLException e) {
-            throw new RuntimeException(e);
-        }
+        });
+
         return this;
     }
 
-    public Query bind(Object pojo) {
+    public Query bind(final Object pojo) {
         Class clazz = pojo.getClass();
         Map<String, PojoIntrospector.ReadableProperty> propertyMap = PojoIntrospector.readableProperties(clazz);
         for (PojoIntrospector.ReadableProperty property : propertyMap.values()) {
             try {
-                if(statement.containsParameter(property.name))
+                if( getNamedParameterHandler().containsParameter(property.name))
                     this.addParameter(property.name, property.get(pojo));
             }
             catch(IllegalArgumentException ex) {
@@ -237,14 +264,6 @@ public class Query {
             }
         }
         return this;
-    }
-
-    public ResultSetHandlerFactoryBuilder getResultSetHandlerFactoryBuilder() {
-        return resultSetHandlerFactoryBuilder;
-    }
-
-    public void setResultSetHandlerFactoryBuilder(ResultSetHandlerFactoryBuilder resultSetHandlerFactoryBuilder) {
-        this.resultSetHandlerFactoryBuilder = resultSetHandlerFactoryBuilder;
     }
 
     // ------------------------------------------------
@@ -391,9 +410,8 @@ public class Query {
     public Connection executeUpdate(){
         long start = System.currentTimeMillis();
         try{
-
             this.connection.setResult(statement.executeUpdate());
-            this.connection.setKeys(this.returnGeneratedKeys ? statement.getStatement().getGeneratedKeys() : null);
+            this.connection.setKeys(this.returnGeneratedKeys ? statement.getGeneratedKeys() : null);
             connection.setCanGetKeys(this.returnGeneratedKeys);
         }
         catch(SQLException ex){
@@ -502,7 +520,7 @@ public class Query {
         long start = System.currentTimeMillis();
         try {
             connection.setBatchResult(statement.executeBatch());
-            connection.setKeys(this.returnGeneratedKeys ? statement.getStatement().getGeneratedKeys() : null);
+            connection.setKeys(this.returnGeneratedKeys ? statement.getGeneratedKeys() : null);
             connection.setCanGetKeys(this.returnGeneratedKeys);
         }
         catch (Throwable e) {
@@ -565,5 +583,9 @@ public class Query {
         catch (Exception ex){
             throw new RuntimeException("Error while attempting to close connection", ex);
         }
+    }
+
+    private interface ParameterSetter{
+        void setParameter(int paramIdx) throws SQLException;
     }
 }
