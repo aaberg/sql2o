@@ -120,18 +120,6 @@ public class Query {
         }
     }
 
-    public Query addParameter(final String name, final Object value) {
-        final Object convertedValue = convertParameter(value);
-
-        addParameterInternal(name, new ParameterSetter() {
-            public void setParameter(int paramIdx) throws SQLException {
-                statement.setObject(paramIdx, convertedValue);
-            }
-        });
-
-        return this;
-    }
-
     private Object convertParameter(Object value) {
         if (value == null) {
             return null;
@@ -144,10 +132,22 @@ public class Query {
         return converter.toDatabaseParam(value);
     }
 
-    public Query addParameter(final String name, final InputStream value){
+    public Query addParameter(String name, Object value) {
+        final Object convertedValue = convertParameter(value);
+
         addParameterInternal(name, new ParameterSetter() {
             public void setParameter(int paramIdx) throws SQLException {
-                statement.setBinaryStream(paramIdx, value);
+                getConnection().getSql2o().getQuirks().setParameter(statement, paramIdx, convertedValue);
+            }
+        });
+
+        return this;
+    }
+
+    public Query addParameter(String name, final InputStream value){
+        addParameterInternal(name, new ParameterSetter() {
+            public void setParameter(int paramIdx) throws SQLException {
+                getConnection().getSql2o().getQuirks().setParameter(statement, paramIdx, value);
             }
         });
 
@@ -157,7 +157,7 @@ public class Query {
     public Query addParameter(String name, final int value){
         addParameterInternal(name, new ParameterSetter() {
             public void setParameter(int paramIdx) throws SQLException {
-                statement.setInt(paramIdx, value);
+                getConnection().getSql2o().getQuirks().setParameter(statement, paramIdx, value);
             }
         });
 
@@ -167,11 +167,7 @@ public class Query {
     public Query addParameter(String name, final Integer value) {
         addParameterInternal(name, new ParameterSetter() {
             public void setParameter(int paramIdx) throws SQLException {
-                if (value == null) {
-                    statement.setNull(paramIdx, Types.INTEGER);
-                } else {
-                    statement.setInt(paramIdx, value);
-                }
+                getConnection().getSql2o().getQuirks().setParameter(statement, paramIdx, value);
             }
         });
 
@@ -181,7 +177,7 @@ public class Query {
     public Query addParameter(String name, final long value){
         addParameterInternal(name, new ParameterSetter() {
             public void setParameter(int paramIdx) throws SQLException {
-                statement.setLong(paramIdx, value);
+                getConnection().getSql2o().getQuirks().setParameter(statement, paramIdx, value);
             }
         });
 
@@ -191,11 +187,7 @@ public class Query {
     public Query addParameter(String name, final Long value){
         addParameterInternal(name, new ParameterSetter() {
             public void setParameter(int paramIdx) throws SQLException {
-                if (value == null) {
-                    statement.setNull(paramIdx, Types.BIGINT);
-                } else {
-                    statement.setLong(paramIdx, value);
-                }
+                getConnection().getSql2o().getQuirks().setParameter(statement, paramIdx, value);
             }
         });
 
@@ -205,39 +197,27 @@ public class Query {
     public Query addParameter(String name, final String value) {
         addParameterInternal(name, new ParameterSetter() {
             public void setParameter(int paramIdx) throws SQLException {
-                if (value == null) {
-                    statement.setNull(paramIdx, Types.VARCHAR);
-                } else {
-                    statement.setString(paramIdx, value);
-                }
+                getConnection().getSql2o().getQuirks().setParameter(statement, paramIdx, value);
             }
         });
 
         return this;
     }
 
-    public Query addParameter(final String name, final Timestamp value){
+    public Query addParameter(String name, final Timestamp value){
         addParameterInternal(name, new ParameterSetter() {
             public void setParameter(int paramIdx) throws SQLException {
-                if (value == null) {
-                    statement.setNull(paramIdx, Types.TIMESTAMP);
-                } else {
-                    statement.setTimestamp(paramIdx, value);
-                }
+                getConnection().getSql2o().getQuirks().setParameter(statement, paramIdx, value);
             }
         });
 
         return this;
     }
 
-    public Query addParameter(final String name, final Time value) {
+    public Query addParameter(String name, final Time value) {
         addParameterInternal(name, new ParameterSetter() {
             public void setParameter(int paramIdx) throws SQLException {
-                if (value == null) {
-                    statement.setNull(paramIdx, Types.TIME);
-                } else {
-                    statement.setTime(paramIdx, value);
-                }
+                getConnection().getSql2o().getQuirks().setParameter(statement, paramIdx, value);
             }
         });
 

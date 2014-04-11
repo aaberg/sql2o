@@ -2,8 +2,8 @@ package org.sql2o.quirks;
 
 import org.sql2o.converters.Converter;
 
-import java.sql.ResultSetMetaData;
-import java.sql.SQLException;
+import java.io.InputStream;
+import java.sql.*;
 import java.util.Map;
 
 /**
@@ -29,4 +29,14 @@ public interface Quirks {
      * @return true if queries should return generated keys by default, false otherwise
      */
     boolean returnGeneratedKeysByDefault();
+
+    void setParameter(PreparedStatement statement, int paramIdx, Object value) throws SQLException;
+    void setParameter(PreparedStatement statement, int paramIdx, InputStream value) throws SQLException;
+    void setParameter(PreparedStatement statement, int paramIdx, int value) throws SQLException;
+    void setParameter(PreparedStatement statement, int paramidx, Integer value) throws SQLException;
+    void setParameter(PreparedStatement statement, int paramIdx, long value) throws SQLException;
+    void setParameter(PreparedStatement statement, int paramIdx, Long value) throws SQLException;
+    void setParameter(PreparedStatement statement, int paramIdx, String value) throws SQLException;
+    void setParameter(PreparedStatement statement, int paramIdx, Timestamp value) throws SQLException;
+    void setParameter(PreparedStatement statement, int paramIdx, Time value) throws SQLException;
 }
