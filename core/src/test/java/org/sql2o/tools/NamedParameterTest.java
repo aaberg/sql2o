@@ -2,6 +2,13 @@ package org.sql2o.tools;
 
 import junit.framework.TestCase;
 
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+
+import static org.hamcrest.CoreMatchers.*;
+import static org.hamcrest.MatcherAssert.assertThat;
+
 /**
  * User: dimzon
  * Date: 4/9/14
@@ -9,10 +16,7 @@ import junit.framework.TestCase;
  */
 public class NamedParameterTest extends TestCase {
 
-    private NamedParameterHandlerFactory namedParameterHandlerFactory = new DefaultNamedParameterHandlerFactory();
-    private NamedParameterHandler getNamedParameterHandler() {
-        return namedParameterHandlerFactory.newParameterHandler();
-    }
+    private SqlParameterParsingStrategy sqlParameterParsingStrategy = new DefaultSqlParameterParsingStrategy();
 
     /*
      A type cast specifies a conversion from one data type to another.
@@ -21,14 +25,21 @@ public class NamedParameterTest extends TestCase {
      expression::type
      */
     public void testPostgresSqlCastSyntax() throws Exception {
-        String preparedQuery = getNamedParameterHandler().parseStatement("select :foo");
+        Map<String, List<Integer>> map = new HashMap<String, List<Integer>>();
+        String preparedQuery = sqlParameterParsingStrategy.parseSql("select :foo", map);
         assertEquals("select ?", preparedQuery);
-        preparedQuery = getNamedParameterHandler().parseStatement("select (:foo)::uuid");
+        assertThat(map.size(), is(equalTo(1)));
+        assertThat(map.get("foo").size(), is(equalTo(1)));
+        assertThat(map.get("foo"), hasItem(1));
+
+        map.clear();
+        preparedQuery = sqlParameterParsingStrategy.parseSql("select (:foo)::uuid", map);
         assertEquals("select (?)::uuid", preparedQuery);
     }
 
     public void testStringConstant() throws Exception {
-        String preparedQuery = getNamedParameterHandler().parseStatement("select ':foo'");
+        Map<String, List<Integer>> map = new HashMap<String, List<Integer>>();
+        String preparedQuery = sqlParameterParsingStrategy.parseSql("select ':foo'", map);
         assertEquals("select ':foo'", preparedQuery);
     }
 }

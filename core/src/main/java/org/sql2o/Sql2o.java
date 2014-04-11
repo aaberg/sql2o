@@ -2,9 +2,12 @@ package org.sql2o;
 
 import org.sql2o.converters.Convert;
 import org.sql2o.converters.Converter;
-import org.sql2o.quirks.*;
-import org.sql2o.tools.DefaultNamedParameterHandlerFactory;
-import org.sql2o.tools.NamedParameterHandlerFactory;
+import org.sql2o.quirks.Db2Quirks;
+import org.sql2o.quirks.NoQuirks;
+import org.sql2o.quirks.PostgresQuirks;
+import org.sql2o.quirks.Quirks;
+import org.sql2o.tools.DefaultSqlParameterParsingStrategy;
+import org.sql2o.tools.SqlParameterParsingStrategy;
 
 import javax.naming.Context;
 import javax.naming.InitialContext;
@@ -34,7 +37,7 @@ public class Sql2o {
     private final DataSource dataSource;
     private Map<String, String> defaultColumnMappings;
     private boolean defaultCaseSensitive;
-    private NamedParameterHandlerFactory namedParameterHandlerFactory;
+    private SqlParameterParsingStrategy sqlParameterParsingStrategy = new DefaultSqlParameterParsingStrategy();
 
     public Sql2o(String jndiLookup) {
         this(_getJndiDatasource(jndiLookup));
@@ -151,18 +154,7 @@ public class Sql2o {
         }
     }
 
-    public NamedParameterHandlerFactory getNamedParameterHandlerFactory() {
-        if (namedParameterHandlerFactory == null) {
-            namedParameterHandlerFactory = new DefaultNamedParameterHandlerFactory();
-        }
-        return namedParameterHandlerFactory;
-    }
-
-    public void setNamedParameterHandlerFactory(NamedParameterHandlerFactory namedParameterHandlerFactory) {
-        this.namedParameterHandlerFactory = namedParameterHandlerFactory;
-    }
-
-    /**
+     /**
      * Gets the DataSource that Sql2o uses internally to acquire database connections.
      * @return  The DataSource instance
      */
@@ -205,6 +197,14 @@ public class Sql2o {
      */
     public void setDefaultCaseSensitive(boolean defaultCaseSensitive) {
         this.defaultCaseSensitive = defaultCaseSensitive;
+    }
+
+    public SqlParameterParsingStrategy getSqlParameterParsingStrategy() {
+        return sqlParameterParsingStrategy;
+    }
+
+    public void setSqlParameterParsingStrategy(SqlParameterParsingStrategy sqlParameterParsingStrategy) {
+        this.sqlParameterParsingStrategy = sqlParameterParsingStrategy;
     }
 
     /**

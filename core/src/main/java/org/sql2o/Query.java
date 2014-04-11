@@ -11,9 +11,7 @@ import org.sql2o.logging.LocalLoggerFactory;
 import org.sql2o.logging.Logger;
 import org.sql2o.quirks.Quirks;
 import org.sql2o.reflection.PojoIntrospector;
-import org.sql2o.tools.NamedParameterHandler;
-import org.sql2o.tools.NamedParameterHandlerFactory;
-import org.sql2o.tools.ResultSetUtils;
+import org.sql2o.tools.*;
 
 import java.io.InputStream;
 import java.lang.reflect.InvocationTargetException;
@@ -36,21 +34,22 @@ public class Query {
     private boolean autoDeriveColumnNames;
     private String name;
     private boolean returnGeneratedKeys;
+    private final Map<String, List<Integer>> paramNameToIdxMap;
 
     private ResultSetHandlerFactoryBuilder resultSetHandlerFactoryBuilder;
 
-    private final NamedParameterHandler namedParameterHandler;
     private final String parsedQuery;
 
-    public Query(Connection connection, NamedParameterHandlerFactory namedParameterHandlerFactory, String queryText, String name, boolean returnGeneratedKeys) {
+    public Query(Connection connection, String queryText, String name, boolean returnGeneratedKeys) {
         this.connection = connection;
         this.name = name;
         this.returnGeneratedKeys = returnGeneratedKeys;
         this.setColumnMappings(connection.getSql2o().getDefaultColumnMappings());
         this.caseSensitive = connection.getSql2o().isDefaultCaseSensitive();
-        this.namedParameterHandler = namedParameterHandlerFactory.newParameterHandler();
 
-        parsedQuery = getNamedParameterHandler().parseStatement(queryText);
+        paramNameToIdxMap = new HashMap<String, List<Integer>>();
+
+        parsedQuery = getConnection().getSql2o().getSqlParameterParsingStrategy().parseSql(queryText, paramNameToIdxMap);
         try {
             if (returnGeneratedKeys) {
                 statement = getConnection().getJdbcConnection().prepareStatement(parsedQuery, Statement.RETURN_GENERATED_KEYS);
@@ -92,10 +91,6 @@ public class Query {
         return name;
     }
 
-    public NamedParameterHandler getNamedParameterHandler() {
-        return namedParameterHandler;
-    }
-
     public ResultSetHandlerFactoryBuilder getResultSetHandlerFactoryBuilder() {
         if (resultSetHandlerFactoryBuilder == null) {
             resultSetHandlerFactoryBuilder = new DefaultResultSetHandlerFactoryBuilder();
@@ -107,12 +102,16 @@ public class Query {
         this.resultSetHandlerFactoryBuilder = resultSetHandlerFactoryBuilder;
     }
 
+    public Map<String, List<Integer>> getParamNameToIdxMap() {
+        return paramNameToIdxMap;
+    }
+
     // ------------------------------------------------
     // ------------- Add Parameters -------------------
     // ------------------------------------------------
 
     private void addParameterInternal(String name, ParameterSetter parameterSetter) {
-        for (int paramIdx : this.getNamedParameterHandler().getParameterIndices(name)) {
+        for (int paramIdx : this.getParamNameToIdxMap().get(name)) {
             try {
                 parameterSetter.setParameter(paramIdx);
             } catch (SQLException e) {
@@ -250,7 +249,7 @@ public class Query {
         Map<String, PojoIntrospector.ReadableProperty> propertyMap = PojoIntrospector.readableProperties(clazz);
         for (PojoIntrospector.ReadableProperty property : propertyMap.values()) {
             try {
-                if( getNamedParameterHandler().containsParameter(property.name))
+                if( this.getParamNameToIdxMap().containsKey(property.name))
                     this.addParameter(property.name, property.get(pojo));
             }
             catch(IllegalArgumentException ex) {
