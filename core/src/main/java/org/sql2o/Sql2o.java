@@ -107,7 +107,7 @@ public class Sql2o {
     @Deprecated
     public Sql2o(DataSource dataSource, QuirksMode quirksMode) {
         this.dataSource = dataSource;
-        this.setQuirks(getQuirksForMode(quirksMode));
+        this.setQuirks(quirksMode);
         this.defaultColumnMappings = new HashMap<String, String>();
     }
 
@@ -120,19 +120,6 @@ public class Sql2o {
         this.dataSource = dataSource;
         this.setQuirks(quirks);
         this.defaultColumnMappings = new HashMap<String, String>();
-    }
-
-    // TODO delete this method when {@link org.sql2o.QuirksMode} removed.
-    private Quirks getQuirksForMode(QuirksMode quirksMode) {
-        if (quirksMode == QuirksMode.DB2) {
-            return new Db2Quirks();
-        }
-        else if (quirksMode == QuirksMode.PostgreSQL) {
-            return new PostgresQuirks();
-        }
-        else {
-            return new NoQuirks();
-        }
     }
 
     Quirks getQuirks() {
