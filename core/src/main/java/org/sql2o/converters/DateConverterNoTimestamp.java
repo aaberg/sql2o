@@ -9,6 +9,8 @@ import java.util.Date;
 public class DateConverterNoTimestamp extends DateConverter {
     @Override
     public Object toDatabaseParam(Date val) {
-        return new java.sql.Date(val.getTime());
+        return (val instanceof java.sql.Date)
+                ? val
+                : new java.sql.Date(val.getTime());
     }
 }
