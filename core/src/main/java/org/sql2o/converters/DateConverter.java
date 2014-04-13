@@ -1,26 +1,19 @@
 package org.sql2o.converters;
 
-import java.sql.Timestamp;
 import java.util.Date;
 
 /**
  * Used by sql2o to convert a value from the database into a {@link Date}.
  */
-public class DateConverter implements Converter<Date> {
-    
-    public Date convert(Object val) throws ConverterException {
-        if (val == null){
-            return null;
-        }
-        
-        if (Date.class.isAssignableFrom( val.getClass() )){
-            return (Date)val;
-        }
-        
-        throw new ConverterException("Cannot convert type " + val.getClass().toString() + " to java.util.Date");
+public class DateConverter extends AbstractDateConverter<Date> {
+    public static final DateConverter instance = new DateConverter();
+
+    public DateConverter() {
+        super(Date.class);
     }
 
-    public Object toDatabaseParam(Date val) {
-        return new Timestamp(val.getTime());
+    @Override
+    protected Date fromMilliseconds(long millisecond) {
+        return new Date(millisecond);
     }
 }

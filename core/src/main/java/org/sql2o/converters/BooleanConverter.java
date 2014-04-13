@@ -12,15 +12,21 @@ public class BooleanConverter extends ConverterBase<Boolean> {
     public Boolean convert(Object val) throws ConverterException {
         if (val == null) return null;
 
-        if (Boolean.class.isAssignableFrom(val.getClass())) {
+        if (val instanceof Boolean) {
             return (Boolean) val;
         }
 
-        if (Number.class.isAssignableFrom(val.getClass())) {
-            return ((Number)val).intValue() > 0;
+        if (val instanceof Number) {
+            return ((Number)val).intValue() != 0;
         }
 
-        if (String.class.isAssignableFrom(val.getClass())) {
+        if (val instanceof Character) {
+            return ((Character)val)=='Y'
+                    ||((Character)val)=='T'
+                    ||((Character)val)=='J';
+        }
+
+        if (val instanceof String) {
             String strVal = ((String)val).trim();
             return "Y".equalsIgnoreCase(strVal) || "YES".equalsIgnoreCase(strVal) || "TRUE".equalsIgnoreCase(strVal) ||
                     "T".equalsIgnoreCase(strVal) || "J".equalsIgnoreCase(strVal);
