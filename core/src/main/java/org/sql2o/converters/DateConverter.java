@@ -13,8 +13,12 @@ public class DateConverter implements Converter<Date> {
             return null;
         }
         
-        if (Date.class.isAssignableFrom( val.getClass() )){
+        if (val instanceof Date){
             return (Date)val;
+        }
+
+        if (val instanceof Number){
+            return new Date(((Number) val).longValue());
         }
         
         throw new ConverterException("Cannot convert type " + val.getClass().toString() + " to java.util.Date");
