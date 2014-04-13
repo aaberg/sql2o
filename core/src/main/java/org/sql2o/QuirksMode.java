@@ -6,6 +6,7 @@ import org.sql2o.quirks.NoQuirks;
 import org.sql2o.quirks.PostgresQuirks;
 import org.sql2o.quirks.Quirks;
 
+import java.sql.ResultSet;
 import java.sql.ResultSetMetaData;
 import java.sql.SQLException;
 import java.util.Map;
@@ -35,7 +36,13 @@ public enum QuirksMode implements Quirks {
         return quirks.returnGeneratedKeysByDefault();
     }
 
+    public Object getRSVal(ResultSet rs, int idx) throws SQLException {
+        return this.quirks.getRSVal(rs, idx);
+    }
+
     private QuirksMode(Quirks quirks) {
         this.quirks = quirks;
     }
+
+
 }

@@ -2,6 +2,7 @@ package org.sql2o.quirks;
 
 import org.sql2o.converters.Converter;
 
+import java.sql.ResultSet;
 import java.sql.ResultSetMetaData;
 import java.sql.SQLException;
 import java.util.Collections;
@@ -22,5 +23,9 @@ public class NoQuirks implements Quirks {
 
     public boolean returnGeneratedKeysByDefault() {
         return true;
+    }
+
+    public Object getRSVal(ResultSet rs, int idx) throws SQLException {
+        return rs.getObject(idx);
     }
 }

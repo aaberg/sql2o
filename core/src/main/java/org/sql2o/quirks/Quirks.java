@@ -2,6 +2,7 @@ package org.sql2o.quirks;
 
 import org.sql2o.converters.Converter;
 
+import java.sql.ResultSet;
 import java.sql.ResultSetMetaData;
 import java.sql.SQLException;
 import java.util.Map;
@@ -29,4 +30,6 @@ public interface Quirks {
      * @return true if queries should return generated keys by default, false otherwise
      */
     boolean returnGeneratedKeysByDefault();
+
+    Object getRSVal(ResultSet rs, int idx) throws SQLException;
 }

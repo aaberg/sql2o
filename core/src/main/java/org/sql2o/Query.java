@@ -471,7 +471,7 @@ public class Query {
         try {
             ResultSet rs = this.statement.executeQuery();
             if (rs.next()){
-                Object o = ResultSetUtils.getRSVal(rs, 1);
+                Object o = this.connection.getSql2o().getQuirks().getRSVal(rs, 1);
                 long end = System.currentTimeMillis();
                 logger.debug("total: {} ms; executed scalar [{}]", new Object[]{
                         end - start,
@@ -523,11 +523,12 @@ public class Query {
 
     @SuppressWarnings("unchecked")
     private <T> ResultSetHandler<T> newScalarResultSetHandler(final Class<T> returnType) {
+        final Quirks quirks = this.connection.getSql2o().getQuirks();
         try {
             final Converter<T> converter = Convert.getConverter(returnType);
             return new ResultSetHandler<T>() {
                 public T handle(ResultSet resultSet) throws SQLException {
-                    Object value = ResultSetUtils.getRSVal(resultSet, 1);
+                    Object value = quirks.getRSVal(resultSet, 1);
                     try {
                         return (converter.convert(value));
                     } catch (ConverterException e) {
