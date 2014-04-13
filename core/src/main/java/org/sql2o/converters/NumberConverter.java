@@ -15,7 +15,13 @@ public abstract class NumberConverter<V extends Number> extends ConverterBase<V>
         if (val == null) {
             return isPrimitive ? convertNumberValue(0) : null;
         }
-        else if (val.getClass().isPrimitive() || val instanceof Number ) {
+
+        // val.getClass().isPrimitive() is ALWAYS false
+        // since boxing (i.e. Object val=(int)1;)
+        // changes type from Integet.TYPE to Integer.class
+        // learn 2 java :)
+
+        else if (/*val.getClass().isPrimitive() || */val instanceof Number ) {
             return convertNumberValue((Number)val);
         }
         else if (val instanceof String){
