@@ -7,6 +7,7 @@ import java.sql.SQLException;
  * Utilities for {@link java.sql.ResultSet}.
  */
 public class ResultSetUtils {
+    // TODO. Remove class for version 2.0
     @Deprecated
     public static Object getRSVal(ResultSet rs, int idx) throws SQLException {
         Object o = rs.getObject(idx);

@@ -36,7 +36,7 @@ public interface Quirks {
     void setParameter(PreparedStatement statement, int paramIdx, Object value) throws SQLException;
     void setParameter(PreparedStatement statement, int paramIdx, InputStream value) throws SQLException;
     void setParameter(PreparedStatement statement, int paramIdx, int value) throws SQLException;
-    void setParameter(PreparedStatement statement, int paramidx, Integer value) throws SQLException;
+    void setParameter(PreparedStatement statement, int paramIdx, Integer value) throws SQLException;
     void setParameter(PreparedStatement statement, int paramIdx, long value) throws SQLException;
     void setParameter(PreparedStatement statement, int paramIdx, Long value) throws SQLException;
     void setParameter(PreparedStatement statement, int paramIdx, String value) throws SQLException;
