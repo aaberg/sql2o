@@ -3,15 +3,14 @@ package org.sql2o.converters;
 import org.sql2o.tools.IOUtils;
 
 import java.io.IOException;
+import java.io.InputStream;
 import java.sql.Blob;
 import java.sql.SQLException;
 
 /**
- * Created with IntelliJ IDEA.
  * User: lars
  * Date: 6/13/13
  * Time: 11:36 PM
- * To change this template use File | Settings | File Templates.
  */
 public class ByteArrayConverter extends ConverterBase<byte[]> {
 
@@ -20,8 +19,25 @@ public class ByteArrayConverter extends ConverterBase<byte[]> {
 
         if (val instanceof Blob) {
             Blob b = (Blob)val;
+            InputStream stream=null;
             try {
-                return IOUtils.toByteArray( b.getBinaryStream() );
+                try {
+                    stream = b.getBinaryStream();
+                    return IOUtils.toByteArray(stream);
+                } finally {
+                    if(stream!=null) {
+                        try {
+                            stream.close();
+                        } catch (Throwable ignore){
+                            // ignore stream.close errors
+                        }
+                    }
+                    try {
+                        b.free();
+                    } catch (Throwable ignore){
+                        // ignore blob.free errors
+                    }
+                }
             } catch (SQLException e) {
                 throw new ConverterException("Error converting Blob to byte[]", e);
             } catch (IOException e) {
