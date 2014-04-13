@@ -13,7 +13,7 @@ public class BigDecimalConverter extends NumberConverter<BigDecimal>{
 
     @Override
     protected BigDecimal convertNumberValue(Number val) {
-        if (val.getClass().equals(BigDecimal.class)){
+        if (val instanceof BigDecimal){
             return (BigDecimal)val;
         }
         else{

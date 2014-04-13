@@ -4,6 +4,9 @@ import org.sql2o.converters.Converter;
 
 import java.io.InputStream;
 import java.sql.*;
+import java.sql.ResultSet;
+import java.sql.ResultSetMetaData;
+import java.sql.SQLException;
 import java.util.Collections;
 import java.util.Map;
 
@@ -78,5 +81,9 @@ public class NoQuirks implements Quirks {
         } else {
             statement.setTime(paramIdx, value);
         }
+    }
+
+    public Object getRSVal(ResultSet rs, int idx) throws SQLException {
+        return rs.getObject(idx);
     }
 }

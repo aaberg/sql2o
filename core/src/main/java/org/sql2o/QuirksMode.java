@@ -1,10 +1,85 @@
 package org.sql2o;
 
+import org.sql2o.converters.Converter;
+import org.sql2o.quirks.Db2Quirks;
+import org.sql2o.quirks.NoQuirks;
+import org.sql2o.quirks.PostgresQuirks;
+import org.sql2o.quirks.Quirks;
+
+import java.io.InputStream;
+import java.sql.*;
+import java.util.Map;
+
 /**
  * Use {@link org.sql2o.quirks.Quirks}.
  */
 @Deprecated
-public enum QuirksMode {
+public enum QuirksMode implements Quirks {
 
-    None, DB2, PostgreSQL, MSSqlServer
+    None(new NoQuirks()),
+    DB2(new Db2Quirks()),
+    PostgreSQL(new PostgresQuirks()),
+    MSSqlServer(new NoQuirks());
+
+    private final Quirks quirks;
+
+    public Map<Class, Converter> customConverters() {
+        return quirks.customConverters();
+    }
+
+    public String getColumnName(ResultSetMetaData meta, int colIdx) throws SQLException {
+        return quirks.getColumnName(meta, colIdx);
+    }
+
+    public boolean returnGeneratedKeysByDefault() {
+        return quirks.returnGeneratedKeysByDefault();
+    }
+
+    public void setParameter(PreparedStatement statement, int paramIdx, Object value) throws SQLException {
+        quirks.setParameter(statement, paramIdx, value);
+    }
+
+    public void setParameter(PreparedStatement statement, int paramIdx, InputStream value) throws SQLException {
+        quirks.setParameter(statement, paramIdx, value);
+    }
+
+    public void setParameter(PreparedStatement statement, int paramIdx, int value) throws SQLException {
+        quirks.setParameter(statement, paramIdx, value);
+    }
+
+    public void setParameter(PreparedStatement statement, int paramidx, Integer value) throws SQLException {
+        quirks.setParameter(statement, paramidx, value);
+    }
+
+    public void setParameter(PreparedStatement statement, int paramIdx, long value) throws SQLException {
+        quirks.setParameter(statement, paramIdx, value);
+    }
+
+    public void setParameter(PreparedStatement statement, int paramIdx, Long value) throws SQLException {
+        quirks.setParameter(statement, paramIdx, value);
+    }
+
+    public void setParameter(PreparedStatement statement, int paramIdx, String value) throws SQLException {
+        quirks.setParameter(statement, paramIdx, value);
+    }
+
+    public void setParameter(PreparedStatement statement, int paramIdx, Timestamp value) throws SQLException {
+        quirks.setParameter(statement, paramIdx, value);
+    }
+
+    public void setParameter(PreparedStatement statement, int paramIdx, Time value) throws SQLException {
+        quirks.setParameter(statement, paramIdx, value);
+    }
+
+    public Object getRSVal(ResultSet rs, int idx) throws SQLException {
+        return this.quirks.getRSVal(rs, idx);
+    }
+
+    private QuirksMode(Quirks quirks) {
+        this.quirks = quirks;
+    }
+
+
+
+
 }

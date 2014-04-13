@@ -11,7 +11,6 @@ import org.sql2o.logging.LocalLoggerFactory;
 import org.sql2o.logging.Logger;
 import org.sql2o.quirks.Quirks;
 import org.sql2o.reflection.PojoIntrospector;
-import org.sql2o.tools.*;
 
 import java.io.InputStream;
 import java.lang.reflect.InvocationTargetException;
@@ -303,6 +302,11 @@ public class Query {
      * @return iterable results
      */
     public <T> ResultSetIterable<T> executeAndFetchLazy(final Class<T> returnType) {
+        final ResultSetHandlerFactory<T> resultSetHandlerFactory = newResultSetHandlerFactory(returnType);
+        return executeAndFetchLazy(resultSetHandlerFactory);
+    }
+
+    private <T> ResultSetHandlerFactory<T> newResultSetHandlerFactory(Class<T> returnType) {
         final Quirks quirks = getConnection().getSql2o().getQuirks();
         ResultSetHandlerFactoryBuilder builder = getResultSetHandlerFactoryBuilder();
         if(builder==null) builder=new DefaultResultSetHandlerFactoryBuilder();
@@ -310,7 +314,19 @@ public class Query {
         builder.setCaseSensitive(caseSensitive);
         builder.setColumnMappings(columnMappings);
         builder.setQuirks(quirks);
-        final ResultSetHandlerFactory<T> resultSetHandlerFactory = builder.newFactory(returnType);
+        return builder.newFactory(returnType);
+    }
+
+    /**
+     * Read a collection lazily. Generally speaking, this should only be used if you are reading MANY
+     * results and keeping them all in a Collection would cause memory issues. You MUST call
+     * {@link org.sql2o.ResultSetIterable#close()} when you are done iterating.
+     *
+     * @param resultSetHandlerFactory factory to provide ResultSetHandler
+     * @return iterable results
+     */
+    public <T> ResultSetIterable<T> executeAndFetchLazy(final ResultSetHandlerFactory<T> resultSetHandlerFactory) {
+        final Quirks quirks = getConnection().getSql2o().getQuirks();
         return new ResultSetIterableBase<T>() {
             public Iterator<T> iterator() {
                 return new PojoResultSetIterator<T>(rs, isCaseSensitive(), quirks, resultSetHandlerFactory);
@@ -318,13 +334,42 @@ public class Query {
         };
     }
 
+    /**
+     * Read a collection lazily. Generally speaking, this should only be used if you are reading MANY
+     * results and keeping them all in a Collection would cause memory issues. You MUST call
+     * {@link org.sql2o.ResultSetIterable#close()} when you are done iterating.
+     *
+     * @param resultSetHandler ResultSetHandler
+     * @return iterable results
+     */
+    public <T> ResultSetIterable<T> executeAndFetchLazy(final ResultSetHandler<T> resultSetHandler) {
+        final ResultSetHandlerFactory<T> factory = newResultSetHandlerFactory(resultSetHandler);
+        return executeAndFetchLazy(factory);
+    }
+
+    private static  <T> ResultSetHandlerFactory<T> newResultSetHandlerFactory(final ResultSetHandler<T> resultSetHandler) {
+        return new ResultSetHandlerFactory<T>() {
+            public ResultSetHandler<T> newResultSetHandler(ResultSetMetaData resultSetMetaData) throws SQLException {
+                return resultSetHandler;
+            }
+        };
+    }
+
     public <T> List<T> executeAndFetch(Class<T> returnType){
+        return executeAndFetch(newResultSetHandlerFactory(returnType));
+    }
+
+    public <T> List<T> executeAndFetch(ResultSetHandler<T> resultSetHandler){
+        return executeAndFetch(newResultSetHandlerFactory(resultSetHandler));
+    }
+
+    public <T> List<T> executeAndFetch(ResultSetHandlerFactory<T> factory){
         List<T> list = new ArrayList<T>();
 
         // if sql2o moves to java 7 at some point, this could be much cleaner using try-with-resources
         ResultSetIterable<T> iterable = null;
         try {
-            iterable = executeAndFetchLazy(returnType);
+            iterable = executeAndFetchLazy(factory);
             for (T item : iterable) {
                 list.add(item);
             }
@@ -339,10 +384,18 @@ public class Query {
     }
 
     public <T> T executeAndFetchFirst(Class<T> returnType){
+        return executeAndFetchFirst(newResultSetHandlerFactory(returnType));
+    }
+
+    public <T> T executeAndFetchFirst(ResultSetHandler<T> resultSetHandler){
+        return executeAndFetchFirst(newResultSetHandlerFactory(resultSetHandler));
+    }
+
+    public <T> T executeAndFetchFirst(ResultSetHandlerFactory<T> resultSetHandlerFactory){
         // if sql2o moves to java 7 at some point, this could be much cleaner using try-with-resources
         ResultSetIterable<T> iterable = null;
         try {
-            iterable = executeAndFetchLazy(returnType);
+            iterable = executeAndFetchLazy(resultSetHandlerFactory);
             Iterator<T> iterator = iterable.iterator();
             return iterator.hasNext() ? iterator.next() : null;
         }
@@ -415,7 +468,7 @@ public class Query {
         try {
             ResultSet rs = this.statement.executeQuery();
             if (rs.next()){
-                Object o = ResultSetUtils.getRSVal(rs, 1);
+                Object o = this.connection.getSql2o().getQuirks().getRSVal(rs, 1);
                 long end = System.currentTimeMillis();
                 logger.debug("total: {} ms; executed scalar [{}]", new Object[]{
                         end - start,
@@ -439,47 +492,49 @@ public class Query {
     }
 
     public <V> V executeScalar(Class<V> returnType){
-        Object value = executeScalar();
-        Converter<V> converter;
         try {
+            Converter<V> converter;
             //noinspection unchecked
             converter = Convert.getConverter(returnType);
-            return converter.convert(value);
+            //noinspection unchecked
+            return executeScalar(converter);
         } catch (ConverterException e) {
-            throw new Sql2oException("Error occured while converting value from database to type " + returnType.toString(), e);
+            throw new Sql2oException("Error occured while converting value from database to type " + returnType, e);
         }
-
     }
 
-    public <T> List<T> executeScalarList(Class<T> returnType){
-        long start = System.currentTimeMillis();
-        List<T> list = new ArrayList<T>();
-        try{
+    public <V> V executeScalar(Converter<V> converter){
+        try {
             //noinspection unchecked
-            Converter<T> converter = Convert.getConverter(returnType);
-            ResultSet rs = this.statement.executeQuery();
-            while(rs.next()){
-                Object value = ResultSetUtils.getRSVal(rs, 1);
-                list.add(converter.convert(value));
-            }
+            return converter.convert(executeScalar());
+        } catch (ConverterException e) {
+            throw new Sql2oException("Error occured while converting value from database", e);
+        }
+    }
 
-            long end = System.currentTimeMillis();
-            logger.debug("total: {} ms; executed scalar list [{}]", new Object[]{
-                    end - start,
-                    this.getName() == null ? "No name" : this.getName()
-            });
 
-            return list;
-        }
-        catch(SQLException ex){
-            this.connection.onException();
-            throw new Sql2oException("Error occurred while executing scalar list: " + ex.getMessage(), ex);
-        }
-        catch (ConverterException e) {
-            throw new Sql2oException("Error occurred while converting value from database to type " + returnType.toString(), e);
-        }
-        finally{
-            closeConnectionIfNecessary();
+
+    public <T> List<T> executeScalarList(final Class<T> returnType){
+        return executeAndFetch(newScalarResultSetHandler(returnType));
+    }
+
+    @SuppressWarnings("unchecked")
+    private <T> ResultSetHandler<T> newScalarResultSetHandler(final Class<T> returnType) {
+        final Quirks quirks = this.connection.getSql2o().getQuirks();
+        try {
+            final Converter<T> converter = Convert.getConverter(returnType);
+            return new ResultSetHandler<T>() {
+                public T handle(ResultSet resultSet) throws SQLException {
+                    Object value = quirks.getRSVal(resultSet, 1);
+                    try {
+                        return (converter.convert(value));
+                    } catch (ConverterException e) {
+                        throw new Sql2oException("Error occurred while converting value from database to type " + returnType, e);
+                    }
+                }
+            };
+        } catch (ConverterException e) {
+            throw new Sql2oException("Can't get converter for type " + returnType, e);
         }
     }
 

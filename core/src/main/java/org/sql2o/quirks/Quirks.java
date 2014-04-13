@@ -4,6 +4,9 @@ import org.sql2o.converters.Converter;
 
 import java.io.InputStream;
 import java.sql.*;
+import java.sql.ResultSet;
+import java.sql.ResultSetMetaData;
+import java.sql.SQLException;
 import java.util.Map;
 
 /**
@@ -39,4 +42,6 @@ public interface Quirks {
     void setParameter(PreparedStatement statement, int paramIdx, String value) throws SQLException;
     void setParameter(PreparedStatement statement, int paramIdx, Timestamp value) throws SQLException;
     void setParameter(PreparedStatement statement, int paramIdx, Time value) throws SQLException;
+
+    Object getRSVal(ResultSet rs, int idx) throws SQLException;
 }

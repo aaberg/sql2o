@@ -161,7 +161,7 @@ public class DefaultResultSetHandlerFactory<T> implements ResultSetHandlerFactor
             public T handle(ResultSet resultSet) throws SQLException {
                 if (useExecuteScalar) {
                     try {
-                        return (T) converter.convert(ResultSetUtils.getRSVal(resultSet, 1));
+                        return (T) converter.convert(quirks.getRSVal(resultSet, 1));
                     } catch (ConverterException e) {
                         throw new Sql2oException("Error occurred while converting value from database to type " + metadata.getType(), e);
                     }
@@ -172,7 +172,7 @@ public class DefaultResultSetHandlerFactory<T> implements ResultSetHandlerFactor
                 for (int colIdx = 1; colIdx <= columnCount; colIdx++) {
                     Setter setter = setters[colIdx];
                     if (setter == null) continue;
-                    setter.setProperty(pojo, ResultSetUtils.getRSVal(resultSet, colIdx));
+                    setter.setProperty(pojo, quirks.getRSVal(resultSet, colIdx));
                 }
 
                 return (T) pojo;
