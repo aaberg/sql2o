@@ -131,7 +131,7 @@ public class Convert {
         }
     }
 
-    public static void registerConverter0(Class clazz, Converter converter){
+    private static void registerConverter0(Class clazz, Converter converter){
         registeredConverters.put(clazz, converter);
     }
 
