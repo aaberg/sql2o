@@ -118,7 +118,7 @@ public class Row {
     
     public Date getDate(int columnIndex){
         try {
-            return new DateConverter().convert(getObject(columnIndex));
+            return DateConverter.instance.convert(getObject(columnIndex));
         } catch (ConverterException e) {
             throw new Sql2oException("Could not convert column with index " + columnIndex + " to " + Date.class.toString());
         }
@@ -126,7 +126,7 @@ public class Row {
     
     public Date getDate(String columnName){
         try {
-            return new DateConverter().convert(getObject(columnName));
+            return DateConverter.instance.convert(getObject(columnName));
         } catch (ConverterException e) {
             throw new Sql2oException("Could not convert column with name " + columnName + " to " + Date.class.toString());
         }

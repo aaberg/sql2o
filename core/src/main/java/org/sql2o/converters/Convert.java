@@ -9,6 +9,7 @@ import org.sql2o.tools.FeatureDetector;
 import java.io.ByteArrayInputStream;
 import java.io.InputStream;
 import java.math.BigDecimal;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.UUID;
@@ -50,18 +51,39 @@ public class Convert {
 
         registerConverter0(String.class, new StringConverter());
 
-        Converter utilDateConverter = new DateConverter();
-        registerConverter0(java.util.Date.class, utilDateConverter);
-        registerConverter0(java.sql.Date.class, utilDateConverter);
-        registerConverter0(java.sql.Time.class, utilDateConverter);
-        registerConverter0(java.sql.Timestamp.class, utilDateConverter);
+        registerConverter0(java.util.Date.class,DateConverter.instance);
+        registerConverter0(java.sql.Date.class,
+            new AbstractDateConverter<java.sql.Date>(java.sql.Date.class) {
+                @Override
+                protected java.sql.Date fromMilliseconds(long millisecond) {
+                    return new java.sql.Date(millisecond);
+                }
+            });
+        registerConverter0(java.sql.Time.class,
+            new AbstractDateConverter<java.sql.Time>(java.sql.Time.class) {
+                @Override
+                protected java.sql.Time fromMilliseconds(long millisecond) {
+                    return new java.sql.Time(millisecond);
+                }
+            });
+        registerConverter0(java.sql.Timestamp.class,
+            new AbstractDateConverter<java.sql.Timestamp>(java.sql.Timestamp.class) {
+                @Override
+                protected java.sql.Timestamp fromMilliseconds(long millisecond) {
+                    return new java.sql.Timestamp(millisecond);
+                }
+            });
 
         BooleanConverter booleanConverter = new BooleanConverter();
         registerConverter0(Boolean.class, booleanConverter);
         registerConverter0(boolean.class, booleanConverter);
 
         ByteArrayConverter byteArrayConverter = new ByteArrayConverter();
-        registerConverter0(Byte[].class, byteArrayConverter);
+        //it's impossible to cast Byte[].class <-> byte[].class
+        // and I'm too lazy to implement converter for Byte[].class
+        // since it's really doesn't wide-used
+        // otherwise someone already detect this error
+        //registerConverter0(Byte[].class, byteArrayConverter);
         registerConverter0(byte[].class, byteArrayConverter);
 
         InputStreamConverter inputStreamConverter = new InputStreamConverter();
