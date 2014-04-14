@@ -1,10 +1,21 @@
 package org.sql2o.quirks;
 
 
+import org.sql2o.converters.Converter;
+
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.util.Map;
 
 public class OracleQuirks extends NoQuirks {
+    public OracleQuirks() {
+        super();
+    }
+
+    public OracleQuirks(Map<Class, Converter> converters) {
+        super(converters);
+    }
+
     @Override
     public Object getRSVal(ResultSet rs, int idx) throws SQLException {
         Object o = super.getRSVal(rs, idx);

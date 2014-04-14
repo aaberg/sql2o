@@ -4,6 +4,8 @@ import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 import org.sql2o.*;
+import org.sql2o.quirks.NoQuirks;
+import org.sql2o.quirks.Quirks;
 
 import java.util.*;
 
@@ -21,8 +23,14 @@ public class BidirectionalConverterTest {
     @Before
     public void setUp()
     {
-        this.sql2o = new Sql2o("jdbc:h2:mem:test;DB_CLOSE_DELAY=-1", "sa", "");
-        Convert.registerConverter(UUID.class, new CustomUUIDConverter());
+        Quirks quirks = new NoQuirks(){
+            {
+                this.converters.put(UUID.class, new CustomUUIDConverter());
+            }
+        };
+
+
+        this.sql2o = new Sql2o("jdbc:h2:mem:test;DB_CLOSE_DELAY=-1", "sa", "", quirks);
         this.wrappers = randomWrappers();
         this.createAndFillTable(this.wrappers);
     }

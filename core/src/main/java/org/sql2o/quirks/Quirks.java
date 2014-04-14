@@ -17,11 +17,14 @@ import java.util.Map;
  * @since 4/6/14
  */
 public interface Quirks {
-
     /**
-     * @return converters to register by default
+     * @param ofClass
+     * @param <E>
+     * @return converter for class
      */
-    Map<Class, Converter> customConverters();
+
+    <E> Converter<E> converterOf(Class<E> ofClass);
+
 
     /**
      * @return name of column at index {@code colIdx} for result set {@code meta}

@@ -23,8 +23,8 @@ public enum QuirksMode implements Quirks {
 
     private final Quirks quirks;
 
-    public Map<Class, Converter> customConverters() {
-        return quirks.customConverters();
+    public <E> Converter<E> converterOf(Class<E> ofClass) {
+        return quirks.converterOf(ofClass);
     }
 
     public String getColumnName(ResultSetMetaData meta, int colIdx) throws SQLException {

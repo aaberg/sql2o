@@ -1,5 +1,6 @@
 package org.sql2o.quirks;
 
+import org.sql2o.converters.Convert;
 import org.sql2o.converters.Converter;
 
 import java.io.InputStream;
@@ -8,6 +9,7 @@ import java.sql.ResultSet;
 import java.sql.ResultSetMetaData;
 import java.sql.SQLException;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.Map;
 
 /**
@@ -15,8 +17,27 @@ import java.util.Map;
  * @since 4/6/14
  */
 public class NoQuirks implements Quirks {
-    public Map<Class, Converter> customConverters() {
-        return Collections.emptyMap();
+    protected final Map<Class,Converter>  converters;
+
+    public NoQuirks(Map<Class, Converter> converters) {
+        // protective copy
+        // to avoid someone change this collection outside
+        // so this makes converters thread-safe
+        this.converters = new HashMap<Class, Converter>(converters);
+    }
+
+    public NoQuirks() {
+        this(Collections.<Class,Converter>emptyMap());
+    }
+
+    @SuppressWarnings("unchecked")
+    public <E> Converter<E> converterOf(Class<E> ofClass) {
+        // if nobody change this collection outside constructor
+        // it's thread-safe
+        Converter c =  converters.get(ofClass);
+        // if no "local" converter let's look in global
+        return c!=null?c:Convert.getConverterIfExists(ofClass);
+
     }
 
     public String getColumnName(ResultSetMetaData meta, int colIdx) throws SQLException {

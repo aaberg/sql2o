@@ -29,7 +29,12 @@ public class PostgresTest {
 
 
     public PostgresTest() {
-        sql2o = new Sql2o("jdbc:postgresql:testdb", "test", "testtest", new PostgresQuirks());
+        sql2o = new Sql2o("jdbc:postgresql:testdb", "test", "testtest", new PostgresQuirks(){
+            {
+                // make sure we use default UUID converter.
+                converters.put(UUID.class, new UUIDConverter());
+            }
+        });
     }
 
     @Test
@@ -148,8 +153,6 @@ public class PostgresTest {
     @Test
     public void testUUID() {
 
-        // make sure we use default UUID converter.
-        Convert.registerConverter(UUID.class, new UUIDConverter());
         Connection connection = null;
 
         try {
