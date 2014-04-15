@@ -2,9 +2,7 @@ package org.sql2o;
 
 import org.sql2o.converters.Convert;
 import org.sql2o.converters.Converter;
-import org.sql2o.quirks.Db2Quirks;
 import org.sql2o.quirks.NoQuirks;
-import org.sql2o.quirks.PostgresQuirks;
 import org.sql2o.quirks.Quirks;
 import org.sql2o.tools.DefaultSqlParameterParsingStrategy;
 import org.sql2o.tools.SqlParameterParsingStrategy;
@@ -134,11 +132,6 @@ public class Sql2o {
 
     private void setQuirks(Quirks quirks) {
         this.quirks = quirks;
-
-        // register custom converters
-        for (Map.Entry<Class, Converter> entry : quirks.customConverters().entrySet()) {
-            Convert.registerConverter(entry.getKey(), entry.getValue());
-        }
     }
 
      /**

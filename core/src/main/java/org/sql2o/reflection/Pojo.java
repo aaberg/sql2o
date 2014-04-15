@@ -1,9 +1,11 @@
 package org.sql2o.reflection;
 
 import org.sql2o.Sql2oException;
-import org.sql2o.converters.Convert;
 import org.sql2o.converters.Converter;
 import org.sql2o.converters.ConverterException;
+import org.sql2o.quirks.Quirks;
+
+import static org.sql2o.converters.Convert.throwIfNull;
 
 /**
  * Used internally to represent a plain old java object.
@@ -27,7 +29,7 @@ public class Pojo {
         object = objectConstructor.newInstance();
     }
 
-    public void setProperty(String propertyPath, Object value){
+    public void setProperty(String propertyPath, Object value, Quirks quirks){
         // String.split uses RegularExpression
         // this is overkill for every column for every row
         int index = propertyPath.indexOf('.');
@@ -51,13 +53,13 @@ public class Pojo {
             
             PojoMetadata subMetadata = new PojoMetadata(setter.getType(), this.caseSensitive, this.metadata.isAutoDeriveColumnNames(), this.metadata.getColumnMappings());
             Pojo subPojo = new Pojo(subMetadata, this.caseSensitive, subValue);
-            subPojo.setProperty(newPath, value);
+            subPojo.setProperty(newPath, value, quirks);
         }
         else{
             setter = metadata.getPropertySetter(propertyPath);
             Converter converter;
             try {
-                converter = Convert.getConverter(setter.getType());
+                converter = throwIfNull(setter.getType(), quirks.converterOf(setter.getType()));
             } catch (ConverterException e) {
                 throw new Sql2oException("Cannot convert column " + propertyPath + " to type " + setter.getType(), e);
             }
@@ -71,6 +73,8 @@ public class Pojo {
         
         
     }
+
+
 
     public Object getObject(){
         return this.object;

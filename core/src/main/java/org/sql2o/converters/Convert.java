@@ -18,6 +18,7 @@ import java.util.concurrent.locks.ReentrantReadWriteLock;
  * Static class used to register new converters.
  * Also used internally by sql2o to lookup a converter.
  */
+@SuppressWarnings("unchecked")
 public class Convert {
 
     private static final ReentrantReadWriteLock rrwl = new ReentrantReadWriteLock();
@@ -97,15 +98,20 @@ public class Convert {
         }
     }
 
+    @Deprecated
     public static Converter getConverter(Class clazz) throws ConverterException {
-        Converter converter = getConverterIfExists(clazz);
+        return throwIfNull(clazz, getConverterIfExists(clazz));
+    }
+
+
+    public static <E> Converter<E> throwIfNull(Class<E> clazz, Converter<E> converter) throws ConverterException {
         if (converter == null) {
             throw new ConverterException("No converter registered for class: " + clazz.getName());
         }
         return converter;
     }
 
-    public static Converter getConverterIfExists(Class clazz) {
+    public static <E> Converter<E> getConverterIfExists(Class<E> clazz) {
         Converter c;
         rl.lock();
         try{
@@ -116,11 +122,12 @@ public class Convert {
         if(c!=null) return c;
 
         if (clazz.isEnum()) {
-          return registeredEnumConverterFactory.newConverter(clazz);
+          return registeredEnumConverterFactory.newConverter((Class)clazz);
         }
        return null;
     }
 
+    @Deprecated
     public static void registerConverter(Class clazz, Converter converter){
         wl.lock();
         try{

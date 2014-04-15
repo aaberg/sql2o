@@ -26,6 +26,7 @@ public class DefaultResultSetHandlerFactory<T> implements ResultSetHandlerFactor
     }
 
     private static Setter getSetter(
+            final Quirks quirks,
             final String propertyPath,
             final PojoMetadata metadata) {
         int index = propertyPath.indexOf('.');
@@ -34,7 +35,7 @@ public class DefaultResultSetHandlerFactory<T> implements ResultSetHandlerFactor
             final Setter setter = metadata.getPropertySetterIfExists(propertyPath);
             // behavior change: do not throw if POJO contains less properties
             if (setter == null) return null;
-            final Converter converter = Convert.getConverterIfExists(setter.getType());
+            final Converter converter = quirks.converterOf(setter.getType());
             // setter without converter
             if (converter == null) return setter;
             return new Setter() {
@@ -57,7 +58,7 @@ public class DefaultResultSetHandlerFactory<T> implements ResultSetHandlerFactor
         return new Setter() {
             public void setProperty(Object obj, Object value) {
                 Pojo pojo = new Pojo(metadata, metadata.isCaseSensitive(), obj);
-                pojo.setProperty(propertyPath, value);
+                pojo.setProperty(propertyPath, value, quirks);
             }
 
             public Class getType() {
@@ -142,14 +143,14 @@ public class DefaultResultSetHandlerFactory<T> implements ResultSetHandlerFactor
         //TODO: it's possible to cache converter/setters
         // cache key is ResultSetMetadata + Bean type
 
-        converter = Convert.getConverterIfExists(metadata.getType());
+        converter = quirks.converterOf(metadata.getType());
         final int columnCount = meta.getColumnCount();
 
         setters = new Setter[columnCount + 1];   // setters[0] is always null
         for (int i = 1; i <= columnCount; i++) {
             String colName = quirks.getColumnName(meta, i);
             // behavior change: do not throw if POJO contains less properties
-            setters[i] = getSetter(colName, metadata);
+            setters[i] = getSetter(quirks, colName, metadata);
         }
         /**
          * Fallback to executeScalar if converter exists,

@@ -1,15 +1,17 @@
 package org.sql2o;
 
-import org.sql2o.converters.Convert;
 import org.sql2o.converters.Converter;
 import org.sql2o.converters.ConverterException;
 import org.sql2o.logging.LocalLoggerFactory;
 import org.sql2o.logging.Logger;
+import org.sql2o.quirks.Quirks;
 
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.List;
+
+import static org.sql2o.converters.Convert.throwIfNull;
 
 /**
  * Represents a connection to the database with a transaction.
@@ -157,9 +159,10 @@ public class Connection implements AutoCloseable {
 
     @SuppressWarnings("unchecked") // need to change Convert
     public <V> V getKey(Class returnType){
+        final Quirks quirks = this.sql2o.getQuirks();
         Object key = getKey();
         try {
-            Converter<V> converter = Convert.getConverter(returnType);
+            Converter<V> converter = throwIfNull(returnType, quirks.converterOf(returnType));
             return converter.convert(key);
         } catch (ConverterException e) {
             throw new Sql2oException("Exception occurred while converting value from database to type " + returnType.toString(), e);
@@ -178,13 +181,14 @@ public class Connection implements AutoCloseable {
 
     @SuppressWarnings("unchecked") // need to change Convert
     public <V> List<V> getKeys(Class<V> returnType) {
+        final Quirks quirks = sql2o.getQuirks();
         if (!this.canGetKeys) {
             throw new Sql2oException("Keys where not fetched from database. Please call executeUpdate() to fetch keys");
         }
 
         if (this.keys != null) {
             try {
-                Converter<V> converter = Convert.getConverter(returnType);
+                Converter<V> converter = throwIfNull(returnType, quirks.converterOf(returnType));
 
                 List<V> convertedKeys = new ArrayList<V>(this.keys.size());
 

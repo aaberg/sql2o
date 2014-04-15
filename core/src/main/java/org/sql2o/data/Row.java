@@ -2,9 +2,12 @@ package org.sql2o.data;
 
 import org.sql2o.Sql2oException;
 import org.sql2o.converters.*;
+import org.sql2o.quirks.Quirks;
 
 import java.math.BigDecimal;
 import java.util.*;
+
+import static org.sql2o.converters.Convert.throwIfNull;
 
 /**
  * Represents a result set row.
@@ -14,11 +17,13 @@ public class Row {
     private Map<Integer, Object> values;
 
     private boolean isCaseSensitive;
+    private final Quirks quirks;
     private Map<String, Integer> columnNameToIdxMap;
 
-    public Row(Map<String, Integer> columnNameToIdxMap, boolean isCaseSensitive) {
+    public Row(Map<String, Integer> columnNameToIdxMap, boolean isCaseSensitive, Quirks quirks) {
         this.columnNameToIdxMap = columnNameToIdxMap;
         this.isCaseSensitive = isCaseSensitive;
+        this.quirks = quirks;
         this.values = new HashMap<Integer, Object>();
     }
 
@@ -44,17 +49,19 @@ public class Row {
         return obj;
     }
 
+    @SuppressWarnings("unchecked")
     public <V> V getObject(int columnIndex, Class clazz){
         try{
-            return (V)Convert.getConverter(clazz).convert(getObject(columnIndex));
+            return (V) throwIfNull(clazz, quirks.converterOf(clazz)).convert(getObject(columnIndex));
         } catch (ConverterException ex){
             throw new Sql2oException("Error converting value", ex);
         }
     }
 
+    @SuppressWarnings("unchecked")
     public <V> V getObject(String columnName, Class clazz) {
         try{
-            return (V)Convert.getConverter(clazz).convert(getObject(columnName));
+            return (V) throwIfNull(clazz, quirks.converterOf(clazz)).convert(getObject(columnName));
         } catch (ConverterException ex){
             throw new Sql2oException("Error converting value", ex);
         }

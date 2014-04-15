@@ -1,6 +1,5 @@
 package org.sql2o;
 
-import org.sql2o.converters.Convert;
 import org.sql2o.converters.Converter;
 import org.sql2o.converters.ConverterException;
 import org.sql2o.data.LazyTable;
@@ -16,6 +15,8 @@ import java.io.InputStream;
 import java.lang.reflect.InvocationTargetException;
 import java.sql.*;
 import java.util.*;
+
+import static org.sql2o.converters.Convert.throwIfNull;
 
 /**
  * Represents a sql2o statement. With sql2o, all statements are instances of the Query class.
@@ -123,7 +124,7 @@ public class Query {
         if (value == null) {
             return null;
         }
-        Converter converter = Convert.getConverterIfExists(value.getClass());
+        Converter converter = getQuirks().converterOf(value.getClass());
         if (converter == null) {
             return null;
         }
@@ -468,7 +469,7 @@ public class Query {
         try {
             ResultSet rs = this.statement.executeQuery();
             if (rs.next()){
-                Object o = this.connection.getSql2o().getQuirks().getRSVal(rs, 1);
+                Object o = getQuirks().getRSVal(rs, 1);
                 long end = System.currentTimeMillis();
                 logger.debug("total: {} ms; executed scalar [{}]", new Object[]{
                         end - start,
@@ -491,11 +492,15 @@ public class Query {
 
     }
 
+    private Quirks getQuirks() {
+        return this.connection.getSql2o().getQuirks();
+    }
+
     public <V> V executeScalar(Class<V> returnType){
         try {
             Converter<V> converter;
             //noinspection unchecked
-            converter = Convert.getConverter(returnType);
+            converter = throwIfNull(returnType, getQuirks().converterOf(returnType));
             //noinspection unchecked
             return executeScalar(converter);
         } catch (ConverterException e) {
@@ -520,9 +525,9 @@ public class Query {
 
     @SuppressWarnings("unchecked")
     private <T> ResultSetHandler<T> newScalarResultSetHandler(final Class<T> returnType) {
-        final Quirks quirks = this.connection.getSql2o().getQuirks();
+        final Quirks quirks = getQuirks();
         try {
-            final Converter<T> converter = Convert.getConverter(returnType);
+            final Converter<T> converter = throwIfNull(returnType, quirks.converterOf(returnType));
             return new ResultSetHandler<T>() {
                 public T handle(ResultSet resultSet) throws SQLException {
                     Object value = quirks.getRSVal(resultSet, 1);
