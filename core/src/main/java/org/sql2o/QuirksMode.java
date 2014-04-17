@@ -5,10 +5,10 @@ import org.sql2o.quirks.Db2Quirks;
 import org.sql2o.quirks.NoQuirks;
 import org.sql2o.quirks.PostgresQuirks;
 import org.sql2o.quirks.Quirks;
+import org.sql2o.tools.OutParameterGetter;
 
 import java.io.InputStream;
 import java.sql.*;
-import java.util.Map;
 
 /**
  * Use {@link org.sql2o.quirks.Quirks}.
@@ -26,6 +26,11 @@ public enum QuirksMode implements Quirks {
     public <E> Converter<E> converterOf(Class<E> ofClass) {
         return quirks.converterOf(ofClass);
     }
+
+    public <E> OutParameterGetter<E> outParamGetterOf(Class<E> ofClass) {
+        return quirks.outParamGetterOf(ofClass);
+    }
+
 
     public String getColumnName(ResultSetMetaData meta, int colIdx) throws SQLException {
         return quirks.getColumnName(meta, colIdx);
@@ -69,6 +74,10 @@ public enum QuirksMode implements Quirks {
 
     public void setParameter(PreparedStatement statement, int paramIdx, Time value) throws SQLException {
         quirks.setParameter(statement, paramIdx, value);
+    }
+
+    public void registerOutParameter(ProcedureCall procedureCall, OutParameter parameter) throws SQLException {
+        quirks.registerOutParameter(procedureCall, parameter);
     }
 
     public Object getRSVal(ResultSet rs, int idx) throws SQLException {

@@ -1,7 +1,5 @@
 package org.sql2o;
 
-import org.sql2o.converters.Convert;
-import org.sql2o.converters.Converter;
 import org.sql2o.quirks.NoQuirks;
 import org.sql2o.quirks.Quirks;
 import org.sql2o.tools.DefaultSqlParameterParsingStrategy;
@@ -227,6 +225,14 @@ public class Sql2o {
      */
     public Query createQuery(String query){
         return createQuery(query, null);
+    }
+
+    public Query createProcedureCall(String commandText) {
+        return new Connection(this, true).createProcedureCall(commandText);
+    }
+
+    public Query createProcedureCall(String commandText, String name) {
+        return new Connection(this, true).createProcedureCall(commandText, name);
     }
 
     /**

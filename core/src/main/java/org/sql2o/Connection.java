@@ -77,7 +77,7 @@ public class Connection implements AutoCloseable {
             throw new RuntimeException(e);
         }
 
-        return new Query(this, queryText, name, returnGeneratedKeys);
+        return new SqlQuery(this, queryText, name, returnGeneratedKeys);
     }
     
     public Query createQuery(String queryText){
@@ -86,6 +86,14 @@ public class Connection implements AutoCloseable {
 
     public Query createQuery(String queryText, boolean returnGeneratedKeys) {
         return createQuery(queryText, null, returnGeneratedKeys);
+    }
+
+    public Query createProcedureCall(String commandText) {
+        return createProcedureCall(commandText, null);
+    }
+
+    public Query createProcedureCall(String commandText, String name) {
+        return new ProcedureCall(this, commandText, name);
     }
 
     public Sql2o rollback(){
