@@ -47,7 +47,7 @@ public class TableResultSetIterator extends ResultSetIteratorBase<Row> {
     protected Row readNext() throws SQLException {
         Row row = new Row(columnNameToIdxMap, isCaseSensitive,this.quirks);
         for (Column column : columns) {
-            row.addValue(column.getIndex(), rs.getObject(column.getIndex() + 1));
+            row.addValue(column.getIndex(), quirks.getRSVal(rs, column.getIndex() + 1));
         }
         return row;
     }
