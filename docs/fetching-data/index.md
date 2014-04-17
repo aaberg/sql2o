@@ -57,5 +57,46 @@ public List<Task> getTasksBetweenDates(Date fromDate, Date toDate){
 
 ### Retrieve Result as Scalar
 
+Sometimes it is desirable to retrieve only one column from an SQL query, such as - next value of a sequence, count of records or just a primary key of a certain table. In those cases mapping a complete object to query is not only overkill but it may not even be feasible as we may not have a corresponding model class.
+
+In such cases we can retrieve result as scalars - an arbitrary Java object mapping to a specific column that is being returned by the query.
+
+Following are some of the examples:
+
+- This returns count of all students in the database
+
+{% highlight java %}
+public Integer getStudentCount(){
+    String sql =
+        "SELECT count(id) FROM students";
+
+    return sql2o.createQuery(sql).executeScalar(Integer.class);
+}
+{% endhighlight %}
+
+- This returns List of all student Id in the database
+
+
+{% highlight java %}
+public List<Integer> getStudentIdList(){
+    String sql =
+        "SELECT id FROM students";
+
+    return sql2o.createQuery(sql).executeScalarList(Integer.class);
+}
+{% endhighlight %}
+
 
 ### Retrieve Result from Arbitrary Query
+
+Often times in enterprise reporting we deal with very complex SQL query that spans multiple joins as well as aggregation functions. In such cases it may not be possible to map it to a single Java Model. It is desirable to have the database result returned as a List of Map object. Every element of List in this case is a Map that represents a virtual row of record. 
+
+<div class="alert alert-info">NOTE: This is available in SNAPSHOT only and will be released with Sql2o 1.4.1 version.</div>
+
+{% highlight java %}
+public List<Map<String,Object>> getReportData(){
+    String complexSql = "...";
+
+    return sql2o.createQuery(complexSql).executeAndFetchTable().asList();
+}
+{% endhighlight %}
