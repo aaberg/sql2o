@@ -5,6 +5,7 @@ import org.sql2o.converters.Converter;
 import org.sql2o.converters.ConverterException;
 import org.sql2o.logging.LocalLoggerFactory;
 import org.sql2o.logging.Logger;
+import org.sql2o.tools.OnConnectionCloseObserver;
 
 import java.sql.ResultSet;
 import java.sql.SQLException;
@@ -246,10 +247,21 @@ public class Connection implements AutoCloseable {
 
     private void closeJdbcConnection() {
         try {
+            this.onClose();
             this.getJdbcConnection().close();
         }
         catch (SQLException e) {
             logger.warn("Could not close connection. message: {}", e);
+        }
+    }
+
+    private final List<OnConnectionCloseObserver> onConnectionCloseObservers = new ArrayList<OnConnectionCloseObserver>();
+    public void registerConnectionsCloseObserver(OnConnectionCloseObserver observer) {
+        this.onConnectionCloseObservers.add(observer);
+    }
+    private void onClose() throws SQLException {
+        for (OnConnectionCloseObserver observer : onConnectionCloseObservers) {
+            observer.update();
         }
     }
 }

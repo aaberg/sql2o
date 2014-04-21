@@ -10,6 +10,7 @@ import org.sql2o.logging.Logger;
 import org.sql2o.reflection.PojoMetadata;
 import org.sql2o.tools.FeatureDetector;
 import org.sql2o.tools.NamedParameterStatement;
+import org.sql2o.tools.OnConnectionCloseObserver;
 import org.sql2o.tools.ResultSetUtils;
 
 import java.io.InputStream;
@@ -583,9 +584,16 @@ public class Query {
     /************** private stuff ***************/
     private void closeConnectionIfNecessary(){
         try{
-            if (connection.autoClose && !connection.getJdbcConnection().isClosed() && statement != null){
+
+            if (connection.autoClose) {
                 this.statement.close();
                 this.connection.getJdbcConnection().close();
+            } else {
+                this.connection.registerConnectionsCloseObserver(new OnConnectionCloseObserver() {
+                    public void update() throws SQLException {
+                        statement.close();
+                    }
+                });
             }
         }
         catch (Exception ex){
