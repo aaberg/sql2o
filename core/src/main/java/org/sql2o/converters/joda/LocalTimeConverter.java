@@ -4,7 +4,7 @@ import org.joda.time.LocalTime;
 import org.sql2o.converters.Converter;
 import org.sql2o.converters.ConverterException;
 
-import java.sql.Time;
+import java.sql.Timestamp;
 
 /**
  * Created by lars on 12/18/13.
@@ -15,15 +15,17 @@ public class LocalTimeConverter implements Converter<LocalTime> {
         if (val == null) {
             return null;
         }
-
-        if (!(val instanceof Time)){
-            throw new ConverterException("Don't know how to convert from type '" + val.getClass().getName() + "' to type '" + LocalTime.class.getName() + "'");
+        try {
+            // Joda has it's own pluggable converters infrastructure
+            // it will throw IllegalArgumentException if can't convert
+            // look @ org.joda.time.convert.ConverterManager
+            return new LocalTime(val);
+        } catch (IllegalArgumentException ex) {
+            throw new ConverterException("Don't know how to convert from type '" + val.getClass().getName() + "' to type '" + LocalTime.class.getName() + "'", ex);
         }
-
-        return new LocalTime(val);
     }
 
     public Object toDatabaseParam(LocalTime val) {
-        return new Time(val.toDateTimeToday().getMillis());
+        return new Timestamp(val.toDateTimeToday().getMillis());
     }
 }
