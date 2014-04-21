@@ -6,7 +6,6 @@ import org.sql2o.logging.LocalLoggerFactory;
 import org.sql2o.logging.Logger;
 import org.sql2o.quirks.Quirks;
 
-import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
@@ -93,10 +92,10 @@ public class Connection implements AutoCloseable {
     }
 
     public Sql2o rollback(){
-        return this.rollback(true);
+        return this.rollback(true).sql2o;
     }
 
-    public Sql2o rollback(boolean closeConnection){
+    public Connection rollback(boolean closeConnection){
         try {
             jdbcConnection.rollback();
         }
@@ -106,20 +105,25 @@ public class Connection implements AutoCloseable {
         finally {
             if(closeConnection) this.closeJdbcConnection();
         }
-        return this.getSql2o();
+        return this;
     }
 
     public Sql2o commit(){
+        return this.commit(true).sql2o;
+    }
+
+    public Connection commit(boolean closeConnection){
         try {
             jdbcConnection.commit();
         }
         catch (SQLException e) {
-            throw new RuntimeException(e);
+            throw new Sql2oException(e);
         }
         finally {
-            this.closeJdbcConnection();
+            if(closeConnection)
+                this.closeJdbcConnection();
         }
-        return this.getSql2o();
+        return this;
     }
 
     public int getResult(){
@@ -266,7 +270,7 @@ public class Connection implements AutoCloseable {
 
     private void createConnection(){
         try{
-            this.jdbcConnection = this.getSql2o().getDataSource().getConnection();
+            this.jdbcConnection = this.sql2o.getDataSource().getConnection();
         }
         catch(Exception ex){
             throw new Sql2oException("Could not acquire a connection from DataSource - " + ex.getMessage(), ex);
