@@ -245,6 +245,7 @@ public class Sql2o {
      * @param <V>
      * @return
      */
+    @SuppressWarnings("unchecked")
     public <V> V withConnection(StatementRunnableWithResult runnable, Object argument) {
         Connection connection = null;
         try{
@@ -391,7 +392,8 @@ public class Sql2o {
     public <V> V runInTransaction(StatementRunnableWithResult runnableWithResult, Object argument){
         return runInTransaction(runnableWithResult, argument, java.sql.Connection.TRANSACTION_READ_COMMITTED);
     }
-    
+
+    @SuppressWarnings("unchecked")
     public <V> V runInTransaction(StatementRunnableWithResult runnableWithResult, Object argument, int isolationLevel){
         Connection connection = this.beginTransaction(isolationLevel);
         Object result;

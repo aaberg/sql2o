@@ -5,14 +5,16 @@ package org.sql2o.logging;
  */
 public class SysOutLogger implements Logger {
 
-    private final Class clazz;
+    public static Logger instance = new SysOutLogger();
+
+    //private final Class clazz; // don't used
     private final static long startTime = System.currentTimeMillis();
     public static final String LINE_SEPARATOR = System.getProperty("line.separator");
     private static String WARN_LVL = "WARN";
-    private static String ERROR_LVL = "ERROR";
+    // private static String ERROR_LVL = "ERROR"; // don't used
 
-    public SysOutLogger(Class clazz) {
-        this.clazz = clazz;
+    public SysOutLogger() {
+    //    this.clazz = clazz;
     }
 
     public void debug(String format, Object[] argArray) {
@@ -32,7 +34,7 @@ public class SysOutLogger implements Logger {
     }
 
     private void log(String msg, String level, Throwable exception) {
-        StringBuffer buffer = new StringBuffer();
+        StringBuilder buffer = new StringBuilder(); // bit faster
 
         long millis = System.currentTimeMillis();
         buffer.append(millis - startTime);

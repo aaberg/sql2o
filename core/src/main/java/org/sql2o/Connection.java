@@ -8,8 +8,11 @@ import org.sql2o.quirks.Quirks;
 
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.sql.Statement;
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
 import static org.sql2o.converters.Convert.throwIfNull;
 
@@ -39,7 +42,7 @@ public class Connection implements AutoCloseable {
         return this;
     }
 
-    boolean autoClose;
+    final boolean autoClose;
 
     Connection(Sql2o sql2o, boolean autoClose) {
 
@@ -70,7 +73,7 @@ public class Connection implements AutoCloseable {
     public Query createQuery(String queryText, String name, boolean returnGeneratedKeys){
 
         try {
-            if (this.getJdbcConnection().isClosed()){
+            if (jdbcConnection.isClosed()){
                 createConnection();
             }
         } catch (SQLException e) {
@@ -89,29 +92,38 @@ public class Connection implements AutoCloseable {
     }
 
     public Sql2o rollback(){
+        return this.rollback(true).sql2o;
+    }
+
+    public Connection rollback(boolean closeConnection){
         try {
-            this.getJdbcConnection().rollback();
+            jdbcConnection.rollback();
         }
         catch (SQLException e) {
             logger.warn("Could not roll back transaction. message: {}", e);
         }
         finally {
-            this.closeJdbcConnection();
+            if(closeConnection) this.closeJdbcConnection();
         }
-        return this.getSql2o();
+        return this;
     }
 
     public Sql2o commit(){
+        return this.commit(true).sql2o;
+    }
+
+    public Connection commit(boolean closeConnection){
         try {
-            this.getJdbcConnection().commit();
+            jdbcConnection.commit();
         }
         catch (SQLException e) {
-            throw new RuntimeException(e);
+            throw new Sql2oException(e);
         }
         finally {
-            this.closeJdbcConnection();
+            if(closeConnection)
+                this.closeJdbcConnection();
         }
-        return this.getSql2o();
+        return this;
     }
 
     public int getResult(){
@@ -210,18 +222,37 @@ public class Connection implements AutoCloseable {
         this.canGetKeys = canGetKeys;
     }
 
+    private final Set<Statement> statements = new HashSet<Statement>();
+
+    void registerStatement(Statement statement){
+        statements.add(statement);
+    }
+    void removeStatement(Statement statement){
+        statements.remove(statement);
+    }
+
     public void close() {
         boolean connectionIsClosed;
         try {
-            connectionIsClosed = this.getJdbcConnection().isClosed();
+            connectionIsClosed = jdbcConnection.isClosed();
         } catch (SQLException e) {
             throw new Sql2oException("Sql2o encountered a problem while trying to determine whether the connection is closed.", e);
         }
 
         if (!connectionIsClosed) {
+
+            for (Statement statement : statements) {
+                try {
+                    if(!statement.isClosed()) statement.close();
+                } catch (Throwable e) {
+                    logger.warn("Could not close statement.", e);
+                }
+            }
+            statements.clear();
+
             boolean autoCommit = false;
             try {
-                autoCommit = this.getJdbcConnection().getAutoCommit();
+                autoCommit = jdbcConnection.getAutoCommit();
             }
             catch (SQLException e) {
                 logger.warn("Could not determine connection auto commit mode.", e);
@@ -232,23 +263,23 @@ public class Connection implements AutoCloseable {
                 this.closeJdbcConnection();
             }
             else {
-                this.rollback();
+                this.rollback(true);
             }
         }
     }
 
     private void createConnection(){
         try{
-            this.jdbcConnection = this.getSql2o().getDataSource().getConnection();
+            this.jdbcConnection = this.sql2o.getDataSource().getConnection();
         }
         catch(Exception ex){
-            throw new RuntimeException("Could not acquire a connection from DataSource - " + ex.getMessage(), ex);
+            throw new Sql2oException("Could not acquire a connection from DataSource - " + ex.getMessage(), ex);
         }
     }
 
     private void closeJdbcConnection() {
         try {
-            this.getJdbcConnection().close();
+            jdbcConnection.close();
         }
         catch (SQLException e) {
             logger.warn("Could not close connection. message: {}", e);

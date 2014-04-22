@@ -22,7 +22,7 @@ import static org.sql2o.converters.Convert.throwIfNull;
  * Represents a sql2o statement. With sql2o, all statements are instances of the Query class.
  */
 @SuppressWarnings("UnusedDeclaration")
-public class Query {
+public class Query implements AutoCloseable {
 
     private final Logger logger = LocalLoggerFactory.getLogger(Query.class);
 
@@ -35,10 +35,14 @@ public class Query {
     private String name;
     private boolean returnGeneratedKeys;
     private final Map<String, List<Integer>> paramNameToIdxMap;
+    private final String parsedQuery;
 
     private ResultSetHandlerFactoryBuilder resultSetHandlerFactoryBuilder;
 
-    private final String parsedQuery;
+    @Override
+    public String toString() {
+        return parsedQuery;
+    }
 
     public Query(Connection connection, String queryText, String name, boolean returnGeneratedKeys) {
         this.connection = connection;
@@ -49,16 +53,18 @@ public class Query {
 
         paramNameToIdxMap = new HashMap<String, List<Integer>>();
 
-        parsedQuery = getConnection().getSql2o().getSqlParameterParsingStrategy().parseSql(queryText, paramNameToIdxMap);
+        parsedQuery = connection.getSql2o().getSqlParameterParsingStrategy().parseSql(queryText, paramNameToIdxMap);
         try {
             if (returnGeneratedKeys) {
-                statement = getConnection().getJdbcConnection().prepareStatement(parsedQuery, Statement.RETURN_GENERATED_KEYS);
+                statement = connection.getJdbcConnection().prepareStatement(parsedQuery, Statement.RETURN_GENERATED_KEYS);
             } else {
-                statement = getConnection().getJdbcConnection().prepareStatement(parsedQuery);
+                statement = connection.getJdbcConnection().prepareStatement(parsedQuery);
             }
         } catch(SQLException ex) {
-            throw new RuntimeException(String.format("Error preparing statement - %s", ex.getMessage()), ex);
+            throw new Sql2oException(String.format("Error preparing statement - %s", ex.getMessage()), ex);
         }
+        connection.registerStatement(statement);
+
     }
 
     // ------------------------------------------------
@@ -120,6 +126,7 @@ public class Query {
         }
     }
 
+    @SuppressWarnings("unchecked")
     private Object convertParameter(Object value) {
         if (value == null) {
             return null;
@@ -128,7 +135,6 @@ public class Query {
         if (converter == null) {
             return null;
         }
-        //noinspection unchecked
         return converter.toDatabaseParam(value);
     }
 
@@ -243,6 +249,15 @@ public class Query {
             }
         }
         return this;
+    }
+
+    public void close() {
+        connection.removeStatement(statement);
+        try {
+            if(!statement.isClosed()) statement.close();
+        } catch (Throwable ex){
+            logger.warn("Could not close statement.", ex);
+        }
     }
 
     // ------------------------------------------------
@@ -420,24 +435,18 @@ public class Query {
     }
 
     public Table executeAndFetchTable() {
-        LazyTable lt = null;
-
+        LazyTable lt =  executeAndFetchTableLazy();
         List<Row> rows = new ArrayList<Row>();
-
         try {
-            lt = executeAndFetchTableLazy();
-
             for (Row item : lt.rows()) {
                 rows.add(item);
             }
         }
         finally {
-            if (lt != null) {
-                lt.close();
-            }
+           lt.close();
         }
-
-        return lt == null ? null : new Table(lt.getName(), rows, lt.columns());
+        // lt==null is always false
+        return new Table(lt.getName(), rows, lt.columns());
     }
 
     public Connection executeUpdate(){
@@ -614,13 +623,12 @@ public class Query {
 
     private void closeConnectionIfNecessary(){
         try{
-            if (connection.autoClose && !connection.getJdbcConnection().isClosed() && statement != null){
-                this.statement.close();
-                this.connection.getJdbcConnection().close();
+            if (connection.autoClose){
+                connection.close();
             }
         }
         catch (Exception ex){
-            throw new RuntimeException("Error while attempting to close connection", ex);
+            throw new Sql2oException("Error while attempting to close connection", ex);
         }
     }
 
