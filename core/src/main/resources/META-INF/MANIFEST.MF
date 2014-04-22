@@ -1,0 +1,2 @@
+Library-Name: Sql2o
+Library-Description: Easy database query library
