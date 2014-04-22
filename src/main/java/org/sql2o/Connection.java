@@ -5,7 +5,6 @@ import org.sql2o.converters.Converter;
 import org.sql2o.converters.ConverterException;
 import org.sql2o.logging.LocalLoggerFactory;
 import org.sql2o.logging.Logger;
-import org.sql2o.tools.OnConnectionCloseObserver;
 
 import java.sql.ResultSet;
 import java.sql.SQLException;
@@ -263,5 +262,9 @@ public class Connection implements AutoCloseable {
         for (OnConnectionCloseObserver observer : onConnectionCloseObservers) {
             observer.update();
         }
+    }
+
+    interface OnConnectionCloseObserver {
+        void update() throws SQLException;
     }
 }

@@ -4,20 +4,22 @@ import org.joda.time.DateTime;
 import org.sql2o.converters.Convert;
 import org.sql2o.converters.Converter;
 import org.sql2o.converters.ConverterException;
-import org.sql2o.data.*;
+import org.sql2o.data.LazyTable;
+import org.sql2o.data.Row;
+import org.sql2o.data.Table;
+import org.sql2o.data.TableResultSetIterator;
 import org.sql2o.logging.LocalLoggerFactory;
 import org.sql2o.logging.Logger;
 import org.sql2o.reflection.PojoMetadata;
 import org.sql2o.tools.FeatureDetector;
 import org.sql2o.tools.NamedParameterStatement;
-import org.sql2o.tools.OnConnectionCloseObserver;
 import org.sql2o.tools.ResultSetUtils;
 
 import java.io.InputStream;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
-import java.sql.*;
 import java.sql.Date;
+import java.sql.*;
 import java.util.*;
 
 /**
@@ -589,7 +591,7 @@ public class Query {
                 this.statement.close();
                 this.connection.getJdbcConnection().close();
             } else {
-                this.connection.registerConnectionsCloseObserver(new OnConnectionCloseObserver() {
+                this.connection.registerConnectionsCloseObserver(new Connection.OnConnectionCloseObserver() {
                     public void update() throws SQLException {
                         statement.close();
                     }
