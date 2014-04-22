@@ -8,6 +8,16 @@ base_url: ../
 <br/>
 <br/>
 
+## Sql2o 1.4.1 released
+_<small>22 apr 2014 <a href="https://github.com/aaberg">Lars Aaberg</a> </small>_
+
+####- Fixed statement-leak <a href="https://github.com/aaberg/sql2o/pull/113"><span class="badge badge-info">#113</span></a>
+>When using autoClose feature, statements was never explicitly closed.
+>_<small>Discovered by [Alden Quimby](https://github.com/aldenquimby)</small>_
+
+<br/>
+<br/>
+
 ## Sql2o 1.4.0 released
 _<small>31 mar 2014 <a href="https://github.com/aaberg">Lars Aaberg</a> </small>_
 
