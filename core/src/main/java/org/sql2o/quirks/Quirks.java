@@ -1,13 +1,12 @@
 package org.sql2o.quirks;
 
+import org.sql2o.OutParameter;
+import org.sql2o.ProcedureCall;
 import org.sql2o.converters.Converter;
+import org.sql2o.tools.OutParameterGetter;
 
 import java.io.InputStream;
 import java.sql.*;
-import java.sql.ResultSet;
-import java.sql.ResultSetMetaData;
-import java.sql.SQLException;
-import java.util.Map;
 
 /**
  * Interface for JDBC driver specific quirks.
@@ -24,6 +23,8 @@ public interface Quirks {
      */
 
     <E> Converter<E> converterOf(Class<E> ofClass);
+
+    <E> OutParameterGetter<E> outParamGetterOf(Class<E> ofClass);
 
 
     /**
@@ -46,5 +47,9 @@ public interface Quirks {
     void setParameter(PreparedStatement statement, int paramIdx, Timestamp value) throws SQLException;
     void setParameter(PreparedStatement statement, int paramIdx, Time value) throws SQLException;
 
+    <V> void registerOutParameter(ProcedureCall procedureCall, OutParameter<V> parameter) throws SQLException;
+
     Object getRSVal(ResultSet rs, int idx) throws SQLException;
+
+
 }

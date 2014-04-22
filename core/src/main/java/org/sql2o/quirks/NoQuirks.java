@@ -1,15 +1,16 @@
 package org.sql2o.quirks;
 
+import org.sql2o.*;
 import org.sql2o.converters.Convert;
 import org.sql2o.converters.Converter;
+import org.sql2o.tools.DefaultOutParameterGetters;
+import org.sql2o.tools.OutParameterGetter;
 
 import java.io.InputStream;
 import java.sql.*;
-import java.sql.ResultSet;
-import java.sql.ResultSetMetaData;
-import java.sql.SQLException;
 import java.util.Collections;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 /**
@@ -18,12 +19,15 @@ import java.util.Map;
  */
 public class NoQuirks implements Quirks {
     protected final Map<Class,Converter>  converters;
+    protected final Map<Class, OutParameterGetter> outParameterGetterMap;
 
     public NoQuirks(Map<Class, Converter> converters) {
         // protective copy
         // to avoid someone change this collection outside
         // so this makes converters thread-safe
         this.converters = new HashMap<Class, Converter>(converters);
+
+        this.outParameterGetterMap = new DefaultOutParameterGetters().map();
     }
 
     public NoQuirks() {
@@ -38,6 +42,11 @@ public class NoQuirks implements Quirks {
         // if no "local" converter let's look in global
         return c!=null?c:Convert.getConverterIfExists(ofClass);
 
+    }
+
+    @SuppressWarnings("unchecked")
+    public <E> OutParameterGetter<E> outParamGetterOf(Class<E> ofClass) {
+        return outParameterGetterMap.get(ofClass);
     }
 
     public String getColumnName(ResultSetMetaData meta, int colIdx) throws SQLException {
@@ -101,6 +110,29 @@ public class NoQuirks implements Quirks {
             statement.setNull(paramIdx, Types.TIME);
         } else {
             statement.setTime(paramIdx, value);
+        }
+    }
+
+    @SuppressWarnings("unchecked")
+    public <V> void registerOutParameter(ProcedureCall procedureCall, final OutParameter<V> parameter) throws SQLException {
+        List<Integer> indices = procedureCall.getParamNameToIdxMap().get(parameter.getName());
+        if (indices.size() == 0) {
+            throw new Sql2oException(String.format("No output parameter registered with name [%s]", parameter.getName()));
+        }
+        final int idx = indices.get(0);
+        parameter.registerParam(procedureCall.getCallableStatement(), idx);
+        procedureCall.attachAfterExecuteObserver(new AfterExecuteObserver() {
+            public void update(Query query) {
+                try {
+                    parameter.setValue(parameter.getOutParameterGetter().handle(((ProcedureCall) query).getCallableStatement(), idx));
+                } catch (SQLException e) {
+                    throw new Sql2oException("Error getting output parameter", e);
+                }
+            }
+        });
+
+        if (parameter.getOutParameterGetter() == null) {
+            parameter.setOutParameterGetter(this.outParamGetterOf(parameter.getParamGetterClass()));
         }
     }
 

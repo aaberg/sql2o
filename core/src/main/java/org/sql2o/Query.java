@@ -22,14 +22,14 @@ import static org.sql2o.converters.Convert.throwIfNull;
  * Represents a sql2o statement. With sql2o, all statements are instances of the Query class.
  */
 @SuppressWarnings("UnusedDeclaration")
-public class Query {
+public abstract class Query implements AfterExecuteObservable {
 
     private final Logger logger = LocalLoggerFactory.getLogger(Query.class);
 
     private Connection connection;
     private Map<String, String> caseSensitiveColumnMappings;
     private Map<String, String> columnMappings;
-    private final PreparedStatement statement;
+
     private boolean caseSensitive;
     private boolean autoDeriveColumnNames;
     private String name;
@@ -50,16 +50,14 @@ public class Query {
         paramNameToIdxMap = new HashMap<String, List<Integer>>();
 
         parsedQuery = getConnection().getSql2o().getSqlParameterParsingStrategy().parseSql(queryText, paramNameToIdxMap);
-        try {
-            if (returnGeneratedKeys) {
-                statement = getConnection().getJdbcConnection().prepareStatement(parsedQuery, Statement.RETURN_GENERATED_KEYS);
-            } else {
-                statement = getConnection().getJdbcConnection().prepareStatement(parsedQuery);
-            }
-        } catch(SQLException ex) {
-            throw new RuntimeException(String.format("Error preparing statement - %s", ex.getMessage()), ex);
-        }
+
     }
+
+    // ------------------------------------------------
+    // ------------- Abstract stuff -------------------
+    // ------------------------------------------------
+    protected abstract PreparedStatement getStatement();
+    public abstract <V> Query addParameter(OutParameter<V> parameter);
 
     // ------------------------------------------------
     // ------------- Getter/Setters -------------------
@@ -106,6 +104,10 @@ public class Query {
         return paramNameToIdxMap;
     }
 
+    public String getParsedQuery() {
+        return parsedQuery;
+    }
+
     // ------------------------------------------------
     // ------------- Add Parameters -------------------
     // ------------------------------------------------
@@ -137,7 +139,7 @@ public class Query {
 
         addParameterInternal(name, new ParameterSetter() {
             public void setParameter(int paramIdx) throws SQLException {
-                getConnection().getSql2o().getQuirks().setParameter(statement, paramIdx, convertedValue);
+                getConnection().getSql2o().getQuirks().setParameter(getStatement(), paramIdx, convertedValue);
             }
         });
 
@@ -147,7 +149,7 @@ public class Query {
     public Query addParameter(String name, final InputStream value){
         addParameterInternal(name, new ParameterSetter() {
             public void setParameter(int paramIdx) throws SQLException {
-                getConnection().getSql2o().getQuirks().setParameter(statement, paramIdx, value);
+                getConnection().getSql2o().getQuirks().setParameter(getStatement(), paramIdx, value);
             }
         });
 
@@ -157,7 +159,7 @@ public class Query {
     public Query addParameter(String name, final int value){
         addParameterInternal(name, new ParameterSetter() {
             public void setParameter(int paramIdx) throws SQLException {
-                getConnection().getSql2o().getQuirks().setParameter(statement, paramIdx, value);
+                getConnection().getSql2o().getQuirks().setParameter(getStatement(), paramIdx, value);
             }
         });
 
@@ -167,7 +169,7 @@ public class Query {
     public Query addParameter(String name, final Integer value) {
         addParameterInternal(name, new ParameterSetter() {
             public void setParameter(int paramIdx) throws SQLException {
-                getConnection().getSql2o().getQuirks().setParameter(statement, paramIdx, value);
+                getConnection().getSql2o().getQuirks().setParameter(getStatement(), paramIdx, value);
             }
         });
 
@@ -177,7 +179,7 @@ public class Query {
     public Query addParameter(String name, final long value){
         addParameterInternal(name, new ParameterSetter() {
             public void setParameter(int paramIdx) throws SQLException {
-                getConnection().getSql2o().getQuirks().setParameter(statement, paramIdx, value);
+                getConnection().getSql2o().getQuirks().setParameter(getStatement(), paramIdx, value);
             }
         });
 
@@ -187,7 +189,7 @@ public class Query {
     public Query addParameter(String name, final Long value){
         addParameterInternal(name, new ParameterSetter() {
             public void setParameter(int paramIdx) throws SQLException {
-                getConnection().getSql2o().getQuirks().setParameter(statement, paramIdx, value);
+                getConnection().getSql2o().getQuirks().setParameter(getStatement(), paramIdx, value);
             }
         });
 
@@ -197,7 +199,7 @@ public class Query {
     public Query addParameter(String name, final String value) {
         addParameterInternal(name, new ParameterSetter() {
             public void setParameter(int paramIdx) throws SQLException {
-                getConnection().getSql2o().getQuirks().setParameter(statement, paramIdx, value);
+                getConnection().getSql2o().getQuirks().setParameter(getStatement(), paramIdx, value);
             }
         });
 
@@ -207,7 +209,7 @@ public class Query {
     public Query addParameter(String name, final Timestamp value){
         addParameterInternal(name, new ParameterSetter() {
             public void setParameter(int paramIdx) throws SQLException {
-                getConnection().getSql2o().getQuirks().setParameter(statement, paramIdx, value);
+                getConnection().getSql2o().getQuirks().setParameter(getStatement(), paramIdx, value);
             }
         });
 
@@ -217,7 +219,7 @@ public class Query {
     public Query addParameter(String name, final Time value) {
         addParameterInternal(name, new ParameterSetter() {
             public void setParameter(int paramIdx) throws SQLException {
-                getConnection().getSql2o().getQuirks().setParameter(statement, paramIdx, value);
+                getConnection().getSql2o().getQuirks().setParameter(getStatement(), paramIdx, value);
             }
         });
 
@@ -260,7 +262,7 @@ public class Query {
         public ResultSetIterableBase() {
             try {
                 start = System.currentTimeMillis();
-                rs = statement.executeQuery();
+                rs = getStatement().executeQuery();
                 afterExecQuery = System.currentTimeMillis();
             }
             catch (SQLException ex) {
@@ -328,11 +330,14 @@ public class Query {
      */
     public <T> ResultSetIterable<T> executeAndFetchLazy(final ResultSetHandlerFactory<T> resultSetHandlerFactory) {
         final Quirks quirks = getConnection().getSql2o().getQuirks();
-        return new ResultSetIterableBase<T>() {
+        ResultSetIterableBase i = new ResultSetIterableBase<T>() {
             public Iterator<T> iterator() {
                 return new PojoResultSetIterator<T>(rs, isCaseSensitive(), quirks, resultSetHandlerFactory);
             }
         };
+
+        notifyAfterexecute();
+        return i;
     }
 
     /**
@@ -443,9 +448,10 @@ public class Query {
     public Connection executeUpdate(){
         long start = System.currentTimeMillis();
         try{
-            this.connection.setResult(statement.executeUpdate());
-            this.connection.setKeys(this.returnGeneratedKeys ? statement.getGeneratedKeys() : null);
+            this.connection.setResult(getStatement().executeUpdate());
+            this.connection.setKeys(this.returnGeneratedKeys ? getStatement().getGeneratedKeys() : null);
             connection.setCanGetKeys(this.returnGeneratedKeys);
+            notifyAfterexecute();
         }
         catch(SQLException ex){
             this.connection.onException();
@@ -467,7 +473,8 @@ public class Query {
     public Object executeScalar(){
         long start = System.currentTimeMillis();
         try {
-            ResultSet rs = this.statement.executeQuery();
+            ResultSet rs = this.getStatement().executeQuery();
+            notifyAfterexecute();
             if (rs.next()){
                 Object o = getQuirks().getRSVal(rs, 1);
                 long end = System.currentTimeMillis();
@@ -492,7 +499,7 @@ public class Query {
 
     }
 
-    private Quirks getQuirks() {
+    protected Quirks getQuirks() {
         return this.connection.getSql2o().getQuirks();
     }
 
@@ -547,7 +554,7 @@ public class Query {
 
     public Query addToBatch(){
         try {
-            statement.addBatch();
+            getStatement().addBatch();
         } catch (SQLException e) {
             throw new Sql2oException("Error while adding statement to batch", e);
         }
@@ -558,9 +565,10 @@ public class Query {
     public Connection executeBatch() throws Sql2oException {
         long start = System.currentTimeMillis();
         try {
-            connection.setBatchResult(statement.executeBatch());
-            connection.setKeys(this.returnGeneratedKeys ? statement.getGeneratedKeys() : null);
+            connection.setBatchResult(getStatement().executeBatch());
+            connection.setKeys(this.returnGeneratedKeys ? getStatement().getGeneratedKeys() : null);
             connection.setCanGetKeys(this.returnGeneratedKeys);
+            notifyAfterexecute();
         }
         catch (Throwable e) {
             this.connection.onException();
@@ -614,8 +622,8 @@ public class Query {
 
     private void closeConnectionIfNecessary(){
         try{
-            if (connection.autoClose && !connection.getJdbcConnection().isClosed() && statement != null){
-                this.statement.close();
+            if (connection.autoClose && !connection.getJdbcConnection().isClosed() && getStatement() != null){
+                this.getStatement().close();
                 this.connection.getJdbcConnection().close();
             }
         }
@@ -624,7 +632,20 @@ public class Query {
         }
     }
 
-    private interface ParameterSetter{
+    protected interface ParameterSetter{
         void setParameter(int paramIdx) throws SQLException;
+    }
+
+    /************* observer *******************/
+    private final List<AfterExecuteObserver> afterExecuteObservers = new ArrayList<AfterExecuteObserver>();
+    public void attachAfterExecuteObserver(AfterExecuteObserver observer) {
+        afterExecuteObservers.add(observer);
+    }
+
+    public void notifyAfterexecute() {
+        for (AfterExecuteObserver afterExecuteObserver : afterExecuteObservers) {
+            afterExecuteObserver.update(this);
+        }
+
     }
 }
