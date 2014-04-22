@@ -246,10 +246,25 @@ public class Connection implements AutoCloseable {
 
     private void closeJdbcConnection() {
         try {
+            this.onClose();
             this.getJdbcConnection().close();
         }
         catch (SQLException e) {
             logger.warn("Could not close connection. message: {}", e);
         }
+    }
+
+    private final List<OnConnectionCloseObserver> onConnectionCloseObservers = new ArrayList<OnConnectionCloseObserver>();
+    public void registerConnectionsCloseObserver(OnConnectionCloseObserver observer) {
+        this.onConnectionCloseObservers.add(observer);
+    }
+    private void onClose() throws SQLException {
+        for (OnConnectionCloseObserver observer : onConnectionCloseObservers) {
+            observer.update();
+        }
+    }
+
+    interface OnConnectionCloseObserver {
+        void update() throws SQLException;
     }
 }
