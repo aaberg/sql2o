@@ -5,9 +5,9 @@ package org.sql2o.tools;
  */
 public final class ClassUtils {
 
-    private static ClassLoader getClassLoader() {
-        return Thread.currentThread().getContextClassLoader();
-    }
+//    private static ClassLoader getClassLoader() {
+//        return Thread.currentThread().getContextClassLoader();
+//    }
 
     /**
      * Check whether the {@link Class} identified by the supplied name is present.
@@ -17,7 +17,10 @@ public final class ClassUtils {
      */
     public static boolean isPresent(String className) {
         try {
-            getClassLoader().loadClass(className);
+            // what's wrong with old plain Class.forName
+            // this code supposed to work everywhere including containers
+            Class.forName(className);
+            // getClassLoader().loadClass(className);
             return true;
         }
         catch (Throwable ex) {

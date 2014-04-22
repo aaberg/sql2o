@@ -13,6 +13,6 @@ public class LocalLoggerFactory {
             return new Slf4jLogger(LoggerFactory.getLogger(clazz));
         }
 
-        return new SysOutLogger(clazz);
+        return SysOutLogger.instance;
     }
 }

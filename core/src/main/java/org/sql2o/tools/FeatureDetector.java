@@ -5,6 +5,7 @@ package org.sql2o.tools;
  *
  * @author Alden Quimby
  */
+@SuppressWarnings("UnusedDeclaration")
 public final class FeatureDetector {
 
     private FeatureDetector()
@@ -17,7 +18,6 @@ public final class FeatureDetector {
     private static Boolean jodaTimeAvailable;
     private static Boolean slf4jAvailable;
     private static Boolean oracleAvailable;
-    private static boolean cachePojoMetaDataEnabled;
     private static boolean cacheUnderscoreToCamelcaseEnabled;
 
     /**
