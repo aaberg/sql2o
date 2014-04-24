@@ -32,6 +32,12 @@
             <name>Alden Quimby</name>
             <url>https://github.com/aldenquimby</url>
         </developer>
+        <developer>
+            <email>dimzon541@gmail.com</email>
+            <id>dimzon</id>
+            <name>Dmitry Alexandrov</name>
+            <url>https://github.com/dimzon</url>
+        </developer>
     </developers>
 
     <dependencies>

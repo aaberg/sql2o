@@ -133,12 +133,28 @@ public class Query implements AutoCloseable {
         }
         Converter converter = getQuirks().converterOf(value.getClass());
         if (converter == null) {
-            return null;
+            // let's try to add parameter AS IS
+            return value;
         }
         return converter.toDatabaseParam(value);
     }
 
-    public Query addParameter(String name, Object value) {
+    public <T> Query addParameter(String name, Class<T> parameterClass, T value){
+        //TODO: must cover most of types: BigDecimal,Boolean,SmallInt,Double,Float,byte[]
+        if(InputStream.class.isAssignableFrom(parameterClass))
+            return addParameter(name, (InputStream)value);
+        if(Integer.class==parameterClass)
+            return addParameter(name, (Integer)value);
+        if(Long.class==parameterClass)
+            return addParameter(name, (Long)value);
+        if(String.class==parameterClass)
+            return addParameter(name, (String)value);
+        if(Timestamp.class==parameterClass)
+            return addParameter(name, (Timestamp)value);
+        if(Time.class==parameterClass)
+            return addParameter(name, (Time)value);
+
+
         final Object convertedValue = convertParameter(value);
 
         addParameterInternal(name, new ParameterSetter() {
@@ -149,6 +165,24 @@ public class Query implements AutoCloseable {
 
         return this;
     }
+
+    @SuppressWarnings("unchecked")
+    public Query addParameter(String name, Object value) {
+        return value == null
+                ? addParameter(name, Object.class, value)
+                : addParameter(name,
+                    (Class<Object>) value.getClass(),
+                    value);
+    }
+
+    public Query withParams(Object... paramValues){
+        int i=0;
+        for (Object paramValue : paramValues) {
+            addParameter("p" + (++i), paramValue);
+        }
+        return this;
+    }
+
 
     public Query addParameter(String name, final InputStream value){
         addParameterInternal(name, new ParameterSetter() {
@@ -235,8 +269,11 @@ public class Query implements AutoCloseable {
         Map<String, PojoIntrospector.ReadableProperty> propertyMap = PojoIntrospector.readableProperties(clazz);
         for (PojoIntrospector.ReadableProperty property : propertyMap.values()) {
             try {
-                if( this.getParamNameToIdxMap().containsKey(property.name))
-                    this.addParameter(property.name, property.get(pojo));
+                if( this.getParamNameToIdxMap().containsKey(property.name)) {
+                    @SuppressWarnings("unchecked")
+                    final Class<Object> type = (Class<Object>) property.type;
+                    this.addParameter(property.name, type, property.get(pojo));
+                }
             }
             catch(IllegalArgumentException ex) {
                 logger.debug("Ignoring Illegal Arguments", ex);

@@ -1,9 +1,7 @@
 package org.sql2o;
 
-import org.sql2o.converters.Convert;
-import org.sql2o.converters.Converter;
-import org.sql2o.quirks.NoQuirks;
 import org.sql2o.quirks.Quirks;
+import org.sql2o.quirks.QuirksDetector;
 import org.sql2o.tools.DefaultSqlParameterParsingStrategy;
 import org.sql2o.tools.SqlParameterParsingStrategy;
 
@@ -30,8 +28,7 @@ import java.util.Map;
  * @author Lars Aaberg
  */
 public class Sql2o {
-
-    private Quirks quirks;
+    final Quirks quirks;
     private final DataSource dataSource;
     private Map<String, String> defaultColumnMappings;
     private boolean defaultCaseSensitive;
@@ -74,7 +71,7 @@ public class Sql2o {
      * @param pass  database password
      */
     public Sql2o(String url, String user, String pass){
-        this(url, user, pass, new NoQuirks());
+        this(url, user, pass, QuirksDetector.forURL(url));
     }
 
     /**
@@ -102,7 +99,7 @@ public class Sql2o {
      * @param dataSource    The DataSource Sql2o uses to acquire connections to the database.
      */
     public Sql2o(DataSource dataSource) {
-        this(dataSource, new NoQuirks());
+        this(dataSource, QuirksDetector.forObject(dataSource));
     }
 
     /**
@@ -110,9 +107,7 @@ public class Sql2o {
      */
     @Deprecated
     public Sql2o(DataSource dataSource, QuirksMode quirksMode) {
-        this.dataSource = dataSource;
-        this.setQuirks(quirksMode);
-        this.defaultColumnMappings = new HashMap<String, String>();
+        this(dataSource, (Quirks)quirksMode);
     }
 
     /**
@@ -122,16 +117,12 @@ public class Sql2o {
      */
     public Sql2o(DataSource dataSource, Quirks quirks){
         this.dataSource = dataSource;
-        this.setQuirks(quirks);
+        this.quirks=quirks;
         this.defaultColumnMappings = new HashMap<String, String>();
     }
 
     Quirks getQuirks() {
         return quirks;
-    }
-
-    private void setQuirks(Quirks quirks) {
-        this.quirks = quirks;
     }
 
      /**
