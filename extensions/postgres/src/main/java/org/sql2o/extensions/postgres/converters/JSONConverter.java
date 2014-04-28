@@ -25,7 +25,12 @@ public class JSONConverter implements Converter<JsonElement>, ConvertersProvider
         if (val == null) return null;
         if (val instanceof JsonElement) return (JsonElement) val;
         String jsonString;
-        if (val instanceof PGobject) {
+        if (val instanceof String) {
+            jsonString = (String) val;
+        } else if (val instanceof PGobject) {
+            // at one side this is just a demo
+            // the better way is to unwrap PGObject to String
+            // with type==json in Quirks.getRSVal
             jsonString = ((PGobject) val).getValue();
         } else {
             jsonString = stringConverterHolder.converter.convert(val);
