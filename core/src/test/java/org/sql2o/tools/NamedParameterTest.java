@@ -7,7 +7,7 @@ import java.util.List;
 import java.util.Map;
 
 import static org.hamcrest.CoreMatchers.*;
-import static org.hamcrest.MatcherAssert.assertThat;
+import static org.hamcrest.MatcherAssert.*;
 
 /**
  * User: dimzon
@@ -30,7 +30,7 @@ public class NamedParameterTest extends TestCase {
         assertEquals("select ?", preparedQuery);
         assertThat(map.size(), is(equalTo(1)));
         assertThat(map.get("foo").size(), is(equalTo(1)));
-        assertThat(map.get("foo"), hasItem(1));
+        assertThat(map.get("foo").get(0), is(equalTo(1)));
 
         map.clear();
         preparedQuery = sqlParameterParsingStrategy.parseSql("select (:foo)::uuid", map);
