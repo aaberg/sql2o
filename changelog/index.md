@@ -8,6 +8,20 @@ base_url: ../
 <br/>
 <br/>
 
+## Sql2o 1.4.2 released
+_<small>29 apr 2014 <a href="https://github.com/aaberg">Lars Aaberg</a> </small>_
+
+####- Fixed thread safety issue on enum converterd <a href="https://github.com/aaberg/sql2o/pull/116"><span class="badge badge-info">#116</span></a>
+>As the heading say - Fixed a thread safety issue.
+>_<small>Fixed by [Lars Aaberg](https://github.com/aaberg)</small>_
+
+####- Added Oracle QuirksMode <a href="https://github.com/aaberg/sql2o/commit/47eba9361fa1a5a38aff048bba28cf682dea827c"><span class="badge badge-info">47eba93</span></a>
+>Using this QuirksMode disables returning of generated keys by default, as Oracle JDBC driver otherwise throws an OperationNotAllowed exception for most queries.
+>_<small>Fixed by [Lars Aaberg](https://github.com/aaberg)</small>_
+
+<br/>
+<br/>
+
 ## Sql2o 1.4.1 released
 _<small>22 apr 2014 <a href="https://github.com/aaberg">Lars Aaberg</a> </small>_
 
