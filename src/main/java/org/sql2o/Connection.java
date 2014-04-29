@@ -61,9 +61,9 @@ public class Connection implements AutoCloseable {
     }
 
     public Query createQuery(String queryText, String name){
-        // If postgresql, the default behaviour should be not to retur generated keys, as this will throw an exception on
+        // For some JDBC drivers, the default behaviour should be not to return generated keys, as this will throw an exception on
         // every query that does not create any new keys.
-        boolean returnGeneratedKeys = !(this.sql2o.quirksMode == QuirksMode.PostgreSQL);
+        boolean returnGeneratedKeys = this.sql2o.quirksMode.isReturnGeneratedKeysByDefault();
         return createQuery(queryText, name, returnGeneratedKeys);
     }
 

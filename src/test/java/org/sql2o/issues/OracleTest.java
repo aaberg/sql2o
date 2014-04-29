@@ -2,8 +2,9 @@ package org.sql2o.issues;
 
 import org.joda.time.DateTime;
 import org.joda.time.LocalDate;
-import org.junit.Test;
-import org.sql2o.Sql2o;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.sql2o.*;
 
 import java.sql.Driver;
 import java.sql.DriverManager;
@@ -25,6 +26,8 @@ public class OracleTest {
 
     private Sql2o sql2o;
 
+    private final Logger logger = LoggerFactory.getLogger(this.getClass());
+
     public OracleTest() {
         try {
             Class oracleDriverClass = this.getClass().getClassLoader().loadClass("oracle.jdbc.driver.OracleDriver");
@@ -33,10 +36,10 @@ public class OracleTest {
             throw new RuntimeException(t);
         }
         // new oracle developer day VM
-        this.sql2o = new Sql2o("jdbc:oracle:thin:@//localhost:1521/PDB1", "pmuser", "oracle");
+        this.sql2o = new Sql2o("jdbc:oracle:thin:@//localhost:1521/PDB1", "pmuser", "oracle", QuirksMode.Oracle);
 
         // older oracle developer day VM
-        //this.sql2o = new Sql2o("jdbc:oracle:thin:@localhost:1521:orcl", "test", "test");
+        // this.sql2o = new Sql2o("jdbc:oracle:thin:@localhost:1521:orcl", "test", "test", QuirksMode.Oracle);
     }
 
     /**
@@ -71,6 +74,40 @@ public class OracleTest {
 
         String val = sql2o.createQuery(sql).executeScalar(String.class);
         assertEquals("test", val);
+    }
+
+//    @Test
+    public void testBatch(){
+        final String createSql = "create table SomeTable(id int primary key, value varchar2(100))";
+        final String dropSql = "drop table SomeTable";
+
+        final String insertSql = "INSERT INTO SomeTable(id, value) VALUES (:id, :value)";
+        final String verifySql = "SELECT COUNT(*) FROM SomeTable";
+
+        try{
+            sql2o.createQuery(createSql).executeUpdate();
+
+            sql2o.runInTransaction(new StatementRunnable() {
+                public void run(Connection connection, Object argument) throws Throwable {
+                    Query query = connection.createQuery(insertSql);
+
+                    for (int i = 0; i < 100; i++){
+                        query.addParameter("id", i).addParameter("value", "foo" + i).addToBatch();
+                    }
+
+                    query.executeBatch();
+                }
+            });
+            int cnt = sql2o.createQuery(verifySql).executeScalar(Integer.class);
+
+            assertThat(cnt, is(equalTo(100)));
+        } catch(Exception e) {
+            logger.error("error", e);
+        } finally {
+            sql2o.createQuery(dropSql).executeUpdate();
+        }
+
+
     }
 
 

@@ -5,5 +5,15 @@ package org.sql2o;
  */
 public enum QuirksMode {
 
-    None, DB2, PostgreSQL, MSSqlServer
+    None(true), DB2(true), PostgreSQL(false), MSSqlServer(true), Oracle(false);
+
+    private final boolean returnGeneratedKeysByDefault;
+
+    QuirksMode(boolean returnGeneratedKeysByDefault) {
+        this.returnGeneratedKeysByDefault = returnGeneratedKeysByDefault;
+    }
+
+    public boolean isReturnGeneratedKeysByDefault() {
+        return returnGeneratedKeysByDefault;
+    }
 }
