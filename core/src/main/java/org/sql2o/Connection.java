@@ -84,8 +84,18 @@ public class Connection implements AutoCloseable {
     }
 
     public Query createQueryWithParams(String queryText, Object... paramValues){
-        return createQuery(queryText, null)
-                .withParams(paramValues);
+        Query query = createQuery(queryText, null);
+        boolean destroy = true;
+        try {
+            query.withParams(paramValues);
+            destroy = false;
+            return query;
+        } finally {
+            // instead of re-wrapping exception
+            // just keep it as-is
+            // but kill a query
+            if(destroy) query.close();
+        }
     }
 
     public Query createQuery(String queryText){
