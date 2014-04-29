@@ -1,0 +1,3 @@
+# default quirks provider
+# TODO: move oracle && db2 quirks implementations to different packages
+org.sql2o.quirks.spi.QuirksProviderImpl
