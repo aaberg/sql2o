@@ -7,13 +7,14 @@ package org.sql2o.converters;
 public class DefaultEnumConverterFactory implements EnumConverterFactory {
     public <E extends Enum> Converter<E> newConverter(final Class<E> enumType) {
         return new Converter<E>() {
+            @SuppressWarnings("unchecked")
             public E convert(Object val) throws ConverterException {
                 if (val == null) {
                     return null;
                 }
                 try {
                     if (val instanceof String){
-                        return Enum.valueOf(enumType, val.toString());
+                        return (E)Enum.valueOf(enumType, val.toString());
                     } else if (val instanceof Number){
                         return enumType.getEnumConstants()[((Number)val).intValue()];
                     }

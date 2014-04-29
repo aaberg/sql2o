@@ -14,14 +14,14 @@ public abstract class AbstractDateConverter<E extends Date> implements Converter
 
     protected abstract E fromMilliseconds(long millisecond);
 
+    @SuppressWarnings("unchecked")
     public E convert(Object val) throws ConverterException {
         if (val == null){
             return null;
         }
 
         if (classOfDate.isInstance(val)){
-            //noinspection unchecked
-            return (E)val;
+            return (E) val;
         }
 
         if(val instanceof java.util.Date){

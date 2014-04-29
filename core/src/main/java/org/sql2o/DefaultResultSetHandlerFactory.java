@@ -25,6 +25,7 @@ public class DefaultResultSetHandlerFactory<T> implements ResultSetHandlerFactor
         this.quirks = quirks;
     }
 
+    @SuppressWarnings("unchecked")
     private static Setter getSetter(
             final Quirks quirks,
             final String propertyPath,
@@ -135,6 +136,7 @@ public class DefaultResultSetHandlerFactory<T> implements ResultSetHandlerFactor
     }
 
 
+    @SuppressWarnings("unchecked")
     private  <T> ResultSetHandler<T> newResultSetHandler0(final ResultSetMetaData meta) throws SQLException {
         final Setter[] setters;
         final Converter converter;
