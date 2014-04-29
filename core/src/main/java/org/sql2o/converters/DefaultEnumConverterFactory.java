@@ -13,9 +13,9 @@ public class DefaultEnumConverterFactory implements EnumConverterFactory {
                 }
                 try {
                     if (val instanceof String){
-                        return (E)Enum.valueOf(enumType, val.toString());
+                        return Enum.valueOf(enumType, val.toString());
                     } else if (val instanceof Number){
-                        return (E)enumType.getEnumConstants()[((Number)val).intValue()];
+                        return enumType.getEnumConstants()[((Number)val).intValue()];
                     }
                 } catch (Throwable t) {
                     throw new ConverterException("Error converting value '" + val.toString() + "' to " + enumType.getName(), t);

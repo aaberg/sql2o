@@ -9,6 +9,7 @@ import java.util.Map;
  */
 public class DefaultSqlParameterParsingStrategy implements SqlParameterParsingStrategy {
 
+    @SuppressWarnings("ConstantConditions")
     public String parseSql(String statement, Map<String, List<Integer>> paramMap) {
         int length=statement.length();
         StringBuilder parsedQuery=new StringBuilder(length);
@@ -48,7 +49,7 @@ public class DefaultSqlParameterParsingStrategy implements SqlParameterParsingSt
                         indexList=new ArrayList<Integer>(3);
                         paramMap.put(name, indexList);
                     }
-                    indexList.add(Integer.valueOf(index));
+                    indexList.add(index);
 
                     index++;
                 }

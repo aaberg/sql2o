@@ -96,11 +96,10 @@ public class DefaultResultSetHandlerFactory<T> implements ResultSetHandlerFactor
 
             Key key = (Key) o;
 
-            if (!f.metadata.equals(key.getMetadata())) return false;
-            if (f.quirks != key.getQuirksMode()) return false;
-            if (!stringKey.equals(key.stringKey)) return false;
+            return f.metadata.equals(key.getMetadata())
+                    && f.quirks == key.getQuirksMode()
+                    && stringKey.equals(key.stringKey);
 
-            return true;
         }
 
         @Override

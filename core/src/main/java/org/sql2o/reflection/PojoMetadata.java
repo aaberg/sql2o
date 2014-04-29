@@ -41,13 +41,12 @@ public class PojoMetadata {
 
         PojoMetadata that = (PojoMetadata) o;
 
-        if (autoDeriveColumnNames != that.autoDeriveColumnNames) return false;
-        if (caseSensitive != that.caseSensitive) return false;
-        if (!clazz.equals(that.clazz)) return false;
-        if (!columnMappings.equals(that.columnMappings)) return false;
-        if (!propertyInfo.equals(that.propertyInfo)) return false;
+        return autoDeriveColumnNames == that.autoDeriveColumnNames
+                && caseSensitive == that.caseSensitive
+                && clazz.equals(that.clazz)
+                && columnMappings.equals(that.columnMappings)
+                && propertyInfo.equals(that.propertyInfo);
 
-        return true;
     }
 
     @Override

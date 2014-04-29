@@ -12,7 +12,6 @@ import java.util.concurrent.locks.ReentrantReadWriteLock;
  */
 public abstract class AbstractCache<K,V,E> {
     private final Map<K,V> map;
-    private final ReentrantReadWriteLock rrwl;
     private final ReentrantReadWriteLock.ReadLock rl;
     private final ReentrantReadWriteLock.WriteLock wl;
     /***
@@ -20,7 +19,7 @@ public abstract class AbstractCache<K,V,E> {
      */
     public AbstractCache(Map<K, V> map) {
         this.map = map;
-        rrwl = new ReentrantReadWriteLock();
+        ReentrantReadWriteLock rrwl = new ReentrantReadWriteLock();
         rl = rrwl.readLock();
         wl = rrwl.writeLock();
     }

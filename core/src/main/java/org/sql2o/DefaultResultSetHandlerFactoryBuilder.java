@@ -43,7 +43,8 @@ public class DefaultResultSetHandlerFactoryBuilder implements ResultSetHandlerFa
         this.quirks = quirks;
     }
 
-    public ResultSetHandlerFactory newFactory(Class clazz) {
+    @SuppressWarnings("unchecked")
+    public <T> ResultSetHandlerFactory<T> newFactory(Class<T> clazz) {
         PojoMetadata pojoMetadata = new PojoMetadata(clazz, caseSensitive, autoDeriveColumnNames, columnMappings);
         return new DefaultResultSetHandlerFactory(pojoMetadata, quirks);
     }

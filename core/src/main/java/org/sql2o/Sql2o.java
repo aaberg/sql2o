@@ -1,5 +1,7 @@
 package org.sql2o;
 
+import org.sql2o.logging.LocalLoggerFactory;
+import org.sql2o.logging.Logger;
 import org.sql2o.quirks.Quirks;
 import org.sql2o.quirks.QuirksDetector;
 import org.sql2o.tools.DefaultSqlParameterParsingStrategy;
@@ -34,6 +36,8 @@ public class Sql2o {
     private boolean defaultCaseSensitive;
     private SqlParameterParsingStrategy sqlParameterParsingStrategy = new DefaultSqlParameterParsingStrategy();
 
+    private final static Logger logger = LocalLoggerFactory.getLogger(Sql2o.class);
+
     public Sql2o(String jndiLookup) {
         this(_getJndiDatasource(jndiLookup));
     }
@@ -54,8 +58,8 @@ public class Sql2o {
                 try {
                     ctx.close();
                 }
-                catch (NamingException e) {
-                    throw new RuntimeException(e);
+                catch (Throwable e) {
+                    logger.warn("error closing context", e);
                 }
             }
         }
