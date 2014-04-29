@@ -1,16 +1,15 @@
 package org.sql2o.converters;
 
 /**
- * Default implementation of {@link org.sql2o.converters.EnumConverter},
+ * Default enum converter,
  * used by sql2o to convert a value from the database into an {@link Enum}.
  */
-public class DefaultEnumConverter implements EnumConverter
+public class DefaultEnumConverter implements Converter<Enum>
 {
-    private Class enumType;
+    private final Class enumType;
 
-    public void setEnumType(Class clazz)
-    {
-        enumType = clazz;
+    public DefaultEnumConverter(Class enumType) {
+        this.enumType = enumType;
     }
 
     public Enum convert(Object val) throws ConverterException {

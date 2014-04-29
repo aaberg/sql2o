@@ -16,7 +16,6 @@ import java.util.UUID;
  */
 public class Convert {
 
-    private static EnumConverter registeredEnumConverter = new DefaultEnumConverter();
     private static Map<Class, Converter> registeredConverters = new HashMap<Class, Converter>();
 
     static{
@@ -80,8 +79,7 @@ public class Convert {
         if (registeredConverters.containsKey(clazz)){
             return registeredConverters.get(clazz);
         } else if (clazz.isEnum()) {
-            registeredEnumConverter.setEnumType(clazz);
-            return registeredEnumConverter;
+            return new DefaultEnumConverter(clazz);
         } else {
             return null;
         }
@@ -89,9 +87,5 @@ public class Convert {
 
     public static void registerConverter(Class clazz, Converter converter){
         registeredConverters.put(clazz, converter);
-    }
-
-    public static void registerEnumConverter(EnumConverter converter) {
-        registeredEnumConverter = converter;
     }
 }
