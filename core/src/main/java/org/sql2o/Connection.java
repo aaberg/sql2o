@@ -21,7 +21,7 @@ import static org.sql2o.converters.Convert.throwIfNull;
  */
 public class Connection implements AutoCloseable {
     
-    private final Logger logger = LocalLoggerFactory.getLogger(Connection.class);
+    private final static Logger logger = LocalLoggerFactory.getLogger(Connection.class);
 
     private java.sql.Connection jdbcConnection;
     private Sql2o sql2o;
