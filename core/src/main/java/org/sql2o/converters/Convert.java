@@ -1,8 +1,10 @@
 package org.sql2o.converters;
 
 import org.joda.time.DateTime;
+import org.joda.time.LocalDate;
 import org.joda.time.LocalTime;
 import org.sql2o.converters.joda.DateTimeConverter;
+import org.sql2o.converters.joda.LocalDateConverter;
 import org.sql2o.converters.joda.LocalTimeConverter;
 import org.sql2o.tools.FeatureDetector;
 
@@ -99,6 +101,7 @@ public class Convert {
         if (FeatureDetector.isJodaTimeAvailable()) {
             mapToFill.put(DateTime.class, new DateTimeConverter());
             mapToFill.put(LocalTime.class, new LocalTimeConverter());
+            mapToFill.put(LocalDate.class, new LocalDateConverter());
         }
     }
 
