@@ -1,0 +1,4 @@
+org.sql2o.converters.OracleDateConverter
+org.sql2o.converters.joda.OracleDateTimeConverter
+org.sql2o.converters.joda.OracleLocalDateConverter
+org.sql2o.converters.joda.OracleLocalTimeConverter
