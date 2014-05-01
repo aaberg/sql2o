@@ -24,7 +24,7 @@ import static org.sql2o.converters.Convert.throwIfNull;
 @SuppressWarnings("UnusedDeclaration")
 public class Query implements AutoCloseable {
 
-    private final Logger logger = LocalLoggerFactory.getLogger(Query.class);
+    private final static Logger logger = LocalLoggerFactory.getLogger(Query.class);
 
     private Connection connection;
     private Map<String, String> caseSensitiveColumnMappings;

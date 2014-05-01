@@ -70,10 +70,11 @@
             <version>2.2.8</version>
         </dependency>
         <dependency>
-            <scope>test</scope>
+            <scope>compile</scope>
             <groupId>postgresql</groupId>
             <artifactId>postgresql</artifactId>
             <version>9.1-901.jdbc4</version>
+            <optional>true</optional>
         </dependency>
         <!-- Uncomment to run oracle tests.  -->
         <!--
@@ -121,11 +122,17 @@
             <artifactId>spring-jdbc</artifactId>
             <version>4.0.2.RELEASE</version>
         </dependency>
+
+        <dependency>
+            <groupId>org.mockito</groupId>
+            <artifactId>mockito-all</artifactId>
+            <version>1.9.5</version>
+            <scope>test</scope>
+        </dependency>
     </dependencies>
 
     <build>
         <plugins>
-
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-jar-plugin</artifactId>
