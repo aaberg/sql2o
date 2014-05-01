@@ -21,9 +21,9 @@ public class BooleanConverter extends ConverterBase<Boolean> {
         }
 
         if (val instanceof Character) {
-            return val =='Y'
-                    || val =='T'
-                    || val =='J';
+            return (char)val =='Y'
+                    || (char)val =='T'
+                    || (char)val =='J';
         }
 
         if (val instanceof String) {
