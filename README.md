@@ -18,7 +18,7 @@ typical usage may not involve writing any SQL, or it may map underscore case to 
 #### Performance of SELECT
 
 Execute 1000 SELECT statements against a DB and map the data returned to a POJO.
-Code is available [here](https://github.com/aaberg/sql2o/blob/master/src/test/java/org/sql2o/performance/PojoPerformanceTests.java).
+Code is available [here](https://github.com/aaberg/sql2o/blob/master/core/src/test/java/org/sql2o/performance/PojoPerformanceTest.java).
 
 Method                                                              | Duration               |
 ------------------------------------------------------------------- | ---------------------- |
