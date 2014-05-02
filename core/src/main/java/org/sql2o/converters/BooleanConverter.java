@@ -21,6 +21,7 @@ public class BooleanConverter extends ConverterBase<Boolean> {
         }
 
         if (val instanceof Character) {
+            // cast to char is required to compile with java 8
             return (char)val =='Y'
                     || (char)val =='T'
                     || (char)val =='J';
