@@ -320,6 +320,7 @@ public class Query implements AutoCloseable {
             }
         }
 
+        @Override
         public void close() {
             try {
                 if (rs != null) {
