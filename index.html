@@ -46,15 +46,20 @@ typically done with <b>sql2o</b> compared to how it is done with plain JDBC.</p>
 
 {% highlight java %}
 
+Sql2o sql2o = new Sql2o(DB_URL, USER, PASS);
+
 String sql =
     "SELECT id, category, duedate " +
     "FROM tasks " +
     "WHERE category = :category";
 
-Sql2o sql2o = new Sql2o(DB_URL, USER, PASS);
-List<Task> tasks = sql2o.createQuery(sql)
-    .addParameter("category", "foo")
-    .executeAndFetch(Task.class);
+try(Connection con = sql2o.open()) {
+    List<Task> tasks = con.createQuery(sql)
+        .addParameter("category", "foo")
+        .executeAndFetch(Task.class);
+}
+
+
 
 {% endhighlight %}
 
@@ -125,12 +130,16 @@ String sql =
     "INSERT INTO tasks(id, description, due_date) " +
     "VALUES (:id, :description, :dueDate)";
 
+try (Connection con = sql2o.open()) {
+    con.createQuery(sql)
+        .addParameter("id", task.getId())
+        .addParameter("description", task.getDescription())
+        .addParameter("dueDate", task.getDueDate())
+        .executeUpdate();
+}
+
 // With sql2o, all statements are queries; Even INSERT, UPDATE and DELETE statements
-sql2o.createQuery(sql)
-    .addParameter("id", task.getId())
-    .addParameter("description", task.getDescription())
-    .addParameter("dueDate", task.getDueDate())
-    .executeUpdate();
+
 {% endhighlight %}
 
 

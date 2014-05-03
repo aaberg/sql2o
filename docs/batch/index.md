@@ -17,17 +17,17 @@ In the example below, 100 rows are inserted into a table in the database in one 
 public void insertABunchOfRows(){
     final String sql = "INSERT INTO SomeTable(id, value) VALUES (:id, :value)";
 
-    sql2o.runInTransaction(new StatementRunnable() {
-        public void run(Connection connection, Object argument) throws Throwable {
-            Query query = connection.createQuery(sql);
+    try (Connection con = sql2o.beginTransaction()) {
+        Query query = con.createQuery(sql);
 
-            for (int i = 0; i < 100; i++){
-                query.addParameter("id", i).addParameter("value", "foo" + i).addToBatch();
-            }
-
-            query.executeBatch();
+        for (int i = 0; i < 100; i++){
+            query.addParameter("id", i).addParameter("value", "foo" + i)
+                    .addToBatch();
         }
-    });
+
+        query.executeBatch(); // executes entire batch
+        con.commit();         // remember to call commit(), else sql2o will automatically rollback.
+    }
 }
 
 {% endhighlight %}

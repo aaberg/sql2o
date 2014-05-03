@@ -45,9 +45,7 @@ import org.sql2o.domain.Student;
 public interface TestRepository {
 	
 	public int getStudentCount();
-
 	public Student getStudent(int studentId);
-
 }
 {% endhighlight %}
 
@@ -64,23 +62,27 @@ import org.springframework.stereotype.Repository;
 
 @Repository
 public class TestRepositoryImpl implements TestRepository {
-	
 	@Autowired
 	private Sql2o sql2o;
 	
 	@Override
 	public int getStudentCount(){
 		String sql = "SELECT count(id) FROM students";
-		return sql2o.createQuery(sql)
-				.executeScalar(Integer.class);
+                
+		try (Connection con = sql2o.open()) {
+			return con.createQuery(sql).executeScalar(Integer.class);
+		}
 	}
 	
 	@Override
 	public Student getStudent(int studentId){
 		String sql = "SELECT * FROM students where id=:id";
-		return sql2o.createQuery(sql)
+
+		try (Connection con = sql2o.open()) {
+			return con.createQuery(sql)
 				.addParameter("id", studentId)
 				.executeAndFetchFirst(Student.class);;
+		}
 	}
 }
 {% endhighlight %}

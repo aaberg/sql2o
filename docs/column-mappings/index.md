@@ -17,7 +17,13 @@ public List<Task> getTasksBetweenDates(Date fromDate, Date toDate){
         "FROM tasks " +
         "WHERE duedate > :fromDate AND duedate < :toDate";
 
-    return sql2o.createQuery(sql).addParameter("fromDate", fromDate).addParameter("toDate", toDate).executeAndFetch(Task.class);
+    try (Connection con = sql2o.open()) {
+        return con.createQuery(sql)
+            .addParameter("fromDate", fromDate)
+            .addParameter("toDate", toDate)
+            .executeAndFetch(Task.class);
+    }
+    
 }
 {% endhighlight %}
 
@@ -31,10 +37,12 @@ public List<Task> getTasksBetweenDates(Date fromDate, Date toDate){
         "FROM tasks " +
         "WHERE duedate > :fromDate AND duedate < :toDate";
 
-    return sql2o.createQuery(sql)
-        .addParameter("fromDate", fromDate).addParameter("toDate", toDate)
-        .addColumnMapping("DUE_DATE", "dueDate")
-        .executeAndFetch(Task.class);
+    try (Connection con = sql2o.open()) {
+        return con.createQuery(sql)
+            .addParameter("fromDate", fromDate).addParameter("toDate", toDate)
+            .addColumnMapping("DUE_DATE", "dueDate")
+            .executeAndFetch(Task.class);
+    }
 }
 {% endhighlight %}
 

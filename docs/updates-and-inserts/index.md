@@ -11,10 +11,13 @@ With sql2o updates and inserts are executed with the executeUpdate() method.
 {% highlight java %}
 
 String updateSql = "update myTable set value = :valParam where id = :idParam";
-sql2o.createQuery(updateSql)
-	.addParameter("valParam", foo)
-	.addParameter("idParam", bar)
-	.executeUpdate();
+
+try (Connection con = sql2o.open()) {
+    con.createQuery(updateSql)
+	    .addParameter("valParam", foo)
+	    .addParameter("idParam", bar)
+	    .executeUpdate();
+}
 
 {% endhighlight %}
 
@@ -25,10 +28,12 @@ String insertSql =
 	"insert into myTable(id, value) " +
 	"values (:idParam, :valParam)";
 
-sql2o.createQuery(insertSql)
-	.addParameter("idParam", bar)
-	.addParameter("valParam", foo)
-	.executeUpdate();
+try (Connection con = sql2o.open()) {
+    con.createQuery(insertSql)
+	    .addParameter("idParam", bar)
+	    .addParameter("valParam", foo)
+	    .executeUpdate();
+}
 
 {% endhighlight %}
 
@@ -46,10 +51,12 @@ Example:
 // - value varchar(10)
 String sql = "insert into MYTABLE ( value ) values ( :val )";
 
-int insertedId = sql2o.createQuery(sql, true)
-	.addParameter("val", someValue)
-	.executeUpdate()
-	.getKey();
+try (Connection con = sql2o.open()) {
+    int insertedId = con.createQuery(sql, true)
+	    .addParameter("val", someValue)
+	    .executeUpdate()
+	    .getKey();
+}
 
 {% endhighlight %}
 
@@ -81,6 +88,8 @@ String sql =
 	"insert into MYTABLE(col1, col2, col3, col4 ...) "
 	"values (:prop1, :prop2, :prop3, :prop4 ...)";
 
-sql2o.createQuery(sql).bind(model).executeUpdate();
+try (Connection con = sql2o.open()) {
+    con.createQuery(sql).bind(model).executeUpdate();
+}
 
 {% endhighlight %}

@@ -36,7 +36,9 @@ public List<Task> getAllTasks(){
         "SELECT id, description, duedate " +
         "FROM tasks";
 
-    return sql2o.createQuery(sql).executeAndFetch(Task.class);
+    try(Connection con = sql2o.open()) {
+        return con.createQuery(sql).executeAndFetch(Task.class);
+    }
 }
 {% endhighlight %}
 
@@ -50,7 +52,12 @@ public List<Task> getTasksBetweenDates(Date fromDate, Date toDate){
         "FROM tasks " +
         "WHERE duedate >= :fromDate AND duedate < :toDate";
 
-    return sql2o.createQuery(sql).addParameter("fromDate", fromDate).addParameter("toDate", toDate).executeAndFetch(Task.class);
+    try(Connection con = sql2o.open()) {
+        return sql2o.createQuery(sql)
+            .addParameter("fromDate", fromDate)
+            .addParameter("toDate", toDate)
+            .executeAndFetch(Task.class);
+    }
 }
 {% endhighlight %}
 
@@ -67,10 +74,11 @@ Following are some of the examples:
 
 {% highlight java %}
 public Integer getStudentCount(){
-    String sql =
-        "SELECT count(id) FROM students";
+    String sql = "SELECT count(id) FROM students";
 
-    return sql2o.createQuery(sql).executeScalar(Integer.class);
+    try (Connection con = sql2o.open()) {
+        return con.createQuery(sql).executeScalar(Integer.class);
+    }
 }
 {% endhighlight %}
 
@@ -79,10 +87,11 @@ public Integer getStudentCount(){
 
 {% highlight java %}
 public List<Integer> getStudentIdList(){
-    String sql =
-        "SELECT id FROM students";
+    String sql = "SELECT id FROM students";
 
-    return sql2o.createQuery(sql).executeScalarList(Integer.class);
+    try (Connection con = sql2o.open()) {
+        return con.createQuery(sql).executeScalarList(Integer.class);
+    }   
 }
 {% endhighlight %}
 
@@ -97,6 +106,8 @@ Often times in enterprise reporting we deal with very complex SQL query that spa
 public List<Map<String,Object>> getReportData(){
     String complexSql = "...";
 
-    return sql2o.createQuery(complexSql).executeAndFetchTable().asList();
+    try (Connection con = sql2o.open()) {
+        return con.createQuery(complexSql).executeAndFetchTable().asList();
+    }
 }
 {% endhighlight %}
