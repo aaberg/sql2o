@@ -1,6 +1,5 @@
 package org.sql2o;
 
-import org.sql2o.converters.Convert;
 import org.sql2o.converters.Converter;
 import org.sql2o.converters.ConverterException;
 import org.sql2o.quirks.Quirks;
@@ -8,8 +7,6 @@ import org.sql2o.reflection.Pojo;
 import org.sql2o.reflection.PojoMetadata;
 import org.sql2o.reflection.Setter;
 import org.sql2o.tools.AbstractCache;
-import org.sql2o.tools.FeatureDetector;
-import org.sql2o.tools.ResultSetUtils;
 
 import java.sql.ResultSet;
 import java.sql.ResultSetMetaData;
@@ -137,7 +134,7 @@ public class DefaultResultSetHandlerFactory<T> implements ResultSetHandlerFactor
 
 
     @SuppressWarnings("unchecked")
-    private  <T> ResultSetHandler<T> newResultSetHandler0(final ResultSetMetaData meta) throws SQLException {
+    private ResultSetHandler<T> newResultSetHandler0(final ResultSetMetaData meta) throws SQLException {
         final Setter[] setters;
         final Converter converter;
         final boolean useExecuteScalar;
