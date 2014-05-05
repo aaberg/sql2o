@@ -268,7 +268,8 @@ public class PojoPerformanceTest
 
             q = create.select()
                       .from("post")
-                      .where("id = ?", -1); // param needs an initial value, else future calls the bind() will fail.
+                      .where("id = ?", -1) // param needs an initial value, else future calls the bind() will fail.
+                      .keepStatement(true);
         }
 
         @Override
