@@ -188,7 +188,15 @@ public class Sql2o {
      * @param name name of query. Only used for logging purposes
      * @param returnGeneratedKeys boolean value indicating if the database should return any generated keys.
      * @return the {@link Query} instance
+     *
+     * @deprecated create queries with {@link org.sql2o.Connection} class instead, using try-with-resource blocks
+     * <code>
+     *     try (Connection con = sql2o.open()) {
+     *         return sql2o.createQuery(query, name, returnGeneratedKeys).executeAndFetch(Pojo.class);
+     *     }
+     * </code>
      */
+    @Deprecated
     public Query createQuery(String query, String name, boolean returnGeneratedKeys) {
         return new Connection(this, true).createQuery(query, name, returnGeneratedKeys);
     }
@@ -198,7 +206,15 @@ public class Sql2o {
      * @param query the sql query string
      * @param returnGeneratedKeys boolean value indicating if the database should return any generated keys.
      * @return the {@link Query} instance
+     *
+     * @deprecated create queries with {@link org.sql2o.Connection} class instead, using try-with-resource blocks
+     * <code>
+     *     try (Connection con = sql2o.open()) {
+     *         return sql2o.createQuery(query, returnGeneratedKeys).executeAndFetch(Pojo.class);
+     *     }
+     * </code>
      */
+    @Deprecated
     public Query createQuery(String query, boolean returnGeneratedKeys) {
         return createQuery(query, null, returnGeneratedKeys);
     }
@@ -208,7 +224,15 @@ public class Sql2o {
      * @param query the sql query string
      * @param name name of query. Only used for logging purposes
      * @return the {@link Query} instance
+     *
+     * @deprecated create queries with {@link org.sql2o.Connection} class instead, using try-with-resource blocks
+     * <code>
+     *     try (Connection con = sql2o.open()) {
+     *         return sql2o.createQuery(query, name).executeAndFetch(Pojo.class);
+     *     }
+     * </code>
      */
+    @Deprecated
     public Query createQuery(String query, String name){
 
         Connection connection = new Connection(this, true);
@@ -219,7 +243,15 @@ public class Sql2o {
      * Creates a {@link Query}
      * @param query the sql query string
      * @return the {@link Query} instance
+     *
+     * @deprecated create queries with {@link org.sql2o.Connection} class instead, using try-with-resource blocks
+     * <code>
+     *     try (Connection con = sql2o.open()) {
+     *         return sql2o.createQuery(query).executeAndFetch(Pojo.class);
+     *     }
+     * </code>
      */
+    @Deprecated
     public Query createQuery(String query){
         return createQuery(query, null);
     }
