@@ -15,6 +15,7 @@ public abstract class AbstractObjectConstructorFactoryTest extends TestCase {
     }
 
     public final ObjectConstructorFactory ocf;
+
     public AbstractObjectConstructorFactoryTest(ObjectConstructorFactory ocf) {
         this.ocf = ocf;
     }

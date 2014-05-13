@@ -11,7 +11,7 @@ import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 
 @SuppressWarnings("UnusedDeclaration")
-public class MethodAccessorsGenerator implements MethodSetterFactory {
+public class MethodAccessorsGenerator implements MethodSetterFactory, ObjectConstructorFactory {
     private static final Object generatorObject;
     private static final MethodAccessor generateMethod;
     private static final MethodAccessor generateConstructor;
@@ -96,5 +96,26 @@ public class MethodAccessorsGenerator implements MethodSetterFactory {
                 return type;
             }
         };
+    }
+
+
+    @Override
+    public ObjectConstructor newConstructor(final Class<?> cls) {
+        try {
+            final Constructor<?> constructor = cls.getDeclaredConstructor();
+            final ConstructorAccessor constructorAccessor = newConstructorAccessor(constructor);
+            return new ObjectConstructor() {
+                @Override
+                public Object newInstance() {
+                    try {
+                        return constructorAccessor.newInstance((Object[])null);
+                    } catch (InstantiationException | InvocationTargetException e) {
+                        throw new Sql2oException("Could not create a new instance of class " + cls, e);
+                    }
+                }
+            };
+        } catch (NoSuchMethodException e) {
+            return UnsafeFieldSetterFactory.getConstructor(cls);
+        }
     }
 }

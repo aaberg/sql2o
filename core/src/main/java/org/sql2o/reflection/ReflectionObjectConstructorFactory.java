@@ -14,11 +14,7 @@ public class ReflectionObjectConstructorFactory implements ObjectConstructorFact
                 public Object newInstance() {
                     try {
                         return ctor.newInstance((Object[])null);
-                    } catch (InstantiationException e) {
-                        throw new Sql2oException("Could not create a new instance of class " + clazz, e);
-                    } catch (IllegalAccessException e) {
-                        throw new Sql2oException("Could not create a new instance of class " + clazz, e);
-                    } catch (InvocationTargetException e) {
+                    } catch (InstantiationException | IllegalAccessException | InvocationTargetException e) {
                         throw new Sql2oException("Could not create a new instance of class " + clazz, e);
                     }
                 }
