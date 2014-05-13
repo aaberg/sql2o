@@ -9,19 +9,21 @@ public class FactoryFacade {
 
     static {
         MethodSetterFactory m;
+        ObjectConstructorFactory o;
         try {
             m = (MethodSetterFactory) Class
                     .forName("org.sql2o.reflection.MethodAccessorsGenerator")
                     .newInstance();
+            o = (ObjectConstructorFactory) m;
         } catch (Throwable ex) {
             m = new ReflectionMethodSetterFactory();
+            o = null;
         }
         FieldSetterFactory f;
-        ObjectConstructorFactory o;
         try {
             Class cls = Class.forName("org.sql2o.reflection.UnsafeFieldSetterFactory");
             f = (FieldSetterFactory) cls.newInstance();
-            o = (ObjectConstructorFactory) f;
+            if(o==null) o = (ObjectConstructorFactory) f;
         } catch (Throwable ex) {
             f = new ReflectionFieldSetterFactory();
             o = new ReflectionObjectConstructorFactory();
