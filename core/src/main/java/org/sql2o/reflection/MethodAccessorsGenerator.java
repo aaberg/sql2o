@@ -38,8 +38,8 @@ public class MethodAccessorsGenerator implements MethodSetterFactory, ObjectCons
             bar = aClass.getMethod("generateConstructor", Class.class, Class[].class, Class[].class, Integer.TYPE);
             generateConstructor = newMethodAccessor(generatorObject, bar);
             bar = aClass.getMethod("generateSerializationConstructor", Class.class, Class[].class, Class[].class, Integer.TYPE, Class.class);
-            final ConstructorAccessor goc =  newConstructorAccessor(generatorObject,declaredConstructor);
-            generatorObjectHolder = new ThreadLocal<Object>(){
+            final ConstructorAccessor goc = newConstructorAccessor(generatorObject, declaredConstructor);
+            generatorObjectHolder = new ThreadLocal<Object>() {
                 @Override
                 protected Object initialValue() {
                     try {
@@ -75,14 +75,14 @@ public class MethodAccessorsGenerator implements MethodSetterFactory, ObjectCons
     }
 
     private static MethodAccessor newMethodAccessor(Object generatorObject, Method bar) throws InvocationTargetException {
-            return (MethodAccessor) generateMethod.invoke(
-                    generatorObject, new Object[]{
-                    bar.getDeclaringClass(),
-                    bar.getName(),
-                    bar.getParameterTypes(),
-                    bar.getReturnType(),
-                    bar.getExceptionTypes(),
-                    bar.getModifiers()});
+        return (MethodAccessor) generateMethod.invoke(
+                generatorObject, new Object[]{
+                bar.getDeclaringClass(),
+                bar.getName(),
+                bar.getParameterTypes(),
+                bar.getReturnType(),
+                bar.getExceptionTypes(),
+                bar.getModifiers()});
     }
 
     public static ConstructorAccessor newConstructorAccessor(Constructor<?> bar) {
@@ -94,12 +94,12 @@ public class MethodAccessorsGenerator implements MethodSetterFactory, ObjectCons
     }
 
     private static ConstructorAccessor newConstructorAccessor(Object generatorObject, Constructor<?> bar) throws InvocationTargetException {
-            return (ConstructorAccessor) generateConstructor.invoke(
-                    generatorObject, new Object[]{
-                    bar.getDeclaringClass(),
-                    bar.getParameterTypes(),
-                    bar.getExceptionTypes(),
-                    bar.getModifiers()});
+        return (ConstructorAccessor) generateConstructor.invoke(
+                generatorObject, new Object[]{
+                bar.getDeclaringClass(),
+                bar.getParameterTypes(),
+                bar.getExceptionTypes(),
+                bar.getModifiers()});
     }
 
     public static ConstructorAccessor newConstructorAccessor(Constructor<?> bar, Class<?> targetClass) {
@@ -128,40 +128,35 @@ public class MethodAccessorsGenerator implements MethodSetterFactory, ObjectCons
                     throw new Sql2oException("error while calling setter method with name " + method.getName() + " on class " + obj.getClass().toString(), e);
                 }
             }
+
             public Class getType() {
                 return type;
             }
         };
     }
 
-
     @Override
     public ObjectConstructor newConstructor(final Class<?> cls) {
-        Class<?> cls0 = cls;
-        Constructor<?> ctor;
-        for(;;){
+        for (Class<?> cls0 = cls; cls != Object.class; cls0 = cls0.getSuperclass()) {
             try {
-                ctor = cls0.getDeclaredConstructor();
-                break;
+                Constructor<?> ctor = cls0.getDeclaredConstructor();
+                final ConstructorAccessor constructorAccessor = (cls0 == cls)
+                        ? newConstructorAccessor(ctor)
+                        : newConstructorAccessor(ctor, cls);
+                return new ObjectConstructor() {
+                    @Override
+                    public Object newInstance() {
+                        try {
+                            return constructorAccessor.newInstance(null);
+                        } catch (InstantiationException | InvocationTargetException e) {
+                            throw new Sql2oException("Could not create a new instance of class " + cls, e);
+                        }
+                    }
+                };
             } catch (NoSuchMethodException e) {
-                cls0=cls0.getSuperclass();
+                // ignore
             }
         }
-        if(cls0==Object.class)
-            return UnsafeFieldSetterFactory.getConstructor(cls);
-        final ConstructorAccessor constructorAccessor =
-                (cls0==cls)
-                        ?newConstructorAccessor(ctor)
-                        :newConstructorAccessor(ctor,cls);
-        return new ObjectConstructor() {
-            @Override
-            public Object newInstance() {
-                try {
-                    return constructorAccessor.newInstance(null);
-                } catch (InstantiationException | InvocationTargetException e) {
-                    throw new Sql2oException("Could not create a new instance of class " + cls, e);
-                }
-            }
-        };
+        return UnsafeFieldSetterFactory.getConstructor(cls);
     }
 }
