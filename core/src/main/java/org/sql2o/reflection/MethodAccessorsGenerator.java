@@ -15,6 +15,7 @@ public class MethodAccessorsGenerator implements MethodSetterFactory, ObjectCons
     private static final Object generatorObject;
     private static final MethodAccessor generateMethod;
     private static final MethodAccessor generateConstructor;
+    private static final MethodAccessor generateSerializationConstructor;
     private static final MethodAccessor newFieldAccessor;
 
     static {
@@ -36,6 +37,8 @@ public class MethodAccessorsGenerator implements MethodSetterFactory, ObjectCons
                     bar.getModifiers());
             bar = aClass.getMethod("generateConstructor", Class.class, Class[].class, Class[].class, Integer.TYPE);
             generateConstructor = newMethodAccessor(bar);
+            bar = aClass.getMethod("generateSerializationConstructor", Class.class, Class[].class, Class[].class, Integer.TYPE, Class.class);
+            generateSerializationConstructor = newMethodAccessor(bar);
             aClass = Class.forName("sun.reflect.UnsafeFieldAccessorFactory");
             bar = aClass.getDeclaredMethod("newFieldAccessor", Field.class, Boolean.TYPE);
             newFieldAccessor = newMethodAccessor(bar);
@@ -80,6 +83,20 @@ public class MethodAccessorsGenerator implements MethodSetterFactory, ObjectCons
         }
     }
 
+    public static ConstructorAccessor newConstructorAccessor(Constructor<?> bar, Class<?> targetClass) {
+        try {
+            return (ConstructorAccessor) generateSerializationConstructor.invoke(
+                    generatorObject, new Object[]{
+                    targetClass,
+                    bar.getParameterTypes(),
+                    bar.getExceptionTypes(),
+                    bar.getModifiers(),
+                    bar.getDeclaringClass()});
+        } catch (InvocationTargetException e) {
+            throw new RuntimeException(e);
+        }
+    }
+
     public Setter newSetter(final Method method) {
         final Class type = method.getParameterTypes()[0];
         final MethodAccessor methodAccessor = newMethodAccessor(method);
@@ -101,21 +118,31 @@ public class MethodAccessorsGenerator implements MethodSetterFactory, ObjectCons
 
     @Override
     public ObjectConstructor newConstructor(final Class<?> cls) {
-        try {
-            final Constructor<?> constructor = cls.getDeclaredConstructor();
-            final ConstructorAccessor constructorAccessor = newConstructorAccessor(constructor);
-            return new ObjectConstructor() {
-                @Override
-                public Object newInstance() {
-                    try {
-                        return constructorAccessor.newInstance((Object[])null);
-                    } catch (InstantiationException | InvocationTargetException e) {
-                        throw new Sql2oException("Could not create a new instance of class " + cls, e);
-                    }
-                }
-            };
-        } catch (NoSuchMethodException e) {
-            return UnsafeFieldSetterFactory.getConstructor(cls);
+        Class<?> cls0 = cls;
+        Constructor<?> ctor = null;
+        for(;;){
+            try {
+                ctor = cls0.getDeclaredConstructor();
+                break;
+            } catch (NoSuchMethodException e) {
+                cls0=cls0.getSuperclass();
+            }
         }
+        if(cls0==Object.class)
+            return UnsafeFieldSetterFactory.getConstructor(cls);
+        final ConstructorAccessor constructorAccessor =
+                (cls0==cls)
+                        ?newConstructorAccessor(ctor)
+                        :newConstructorAccessor(ctor,cls);
+        return new ObjectConstructor() {
+            @Override
+            public Object newInstance() {
+                try {
+                    return constructorAccessor.newInstance((Object[])null);
+                } catch (InstantiationException | InvocationTargetException e) {
+                    throw new Sql2oException("Could not create a new instance of class " + cls, e);
+                }
+            }
+        };
     }
 }

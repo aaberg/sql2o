@@ -21,6 +21,14 @@ public class MethodAccessorsGeneratorObjectConstructorFactoryTest extends Abstra
         public boolean constructorInvoked = true;
     }
 
+    public class POJO4 extends POJO3 {
+        public boolean pojo4_constructorInvoked = true;
+
+        public POJO4() {
+            fail("Constructor can't be called");
+        }
+    }
+
     public MethodAccessorsGeneratorObjectConstructorFactoryTest() {
         super(new MethodAccessorsGenerator());
     }
@@ -36,4 +44,26 @@ public class MethodAccessorsGeneratorObjectConstructorFactoryTest extends Abstra
         assertNotNull(pojo3);
         assertTrue(pojo3.constructorInvoked);
     }
+    public void testCallParentConstructor(){
+        POJO4 pojo = (POJO4) ocf.newConstructor(POJO4.class).newInstance();
+        assertNotNull(pojo);
+        assertTrue(pojo.constructorInvoked);
+        assertFalse(pojo.pojo4_constructorInvoked);
+    }
+
+    public void testCallParentConstructor2(){
+        class POJO5 extends POJO4 {
+            public boolean pojo5_constructorInvoked = true;
+
+            public POJO5() {
+                fail("Constructor can't be called");
+            }
+        }
+
+        POJO5 pojo = (POJO5) ocf.newConstructor(POJO5.class).newInstance();
+        assertNotNull(pojo);
+        assertTrue(pojo.constructorInvoked);
+        assertFalse(pojo.pojo5_constructorInvoked);
+    }
+
 }
