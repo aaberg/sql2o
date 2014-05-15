@@ -12,7 +12,7 @@ import java.lang.reflect.Method;
 
 @SuppressWarnings("UnusedDeclaration")
 public class MethodAccessorsGenerator implements MethodSetterFactory, ObjectConstructorFactory {
-    private static final Object generatorObject;
+    private static final ThreadLocal<Object> generatorObjectHolder;
     private static final MethodAccessor generateMethod;
     private static final MethodAccessor generateConstructor;
     private static final MethodAccessor generateSerializationConstructor;
@@ -24,7 +24,7 @@ public class MethodAccessorsGenerator implements MethodSetterFactory, ObjectCons
             Constructor<?>[] declaredConstructors = aClass.getDeclaredConstructors();
             Constructor<?> declaredConstructor = declaredConstructors[0];
             declaredConstructor.setAccessible(true);
-            generatorObject = declaredConstructor.newInstance();
+            Object generatorObject = declaredConstructor.newInstance();
             Method bar = aClass.getMethod("generateMethod", Class.class, String.class, Class[].class, Class.class, Class[].class, Integer.TYPE);
             bar.setAccessible(true);
             generateMethod = (MethodAccessor) bar.invoke(
@@ -36,12 +36,23 @@ public class MethodAccessorsGenerator implements MethodSetterFactory, ObjectCons
                     bar.getExceptionTypes(),
                     bar.getModifiers());
             bar = aClass.getMethod("generateConstructor", Class.class, Class[].class, Class[].class, Integer.TYPE);
-            generateConstructor = newMethodAccessor(bar);
+            generateConstructor = newMethodAccessor(generatorObject, bar);
             bar = aClass.getMethod("generateSerializationConstructor", Class.class, Class[].class, Class[].class, Integer.TYPE, Class.class);
-            generateSerializationConstructor = newMethodAccessor(bar);
+            final ConstructorAccessor goc =  newConstructorAccessor(generatorObject,declaredConstructor);
+            generatorObjectHolder = new ThreadLocal<Object>(){
+                @Override
+                protected Object initialValue() {
+                    try {
+                        return goc.newInstance(null);
+                    } catch (Throwable e) {
+                        throw new RuntimeException(e);
+                    }
+                }
+            };
+            generateSerializationConstructor = newMethodAccessor(generatorObject, bar);
             aClass = Class.forName("sun.reflect.UnsafeFieldAccessorFactory");
             bar = aClass.getDeclaredMethod("newFieldAccessor", Field.class, Boolean.TYPE);
-            newFieldAccessor = newMethodAccessor(bar);
+            newFieldAccessor = newMethodAccessor(generatorObject, bar);
         } catch (Throwable e) {
             throw new RuntimeException(e);
         }
@@ -57,6 +68,13 @@ public class MethodAccessorsGenerator implements MethodSetterFactory, ObjectCons
 
     public static MethodAccessor newMethodAccessor(Method bar) {
         try {
+            return newMethodAccessor(generatorObjectHolder.get(), bar);
+        } catch (InvocationTargetException e) {
+            throw new RuntimeException(e);
+        }
+    }
+
+    private static MethodAccessor newMethodAccessor(Object generatorObject, Method bar) throws InvocationTargetException {
             return (MethodAccessor) generateMethod.invoke(
                     generatorObject, new Object[]{
                     bar.getDeclaringClass(),
@@ -65,28 +83,29 @@ public class MethodAccessorsGenerator implements MethodSetterFactory, ObjectCons
                     bar.getReturnType(),
                     bar.getExceptionTypes(),
                     bar.getModifiers()});
+    }
+
+    public static ConstructorAccessor newConstructorAccessor(Constructor<?> bar) {
+        try {
+            return newConstructorAccessor(generatorObjectHolder.get(), bar);
         } catch (InvocationTargetException e) {
             throw new RuntimeException(e);
         }
     }
 
-    public static ConstructorAccessor newConstructorAccessor(Constructor<?> bar) {
-        try {
+    private static ConstructorAccessor newConstructorAccessor(Object generatorObject, Constructor<?> bar) throws InvocationTargetException {
             return (ConstructorAccessor) generateConstructor.invoke(
                     generatorObject, new Object[]{
                     bar.getDeclaringClass(),
                     bar.getParameterTypes(),
                     bar.getExceptionTypes(),
                     bar.getModifiers()});
-        } catch (InvocationTargetException e) {
-            throw new RuntimeException(e);
-        }
     }
 
     public static ConstructorAccessor newConstructorAccessor(Constructor<?> bar, Class<?> targetClass) {
         try {
             return (ConstructorAccessor) generateSerializationConstructor.invoke(
-                    generatorObject, new Object[]{
+                    generatorObjectHolder.get(), new Object[]{
                     targetClass,
                     bar.getParameterTypes(),
                     bar.getExceptionTypes(),
@@ -119,7 +138,7 @@ public class MethodAccessorsGenerator implements MethodSetterFactory, ObjectCons
     @Override
     public ObjectConstructor newConstructor(final Class<?> cls) {
         Class<?> cls0 = cls;
-        Constructor<?> ctor = null;
+        Constructor<?> ctor;
         for(;;){
             try {
                 ctor = cls0.getDeclaredConstructor();
@@ -138,7 +157,7 @@ public class MethodAccessorsGenerator implements MethodSetterFactory, ObjectCons
             @Override
             public Object newInstance() {
                 try {
-                    return constructorAccessor.newInstance((Object[])null);
+                    return constructorAccessor.newInstance(null);
                 } catch (InstantiationException | InvocationTargetException e) {
                     throw new Sql2oException("Could not create a new instance of class " + cls, e);
                 }
