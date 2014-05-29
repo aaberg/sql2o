@@ -5,6 +5,112 @@ base_url: ../
 ---
 # change log
 
+## sql2o 1.5.0-RC1 released
+_<small>29 may 2014 <a href="https://github.com/aaberg">Lars Aaberg</a> </small>_
+
+I am proud to announce the release of sql2o 1.5.0-RC1! In this release, a lot of refactoring has been done that improves performance and flexibility of the library. This is a release candidate, so if no major errors are found, this will become version 1.5.0
+
+**A special thanks to [Dmitry Alexandrov](https://github.com/dimzon) for all his good ideas, and all the work he has put into this release.**	
+    
+<br/>
+[List of changes on github](https://github.com/aaberg/sql2o/issues?labels=&milestone=8&page=1&state=closed)
+
+####- Deprecated some of the old way of doing things <a href="https://github.com/aaberg/sql2o/pull/121"><span class="badge badge-info">#121</span></a>
+>The execute methods are deprecated on Sql2o instance. It is now recommended to open a connection in a try-with-resource block, and call execute methods on that.
+>_<small>Contributed by [Lars Aaberg](https://github.com/aaberg)</small>_
+
+####- Introducing [mockito test framework](https://code.google.com/p/mockito/) for better unit testing <a href="https://github.com/aaberg/sql2o/issues/117"><span class="badge badge-info">#117</span></a>
+>_<small>Contributed by [Dmitry Alexandrov](https://github.com/dimzon)</small>_
+
+####- New method `withParams` for shorten syntax <a href="https://github.com/aaberg/sql2o/pull/115"><span class="badge badge-info">#115</span></a>
+>_<small>Contributed by [Dmitry Alexandrov](https://github.com/dimzon)</small>_
+
+####- Changed target language level to java 1.7 <a href="https://github.com/aaberg/sql2o/issues/114"><span class="badge badge-info">#114</span></a>
+>_<small>Contributed by [Lars Aaberg](https://github.com/aaberg)</small>_
+
+####- Better jodatime handling <a href="https://github.com/aaberg/sql2o/pull/112"><span class="badge badge-info">#112</span></a>
+>This pull request also improves logging, StringConverter, FeatureDetector.
+>_<small>Contributed by [Dmitry Alexandrov](https://github.com/dimzon)</small>_	
+
+####- Keep tack of all statements created on connection, and close them when connection is closed <a href="https://github.com/dimzon/sql2o/commit/ffecad1bda59895e573f9d32e52526439aec1384"><span class="badge badge-info">ffecad1</span></a>
+>_<small>Contributed by [Dmitry Alexandrov](https://github.com/dimzon)</small>_
+
+####- Query now implements AutoClosable <a href="https://github.com/aaberg/sql2o/issues/110"><span class="badge badge-info">#110</span></a><a href="https://github.com/aaberg/sql2o/issues/112"><span class="badge badge-info">#112</span></a>
+>_<small>Contributed by [Dmitry Alexandrov](https://github.com/dimzon)</small>_
+
+####- Tables and Rows now use quirks <a href="https://github.com/aaberg/sql2o/pull/105"><span class="badge badge-info">#105</span></a>
+>_<small>Contributed by [Dmitry Alexandrov](https://github.com/dimzon)</small>_
+
+####- Added local converters <a href="https://github.com/aaberg/sql2o/pull/104"><span class="badge badge-info">#104</span></a>
+>Extremely useful when using multiple instances of sql2o.
+>_<small>Contributed by [Dmitry Alexandrov](https://github.com/dimzon)</small>_
+
+####- Fixed incompatibility bug in some converters <a href="https://github.com/aaberg/sql2o/issues/102"><span class="badge badge-info">#102</span></a>
+>_<small>Contributed by [Dmitry Alexandrov](https://github.com/dimzon)</small>_	
+
+####- Fixed bug in EnumConverter <a href="https://github.com/aaberg/sql2o/issues/101"><span class="badge badge-info">#101</span></a>
+>_<small>Contributed by [Dmitry Alexandrov](https://github.com/dimzon)</small>_	
+
+####- Fixed thread safety issue on Convert class <a href="https://github.com/aaberg/sql2o/issues/100"><span class="badge badge-info">#100</span></a>
+>_<small>Contributed by [Dmitry Alexandrov](https://github.com/dimzon)</small>_	
+
+####- Added support for custom resultset mapper <a href="https://github.com/aaberg/sql2o/pull/97"><span class="badge badge-info">#97</span></a>
+>_<small>Contributed by [Dmitry Alexandrov](https://github.com/dimzon)</small>_
+
+####- Refactored handling of named parameters. <a href="https://github.com/aaberg/sql2o/pull/95"><span class="badge badge-info">#95</span></a>
+>_<small>Contributed by [Lars Aaberg](https://github.com/aaberg)</small>_
+
+####- Fixed UnderscoreToCamelCase thread-unsafe issue <a href="https://github.com/aaberg/sql2o/pull/93"><span class="badge badge-info">#93</span></a>
+>_<small>Contributed by [Dmitry Alexandrov](https://github.com/dimzon)</small>_
+
+####- NamedParameterStatement fails on Postgresql :: cast syntax <a href="https://github.com/aaberg/sql2o/issues/90"><span class="badge badge-info">90</span></a>
+>_<small>Fixed by [Dmitry Alexandrov](https://github.com/dimzon)</small>_
+
+####- Rewrite Query.Bind <a href="https://github.com/aaberg/sql2o/pull/87"><span class="badge badge-info">#87</span></a>
+>_<small>Contributed by [Dmitry Alexandrov](https://github.com/dimzon)</small>_
+
+####- More unit testing <a href="https://github.com/aaberg/sql2o/issues/86"><span class="badge badge-info">#86</span></a>
+>_<small>Contributed by [Dmitry Alexandrov](https://github.com/dimzon)</small>_
+
+####- Changed caching behavior of PojoMetadata <a href="https://github.com/aaberg/sql2o/issues/81"><span class="badge badge-info">81</span></a><a href="https://github.com/aaberg/sql2o/pull/85"><span class="badge badge-info">85</span></a>
+>From now on, PojoMetadata instances will always be cached for improved performance
+>_<small>Pointed out by [Dmitry Alexandrov](https://github.com/dimzon), Fixed by [Lars Aaberg](https://github.com/aaberg)</small>_
+
+####- Refactoring for more flexibility and better performance <a href="https://github.com/aaberg/sql2o/pull/75"><span class="badge badge-info">#75</span></a>
+>Doing things in a better way!
+>_<small>Contributed by [Dmitry Alexandrov](https://github.com/dimzon)</small>_
+
+####- Fixed a thread safety issue on PojoMetadata class <a href="https://github.com/aaberg/sql2o/pull/68"><span class="badge badge-info">#68</span></a><a href="https://github.com/aaberg/sql2o/pull/69"><span class="badge badge-info">#69</span></a>
+>_<small>Pointed out by [Dmitry Alexandrov](https://github.com/dimzon), fixed by [Dmitry Alexandrov](https://github.com/dimzon) and [Lars Aaberg](https://github.com/aaberg)</small>_
+
+####- Greatly improved performance of object mapper using `sun.misc.Unsafe` <a href="https://github.com/aaberg/sql2o/pull/67"><span class="badge badge-info">#67</span></a>
+>Will fallback to using reflection if `sun.misc.Unsafe` is not availlable
+>_<small>Contributed by [Dmitry Alexandrov](https://github.com/dimzon)</small>_
+
+####- Convert table to list of maps <a href="https://github.com/aaberg/sql2o/pull/63"><span class="badge badge-info">#63</span></a><a href="https://github.com/aaberg/sql2o/pull/66"><span class="badge badge-info">#66</span></a>
+>It is now possible to convert a Table instance to a list of maps. This is done with the new `Table.asList()` method. There is also added a similar `Row.asMap()` method for converting a row to a map.
+>_<small>Proposed by [Sachin Walia](https://github.com/sachinwalia2k8). Implemented by [Alden Quimby](https://github.com/aldenquimby)</small>_
+
+####- Bidirectional converters <a href="https://github.com/aaberg/sql2o/issues/62"><span class="badge badge-info">#62</span></a><a href="https://github.com/aaberg/sql2o/issues/70"><span class="badge badge-info">#70</span></a>
+>Bidirectional converters allows for converters to specify conversion both when data is parsed from a ResultSet and when setting parameters.
+>_<small>Contributed by [Alden Quimby](https://github.com/aldenquimby)</small>_
+
+####- Better quirks pattern <a href="https://github.com/aaberg/sql2o/issues/62"><span class="badge badge-info">#62</span></a><a href="https://github.com/aaberg/sql2o/issues/70"><span class="badge badge-info">#70</span></a>
+>The better Quirks pattern allows for much better control.
+>_<small>Proposed by [Dmitry Alexandrov](https://github.com/dimzon). Implemented by [Alden Quimby](https://github.com/aldenquimby) & [Dmitry Alexandrov](https://github.com/dimzon)</small>_
+
+####- New project structure for better extensions support <a href="https://github.com/aaberg/sql2o/pull/61"><span class="badge badge-info">#61</span></a>
+>_<small>Contributed by [Lars Aaberg](https://github.com/aaberg)</small>_
+
+####- Bug in inserting date time in mysql, postgres <a href="https://github.com/aaberg/sql2o/issues/59"><span class="badge badge-info">#59</span></a><a href="https://github.com/aaberg/sql2o/issues/60"><span class="badge badge-info">#60</span></a>
+>When setting a datetime parameter, only the date would be updated/inserted in the database.
+>_<small>Fixed by [Alden Quimby](https://github.com/aldenquimby)</small>_
+
+####- A better Query.bind method <a href="https://github.com/aaberg/sql2o/issues/55"><span class="badge badge-info">#55</span></a><a href="https://github.com/aaberg/sql2o/issues/80"><span class="badge badge-info">#80</span></a>
+>Fixes a bug and improves behaviour.
+>_<small>Contributed by [Dmitry Alexandrov](https://github.com/dimzon)</small>_
+
+
 <br/>
 <br/>
 
