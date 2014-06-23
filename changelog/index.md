@@ -5,6 +5,20 @@ base_url: ../
 ---
 # change log
 
+## sql2o 1.5.0-RC2 released
+_<small>23 june 2014 <a href="https://github.com/aaberg">Lars Aaberg</a> </small>_
+
+
+####- Fixes a bug in OracleQuirks <a href="https://github.com/aaberg/sql2o/issue/130"><span class="badge badge-info">#130</span></a>
+>The getGeneratedKeysByDefault flag was mistakenly set to `true` for OracleQuirks. Changed back to `false`.
+>_<small>Contributed by [Lars Aaberg](https://github.com/aaberg)</small>_
+
+####- Adds `setAutoCloseConnection(boolean)` on `ResultSetIterable` interface <a href="https://github.com/aaberg/sql2o/issue/130"><span class="badge badge-info">#131</span></a>
+>_<small>Contributed by [Lars Aaberg](https://github.com/aaberg)</small>_
+
+<br/>
+<br/>
+
 ## sql2o 1.5.0-RC1 released
 _<small>29 may 2014 <a href="https://github.com/aaberg">Lars Aaberg</a> </small>_
 
