@@ -2,7 +2,7 @@
     <modelVersion>4.0.0</modelVersion>
     <artifactId>sql2o</artifactId>
     <packaging>jar</packaging>
-    <version>1.6.0-SNAPSHOT</version>
+    <version>1.5.0-RC2</version>
     <name>sql2o</name>
     <description>Easy database query library</description>
     <url>http://www.sql2o.org</url>
@@ -16,7 +16,7 @@
     <parent>
         <groupId>org.sql2o</groupId>
         <artifactId>sql2o-parent</artifactId>
-        <version>1.6.0-SNAPSHOT</version>
+        <version>1.5.0-RC2</version>
     </parent>
     <developers>
         <developer>
