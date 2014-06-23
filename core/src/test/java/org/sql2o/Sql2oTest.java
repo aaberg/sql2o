@@ -1041,6 +1041,27 @@ public class Sql2oTest {
     }
 
     @Test
+    public void testExecuteAndFetchWithAutoclose() throws SQLException {
+        createAndFillUserTable();
+
+        Connection con = sql2o.open();
+
+        try (ResultSetIterable<User> userIterable = con.createQuery("select * from User")
+                .executeAndFetchLazy(User.class)) {
+
+            userIterable.setAutoCloseConnection(true);
+
+            for (User u : userIterable) {
+                assertThat(u.getEmail(), is(not(nullValue())));
+            }
+        }
+
+        assertTrue(con.getJdbcConnection().isClosed());
+
+
+    }
+
+    @Test
     public void testLazyTable() throws SQLException {
         createAndFillUserTable();
 

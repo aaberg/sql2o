@@ -9,4 +9,7 @@ package org.sql2o;
 public interface ResultSetIterable<T> extends Iterable<T>, AutoCloseable {
     // override close to not throw
     void close();
+
+    boolean isAutoCloseConnection();
+    void setAutoCloseConnection(boolean autoCloseConnection);
 }
