@@ -5,6 +5,14 @@ base_url: ../
 ---
 # change log
 
+## sql2o 1.5.0 released
+_<small>26 june 2014 <a href="https://github.com/aaberg">Lars Aaberg</a> </small>_
+
+>No changes since version 1.5.0-RC2
+
+<br/>
+<br/>
+
 ## sql2o 1.5.0-RC2 released
 _<small>23 june 2014 <a href="https://github.com/aaberg">Lars Aaberg</a> </small>_
 
