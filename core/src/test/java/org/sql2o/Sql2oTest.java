@@ -1204,6 +1204,54 @@ public class Sql2oTest {
         assertThat(users2.size(), is(equalTo(10004)));
     }
 
+    @Test
+    public void testAutoDeriveColumnNames () {
+        String createTableSql = "create table testAutoDeriveColumnNames (id_val integer primary key, another_very_exciting_value varchar(20))";
+        String insertSql = "insert into testAutoDeriveColumnNames values (:id, :val)";
+        String selectSql = "select * from testAutoDeriveColumnNames";
+
+        class LocalPojo{
+            private long idVal;
+            private String anotherVeryExcitingValue;
+
+            public long getIdVal() {
+                return idVal;
+            }
+
+            public String getAnotherVeryExcitingValue() {
+                return anotherVeryExcitingValue;
+            }
+
+            public void setAnotherVeryExcitingValue(String anotherVeryExcitingValue) {
+                this.anotherVeryExcitingValue = anotherVeryExcitingValue;
+            }
+        }
+
+        try (Connection con = sql2o.open()) {
+            con.createQuery(createTableSql).executeUpdate();
+            con.createQuery(insertSql).addParameter("id", 1).addParameter("val", "test1").executeUpdate();
+
+            Exception ex = null;
+            try {
+                // expected to fail, as autoDeriveColumnNames are not set
+                con.createQuery(selectSql).executeAndFetchFirst(LocalPojo.class);
+            } catch(Exception e) {
+                ex = e;
+            }
+
+            assertNotNull(ex);
+
+            LocalPojo p = con.createQuery(selectSql)
+                    .setAutoDeriveColumnNames(true)
+                    .executeAndFetchFirst(LocalPojo.class);
+
+            assertNotNull(p);
+            assertEquals(1, p.getIdVal());
+            assertEquals("test1", p.getAnotherVeryExcitingValue());
+
+        }
+    }
+
     /************** Helper stuff ******************/
 
     private void createAndFillUserTable() {
