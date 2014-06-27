@@ -99,7 +99,7 @@ public class IssuesTest {
             KeyValueEntity pojo = sql2o.createQuery("select 1 id, 'something' foo from (values(0))").executeAndFetchFirst(KeyValueEntity.class);
         }
         catch(Sql2oException ex){
-            assertTrue(ex.getMessage().contains("not found"));
+            assertTrue(ex.getMessage().contains("Could not map"));
         }
     }
 
@@ -264,6 +264,53 @@ public class IssuesTest {
         WhatEverEnum enumNull = null;
 
         sql2o.createQuery(insertSql).addParameter("val", enumNull).addParameter("date", dtNull).executeUpdate();
+    }
+
+    /**
+     * Test for issue #132 ( https://github.com/aaberg/sql2o/issues/132 )
+     * Ref change done in pull request #75
+     * Also see comment on google groups
+     * https://groups.google.com/forum/#!topic/sql2o/3H4XJIv-i04
+
+     * If a column cannot be mapped to a property, an exception should be thrown. Today it is silently ignored.
+     */
+    @Test public void testErrorWhenFieldDoesntExist() {
+
+        class LocalPojo {
+            private long id;
+            private String strVal;
+
+            public long getId() {
+                return id;
+            }
+
+            public String getStrVal() {
+                return strVal;
+            }
+        }
+
+        String createQuery = "create table testErrorWhenFieldDoesntExist(id_val integer primary key, str_val varchar(100))";
+
+        try (Connection connection = sql2o.open()) {
+            connection.createQuery(createQuery).executeUpdate();
+
+            String insertSql = "insert into testErrorWhenFieldDoesntExist(id_val, str_val) values (:val1, :val2)";
+            connection.createQuery(insertSql)
+                    .addParameter("val1", 1)
+                    .addParameter("val2", "test")
+                    .executeUpdate();
+
+            Exception ex = null;
+            try {
+                // This is expected to fail to map columns and throw an exception.
+                LocalPojo p = connection.createQuery("select * from testErrorWhenFieldDoesntExist")
+                        .executeAndFetchFirst(LocalPojo.class);
+            } catch(Exception e) {
+                ex = e;
+            }
+            assertNotNull(ex);
+
+        }
     }
 
     public static class Issue9Pojo {
