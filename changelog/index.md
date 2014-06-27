@@ -5,6 +5,16 @@ base_url: ../
 ---
 # change log
 
+## sql2o 1.5.1 released
+_<small>27 june 2014 <a href="https://github.com/aaberg">Lars Aaberg</a> </small>_
+
+####- Fixes a bug with column mappings <a href="https://github.com/aaberg/sql2o/issues/132"><span class="badge badge-info">#132</span></a>
+>Sql2o would silently ignore, if a column could not be mapped to a property. Sql2o will now throw an exception instead.
+>_<small>Contributed by [Lars Aaberg](https://github.com/aaberg)</small>_
+
+<br/>
+<br/>
+
 ## sql2o 1.5.0 released
 _<small>26 june 2014 <a href="https://github.com/aaberg">Lars Aaberg</a> </small>_
 
@@ -17,11 +27,11 @@ _<small>26 june 2014 <a href="https://github.com/aaberg">Lars Aaberg</a> </small
 _<small>23 june 2014 <a href="https://github.com/aaberg">Lars Aaberg</a> </small>_
 
 
-####- Fixes a bug in OracleQuirks <a href="https://github.com/aaberg/sql2o/issue/130"><span class="badge badge-info">#130</span></a>
+####- Fixes a bug in OracleQuirks <a href="https://github.com/aaberg/sql2o/issues/130"><span class="badge badge-info">#130</span></a>
 >The getGeneratedKeysByDefault flag was mistakenly set to `true` for OracleQuirks. Changed back to `false`.
 >_<small>Contributed by [Lars Aaberg](https://github.com/aaberg)</small>_
 
-####- Adds `setAutoCloseConnection(boolean)` on `ResultSetIterable` interface <a href="https://github.com/aaberg/sql2o/issue/130"><span class="badge badge-info">#131</span></a>
+####- Adds `setAutoCloseConnection(boolean)` on `ResultSetIterable` interface <a href="https://github.com/aaberg/sql2o/issues/130"><span class="badge badge-info">#131</span></a>
 >_<small>Contributed by [Lars Aaberg](https://github.com/aaberg)</small>_
 
 <br/>
