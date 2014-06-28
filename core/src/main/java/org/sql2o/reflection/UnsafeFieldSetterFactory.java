@@ -244,6 +244,9 @@ public class UnsafeFieldSetterFactory implements FieldSetterFactory, ObjectConst
     }
 
     public ObjectConstructor newConstructor(final Class<?> clazz) {
+        return getConstructor(clazz);
+    }
+    public static ObjectConstructor getConstructor(final Class<?> clazz) {
         return new ObjectConstructor() {
             public Object newInstance() {
                 try {

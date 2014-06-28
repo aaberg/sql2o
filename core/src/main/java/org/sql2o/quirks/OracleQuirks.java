@@ -28,4 +28,9 @@ public class OracleQuirks extends NoQuirks {
         }
         return o;
     }
+
+    @Override
+    public boolean returnGeneratedKeysByDefault() {
+        return false;
+    }
 }

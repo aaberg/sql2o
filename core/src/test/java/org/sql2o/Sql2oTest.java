@@ -114,20 +114,28 @@ public class Sql2oTest {
     public void testExecuteAndFetch(){
         createAndFillUserTable();
 
-        Date before = new Date();
-        List<User> allUsers = sql2o.createQuery("select * from User").executeAndFetch(User.class);
-        Date after = new Date();
-        long span = after.getTime() - before.getTime();
-        System.out.println(String.format("Fetched %s user: %s ms", insertIntoUsers, span));
+        try (Connection con = sql2o.open()) {
 
-        // repeat this
-        before = new Date();
-        allUsers = sql2o.createQuery("select * from User").executeAndFetch(User.class);
-        after = new Date();
-        span = after.getTime() - before.getTime();
-        System.out.println(String.format("Again Fetched %s user: %s ms", insertIntoUsers, span));
+            Date before = new Date();
+            List<User> allUsers = con.createQuery("select * from User").executeAndFetch(User.class);
 
-        assertTrue(allUsers.size() == insertIntoUsers);
+
+            assertNotNull(allUsers);
+
+            Date after = new Date();
+            long span = after.getTime() - before.getTime();
+            System.out.println(String.format("Fetched %s user: %s ms", insertIntoUsers, span));
+
+            // repeat this
+            before = new Date();
+            allUsers = con.createQuery("select * from User").executeAndFetch(User.class);
+            after = new Date();
+            span = after.getTime() - before.getTime();
+            System.out.println(String.format("Again Fetched %s user: %s ms", insertIntoUsers, span));
+
+            assertTrue(allUsers.size() == insertIntoUsers);
+
+        }
         deleteUserTable();
     }
 
@@ -139,29 +147,31 @@ public class Sql2oTest {
                 "text varchar(255), " +
                 "aNumber int, " +
                 "aLongNumber bigint)";
-        sql2o.createQuery(sql, "testExecuteAndFetchWithNulls").executeUpdate();
+        try (Connection con = sql2o.open()) {
+            con.createQuery(sql, "testExecuteAndFetchWithNulls").executeUpdate();
 
 
-        Connection connection = sql2o.beginTransaction();
-        Query insQuery = connection.createQuery("insert into testExecWithNullsTbl (text, aNumber, aLongNumber) values(:text, :number, :lnum)");
-        insQuery.addParameter("text", "some text").addParameter("number", 2).addParameter("lnum", 10L).executeUpdate();
-        insQuery.addParameter("text", "some text").addParameter("number", (Integer)null).addParameter("lnum", 10L).executeUpdate();
-        insQuery.addParameter("text", (String)null).addParameter("number", 21).addParameter("lnum", (Long)null).executeUpdate();
-        insQuery.addParameter("text", "some text").addParameter("number", 1221).addParameter("lnum", 10).executeUpdate();
-        insQuery.addParameter("text", "some text").addParameter("number", 2311).addParameter("lnum", 12).executeUpdate();
-        connection.commit();
+            Connection connection = sql2o.beginTransaction();
+            Query insQuery = connection.createQuery("insert into testExecWithNullsTbl (text, aNumber, aLongNumber) values(:text, :number, :lnum)");
+            insQuery.addParameter("text", "some text").addParameter("number", 2).addParameter("lnum", 10L).executeUpdate();
+            insQuery.addParameter("text", "some text").addParameter("number", (Integer) null).addParameter("lnum", 10L).executeUpdate();
+            insQuery.addParameter("text", (String) null).addParameter("number", 21).addParameter("lnum", (Long) null).executeUpdate();
+            insQuery.addParameter("text", "some text").addParameter("number", 1221).addParameter("lnum", 10).executeUpdate();
+            insQuery.addParameter("text", "some text").addParameter("number", 2311).addParameter("lnum", 12).executeUpdate();
+            connection.commit();
 
-        List<Entity> fetched = sql2o.createQuery("select * from testExecWithNullsTbl").executeAndFetch(Entity.class);
+            List<Entity> fetched = con.createQuery("select * from testExecWithNullsTbl").executeAndFetch(Entity.class);
 
-        assertTrue(fetched.size() == 5);
-        assertNull(fetched.get(2).text);
-        assertNotNull(fetched.get(3).text);
+            assertTrue(fetched.size() == 5);
+            assertNull(fetched.get(2).text);
+            assertNotNull(fetched.get(3).text);
 
-        assertNull(fetched.get(1).aNumber);
-        assertNotNull(fetched.get(2).aNumber);
+            assertNull(fetched.get(1).aNumber);
+            assertNotNull(fetched.get(2).aNumber);
 
-        assertNull(fetched.get(2).aLongNumber);
-        assertNotNull(fetched.get(3).aLongNumber);
+            assertNull(fetched.get(2).aLongNumber);
+            assertNotNull(fetched.get(3).aLongNumber);
+        }
     }
 
     @Test
@@ -1031,6 +1041,27 @@ public class Sql2oTest {
     }
 
     @Test
+    public void testExecuteAndFetchWithAutoclose() throws SQLException {
+        createAndFillUserTable();
+
+        Connection con = sql2o.open();
+
+        try (ResultSetIterable<User> userIterable = con.createQuery("select * from User")
+                .executeAndFetchLazy(User.class)) {
+
+            userIterable.setAutoCloseConnection(true);
+
+            for (User u : userIterable) {
+                assertThat(u.getEmail(), is(not(nullValue())));
+            }
+        }
+
+        assertTrue(con.getJdbcConnection().isClosed());
+
+
+    }
+
+    @Test
     public void testLazyTable() throws SQLException {
         createAndFillUserTable();
 
@@ -1171,6 +1202,54 @@ public class Sql2oTest {
 
         // expect that that the last insert was committed, as this should not be run in a transaction.
         assertThat(users2.size(), is(equalTo(10004)));
+    }
+
+    @Test
+    public void testAutoDeriveColumnNames () {
+        String createTableSql = "create table testAutoDeriveColumnNames (id_val integer primary key, another_very_exciting_value varchar(20))";
+        String insertSql = "insert into testAutoDeriveColumnNames values (:id, :val)";
+        String selectSql = "select * from testAutoDeriveColumnNames";
+
+        class LocalPojo{
+            private long idVal;
+            private String anotherVeryExcitingValue;
+
+            public long getIdVal() {
+                return idVal;
+            }
+
+            public String getAnotherVeryExcitingValue() {
+                return anotherVeryExcitingValue;
+            }
+
+            public void setAnotherVeryExcitingValue(String anotherVeryExcitingValue) {
+                this.anotherVeryExcitingValue = anotherVeryExcitingValue;
+            }
+        }
+
+        try (Connection con = sql2o.open()) {
+            con.createQuery(createTableSql).executeUpdate();
+            con.createQuery(insertSql).addParameter("id", 1).addParameter("val", "test1").executeUpdate();
+
+            Exception ex = null;
+            try {
+                // expected to fail, as autoDeriveColumnNames are not set
+                con.createQuery(selectSql).executeAndFetchFirst(LocalPojo.class);
+            } catch(Exception e) {
+                ex = e;
+            }
+
+            assertNotNull(ex);
+
+            LocalPojo p = con.createQuery(selectSql)
+                    .setAutoDeriveColumnNames(true)
+                    .executeAndFetchFirst(LocalPojo.class);
+
+            assertNotNull(p);
+            assertEquals(1, p.getIdVal());
+            assertEquals("test1", p.getAnotherVeryExcitingValue());
+
+        }
     }
 
     /************** Helper stuff ******************/

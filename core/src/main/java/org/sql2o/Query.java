@@ -309,6 +309,8 @@ public class Query implements AutoCloseable {
         private long afterExecQuery;
         protected ResultSet rs;
 
+        boolean autoCloseConnection = false;
+
         public ResultSetIterableBase() {
             try {
                 start = System.currentTimeMillis();
@@ -320,6 +322,7 @@ public class Query implements AutoCloseable {
             }
         }
 
+        @Override
         public void close() {
             try {
                 if (rs != null) {
@@ -341,8 +344,22 @@ public class Query implements AutoCloseable {
                 throw new Sql2oException("Error closing ResultSet.", ex);
             }
             finally {
-                closeConnectionIfNecessary();
+                if (this.isAutoCloseConnection()){
+                    connection.close();
+                } else {
+                    closeConnectionIfNecessary();
+                }
             }
+        }
+
+        @Override
+        public boolean isAutoCloseConnection() {
+            return this.autoCloseConnection;
+        }
+
+        @Override
+        public void setAutoCloseConnection(boolean autoCloseConnection) {
+            this.autoCloseConnection = autoCloseConnection;
         }
     }
 
