@@ -261,7 +261,24 @@ public class Sql2oTest {
         assertEquals((int)list.get(0), 1);
         assertEquals((int)list.get(1), 2);
         assertEquals((int)list.get(2), 3);
+    }
 
+    @Test
+    public void testExecuteScalarListWithNulls() throws SQLException {
+        List<String> list = sql2o.createQuery("select val from ( "+
+                                              "select 1 ord, null val from (values(0)) union " +
+                                              "select 2 ord, 'one' from (values(0)) union " +
+                                              "select 3 ord, null from (values(0)) union " +
+                                              "select 4 ord, 'two' from (values(0)) " +
+                                              ") order by ord")  // explicit ordering since nulls seem to mess with ordering
+                                 .executeScalarList(String.class);
+
+        assertEquals(4, list.size());
+
+        assertNull(list.get(0));
+        assertEquals(list.get(1), "one");
+        assertNull(list.get(2));
+        assertEquals(list.get(3), "two");
     }
 
     @Test
