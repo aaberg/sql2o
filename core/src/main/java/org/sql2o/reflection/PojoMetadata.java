@@ -156,10 +156,18 @@ public class PojoMetadata {
         String name = this.caseSensitive ? propertyName : propertyName.toLowerCase();
 
         Field field = this.propertyInfo.fields.get(name);
+
+        boolean accesible = field.isAccessible();
+
         try {
+            field.setAccessible(true);
+
             return field.get(object);
         } catch (IllegalAccessException e) {
             throw new Sql2oException("could not read value of field " + field.getName() + " on class " + object.getClass().toString(), e);
+        }
+        finally {
+            field.setAccessible(accesible);
         }
     }
 
