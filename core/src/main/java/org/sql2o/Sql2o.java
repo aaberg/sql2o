@@ -7,9 +7,6 @@ import org.sql2o.quirks.QuirksDetector;
 import org.sql2o.tools.DefaultSqlParameterParsingStrategy;
 import org.sql2o.tools.SqlParameterParsingStrategy;
 
-import javax.naming.Context;
-import javax.naming.InitialContext;
-import javax.naming.NamingException;
 import javax.sql.DataSource;
 import java.sql.SQLException;
 import java.util.HashMap;
@@ -39,32 +36,7 @@ public class Sql2o {
     private final static Logger logger = LocalLoggerFactory.getLogger(Sql2o.class);
 
     public Sql2o(String jndiLookup) {
-        this(_getJndiDatasource(jndiLookup));
-    }
-
-    private static DataSource _getJndiDatasource(String jndiLookup) {
-        Context ctx = null;
-        DataSource datasource = null;
-
-        try {
-            ctx = new InitialContext();
-            datasource = (DataSource) ctx.lookup(jndiLookup);
-        }
-        catch (NamingException e) {
-            throw new RuntimeException(e);
-        }
-        finally {
-            if (ctx != null) {
-                try {
-                    ctx.close();
-                }
-                catch (Throwable e) {
-                    logger.warn("error closing context", e);
-                }
-            }
-        }
-
-        return datasource;
+        this(JndiDataSource.getJndiDatasource(jndiLookup));
     }
 
     /**
