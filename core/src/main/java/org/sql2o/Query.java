@@ -51,7 +51,7 @@ public class Query implements AutoCloseable {
         this.setColumnMappings(connection.getSql2o().getDefaultColumnMappings());
         this.caseSensitive = connection.getSql2o().isDefaultCaseSensitive();
 
-        paramNameToIdxMap = new HashMap<String, List<Integer>>();
+        paramNameToIdxMap = new HashMap<>();
 
         parsedQuery = connection.getSql2o().getSqlParameterParsingStrategy().parseSql(queryText, paramNameToIdxMap);
         try {
@@ -622,8 +622,12 @@ public class Query implements AutoCloseable {
         long start = System.currentTimeMillis();
         try {
             connection.setBatchResult(statement.executeBatch());
-            connection.setKeys(this.returnGeneratedKeys ? statement.getGeneratedKeys() : null);
-            connection.setCanGetKeys(this.returnGeneratedKeys);
+            try {
+                connection.setKeys(this.returnGeneratedKeys ? statement.getGeneratedKeys() : null);
+                connection.setCanGetKeys(this.returnGeneratedKeys);
+            } catch (SQLException sqlex) {
+                throw new Sql2oException("Error while trying to fetch generated keys from database. If you are not expecting any generated keys, fix this error by setting the fetchGeneratedKeys parameter in the createQuery() method to 'false'", sqlex);
+            }
         }
         catch (Throwable e) {
             this.connection.onException();
