@@ -47,4 +47,6 @@ public interface Quirks {
     void setParameter(PreparedStatement statement, int paramIdx, Time value) throws SQLException;
 
     Object getRSVal(ResultSet rs, int idx) throws SQLException;
+
+    void closeStatement(Statement statement) throws SQLException;
 }

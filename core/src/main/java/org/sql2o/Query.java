@@ -291,7 +291,7 @@ public class Query implements AutoCloseable {
     public void close() {
         connection.removeStatement(statement);
         try {
-            if(!statement.isClosed()) statement.close();
+            this.getQuirks().closeStatement(statement);
         } catch (Throwable ex){
             logger.warn("Could not close statement.", ex);
         }
