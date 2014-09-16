@@ -198,7 +198,7 @@ public class Connection implements AutoCloseable {
 
     public Object[] getKeys(){
         if (!this.canGetKeys){
-            throw new Sql2oException("Keys where not fetched from database. Please call executeUpdate() to fetch keys");
+            throw new Sql2oException("Keys where not fetched from database. Please set the returnGeneratedKeys parameter in the createQuery() method to enable fetching of generated keys.");
         }
         if (this.keys != null){
             return this.keys.toArray();
@@ -210,7 +210,7 @@ public class Connection implements AutoCloseable {
     public <V> List<V> getKeys(Class<V> returnType) {
         final Quirks quirks = sql2o.getQuirks();
         if (!this.canGetKeys) {
-            throw new Sql2oException("Keys where not fetched from database. Please call executeUpdate() to fetch keys");
+            throw new Sql2oException("Keys where not fetched from database. Please set the returnGeneratedKeys parameter in the createQuery() method to enable fetching of generated keys.");
         }
 
         if (this.keys != null) {
