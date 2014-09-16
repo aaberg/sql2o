@@ -237,7 +237,7 @@ public class Connection implements AutoCloseable {
         this.canGetKeys = canGetKeys;
     }
 
-    private final Set<Statement> statements = new HashSet<Statement>();
+    private final Set<Statement> statements = new HashSet<>();
 
     void registerStatement(Statement statement){
         statements.add(statement);
@@ -258,7 +258,7 @@ public class Connection implements AutoCloseable {
 
             for (Statement statement : statements) {
                 try {
-                    if(!statement.isClosed()) statement.close();
+                    getSql2o().getQuirks().closeStatement(statement);
                 } catch (Throwable e) {
                     logger.warn("Could not close statement.", e);
                 }

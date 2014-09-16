@@ -107,4 +107,9 @@ public class NoQuirks implements Quirks {
     public Object getRSVal(ResultSet rs, int idx) throws SQLException {
         return rs.getObject(idx);
     }
+
+    @Override
+    public void closeStatement(Statement statement) throws SQLException {
+        statement.close();
+    }
 }

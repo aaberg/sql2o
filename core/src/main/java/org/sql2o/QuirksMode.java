@@ -14,72 +14,16 @@ import java.util.Map;
  * Use {@link org.sql2o.quirks.Quirks}.
  */
 @Deprecated
-public enum QuirksMode implements Quirks {
+public enum QuirksMode {
 
     None(new NoQuirks()),
     DB2(new Db2Quirks()),
     PostgreSQL(new PostgresQuirks()),
     MSSqlServer(new NoQuirks());
 
-    private final Quirks quirks;
-
-    public <E> Converter<E> converterOf(Class<E> ofClass) {
-        return quirks.converterOf(ofClass);
-    }
-
-    public String getColumnName(ResultSetMetaData meta, int colIdx) throws SQLException {
-        return quirks.getColumnName(meta, colIdx);
-    }
-
-    public boolean returnGeneratedKeysByDefault() {
-        return quirks.returnGeneratedKeysByDefault();
-    }
-
-    public void setParameter(PreparedStatement statement, int paramIdx, Object value) throws SQLException {
-        quirks.setParameter(statement, paramIdx, value);
-    }
-
-    public void setParameter(PreparedStatement statement, int paramIdx, InputStream value) throws SQLException {
-        quirks.setParameter(statement, paramIdx, value);
-    }
-
-    public void setParameter(PreparedStatement statement, int paramIdx, int value) throws SQLException {
-        quirks.setParameter(statement, paramIdx, value);
-    }
-
-    public void setParameter(PreparedStatement statement, int paramidx, Integer value) throws SQLException {
-        quirks.setParameter(statement, paramidx, value);
-    }
-
-    public void setParameter(PreparedStatement statement, int paramIdx, long value) throws SQLException {
-        quirks.setParameter(statement, paramIdx, value);
-    }
-
-    public void setParameter(PreparedStatement statement, int paramIdx, Long value) throws SQLException {
-        quirks.setParameter(statement, paramIdx, value);
-    }
-
-    public void setParameter(PreparedStatement statement, int paramIdx, String value) throws SQLException {
-        quirks.setParameter(statement, paramIdx, value);
-    }
-
-    public void setParameter(PreparedStatement statement, int paramIdx, Timestamp value) throws SQLException {
-        quirks.setParameter(statement, paramIdx, value);
-    }
-
-    public void setParameter(PreparedStatement statement, int paramIdx, Time value) throws SQLException {
-        quirks.setParameter(statement, paramIdx, value);
-    }
-
-    public Object getRSVal(ResultSet rs, int idx) throws SQLException {
-        return this.quirks.getRSVal(rs, idx);
-    }
+    public final Quirks quirks;
 
     private QuirksMode(Quirks quirks) {
         this.quirks = quirks;
     }
-
-
-
-
 }

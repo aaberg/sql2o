@@ -111,7 +111,7 @@ public class Sql2o {
      */
     @Deprecated
     public Sql2o(DataSource dataSource, QuirksMode quirksMode) {
-        this(dataSource, (Quirks)quirksMode);
+        this(dataSource, quirksMode.quirks);
     }
 
     /**
