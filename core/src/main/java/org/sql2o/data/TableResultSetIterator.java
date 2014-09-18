@@ -6,10 +6,7 @@ import org.sql2o.quirks.Quirks;
 
 import java.sql.ResultSet;
 import java.sql.SQLException;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 /**
  * @author aldenquimby@gmail.com
@@ -45,7 +42,7 @@ public class TableResultSetIterator extends ResultSetIteratorBase<Row> {
 
     @Override
     protected Row readNext() throws SQLException {
-        Row row = new Row(columnNameToIdxMap, isCaseSensitive,this.quirks);
+        Row row = new Row(columnNameToIdxMap, columns.size(), isCaseSensitive,this.quirks);
         for (Column column : columns) {
             row.addValue(column.getIndex(), quirks.getRSVal(rs, column.getIndex() + 1));
         }

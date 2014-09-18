@@ -21,6 +21,8 @@ import java.util.Arrays;
 import java.util.Collection;
 import java.util.List;
 
+import static org.hamcrest.CoreMatchers.equalTo;
+import static org.hamcrest.CoreMatchers.is;
 import static org.junit.Assert.*;
 
 /**
@@ -316,5 +318,32 @@ public class IssuesTest {
     public static class Issue9Pojo {
         public int id;
         public String theVal;
+    }
+
+    @Test
+    public void testIndexOutOfRangeExceptionWithMultipleColumnsWithSameName() {
+
+        class ThePojo {
+            public int id;
+            public String name;
+        }
+
+        String sql = "select 11 id, 'something' name, 'something else' name from (values(0))";
+
+        ThePojo p;
+        Table t;
+        try (Connection connection = sql2o.open()) {
+            p = connection.createQuery(sql).executeAndFetchFirst(ThePojo.class);
+
+            t = connection.createQuery(sql).executeAndFetchTable();
+        }
+
+
+
+        assertEquals(11, p.id);
+        assertEquals("something else", p.name);
+
+        assertEquals(11, (int)t.rows().get(0).getInteger("id"));
+        assertEquals("something else", t.rows().get(0).getString("name"));
     }
 }
