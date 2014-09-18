@@ -5,6 +5,34 @@ base_url: ../
 ---
 # change log
 
+## sql2o 1.5.2 released
+_<small>18 sep 2014 <a href="https://github.com/aaberg">Lars Aaberg</a> </small>_
+
+####- Fixed executeScalarList() returns partial list when there are nulls <a href="https://github.com/aaberg/sql2o/pull/137"><span class="badge badge-info">#137</span></a>
+>_<small>Contributed by [mattgilbert](https://github.com/mattgilbert)</small>_
+
+####- Fixed warnings about a possible memory leak when using an application server <a href="https://github.com/aaberg/sql2o/issues/138"><span class="badge badge-info">#138</span></a>
+>Due to use of ThreadLocal
+>_<small>Contributed by [Lars Aaberg](https://github.com/aaberg)</small>_
+
+####- Fixed a warning for some JDBC drivers, when closing statements <a href="https://github.com/aaberg/sql2o/issues/139"><span class="badge badge-info">#139</span></a>
+>Statement.isClosed is not supported on some JDBC drivers, which made Sql2o to print a warning. Sql2o will no longer call isClosed before closing a statement.
+>_<small>Contributed by [Lars Aaberg](https://github.com/aaberg)</small>_
+
+####- Basic Android support <a href="https://github.com/aaberg/sql2o/issues/140"><span class="badge badge-info">#140</span></a>
+>Done some refactoring to support Android
+>_<small>Contributed by [migel](https://github.com/migel)</small>_
+
+####- Fixed IndexOutOfRange exception <a href="https://github.com/aaberg/sql2o/issues/148"><span class="badge badge-info">#148</span></a>
+>The exception was thrown when using executeAndFetchTable method with a dataset where more than one column had the same name. 
+>_<small>Contributed by [Lars Aaberg](https://github.com/aaberg)</small>_
+
+[@l_aaberg](https://twitter.com/l_aaberg)
+
+<br/>
+<br/>
+
+
 ## sql2o 1.5.1 released
 _<small>27 june 2014 <a href="https://github.com/aaberg">Lars Aaberg</a> </small>_
 
