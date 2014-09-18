@@ -21,12 +21,12 @@ public class Row {
     private final Quirks quirks;
     private final Map<String, Integer> columnNameToIdxMap;
 
-    public Row(Map<String, Integer> columnNameToIdxMap, boolean isCaseSensitive, Quirks quirks) {
+    public Row(Map<String, Integer> columnNameToIdxMap, int columnCnt, boolean isCaseSensitive, Quirks quirks) {
         this.columnNameToIdxMap = columnNameToIdxMap;
         this.isCaseSensitive = isCaseSensitive;
         this.quirks = quirks;
         // lol. array works better
-        this.values = new Object[columnNameToIdxMap.size()];
+        this.values = new Object[columnCnt];
     }
 
     void addValue(int columnIndex, Object value){
