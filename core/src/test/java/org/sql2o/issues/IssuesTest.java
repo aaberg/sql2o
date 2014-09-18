@@ -320,6 +320,11 @@ public class IssuesTest {
         public String theVal;
     }
 
+    /**
+     * Test for issue #148 (https://github.com/aaberg/sql2o/issues/148)
+     * ## IndexOutOfRange exception
+     * When a resultset has multiple columns with the same name, sql2o 1.5.1 will throw an IndexOutOfRange exception when calling executeAndFetchTable() method.
+     */
     @Test
     public void testIndexOutOfRangeExceptionWithMultipleColumnsWithSameName() {
 
