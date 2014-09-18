@@ -2,7 +2,7 @@
     <modelVersion>4.0.0</modelVersion>
     <groupId>org.sql2o</groupId>
     <artifactId>sql2o-parent</artifactId>
-    <version>1.5.2-SNAPSHOT</version>
+    <version>1.5.2</version>
     <description>
         Easy database query library
     </description>
@@ -53,7 +53,7 @@
         <connection>scm:git:git@github.com:aaberg/sql2o.git</connection>
         <developerConnection>scm:git:git@github.com:aaberg/sql2o.git</developerConnection>
         <url>git@github.com:aaberg/sql2o.git</url>
-      <tag>HEAD</tag>
+      <tag>sql2o-parent-1.5.2</tag>
   </scm>
 
     <dependencies>
