@@ -349,44 +349,4 @@ public class IssuesTest {
         assertEquals(11, (int)t.rows().get(0).getInteger("id"));
         assertEquals("something else", t.rows().get(0).getString("name"));
     }
-
-    /**
-     * Attempt to recreate an issue reported by a colleague. He fetch a list of integers from a table with a 'select distinct' query,
-     * when using executeAndFetchTable he got the correct dataset, but when using executeScalarList, he only got a subset of the resultset.
-     * He uses MS SQL Server with official Microsoft drivers.
-     *
-     * I was not able to recreate the error with the following test method.
-     */
-    @Test
-    public void testWrongNumberOfResultsOnFetchScalarList() {
-
-        String createSql = "create table testWrongNumberOfResultsOnFetchScalarList(col1 integer)";
-        String insertSql = "insert into testWrongNumberOfResultsOnFetchScalarList(col1) values (:val)";
-
-        String fetchSql = "select distinct col1 from testWrongNumberOfResultsOnFetchScalarList";
-
-        Set<Integer> randomNumberList = new HashSet<>();
-
-        try (Connection connection = sql2o.open()) {
-            connection.createQuery(createSql).executeUpdate();
-            Random rand = new Random();
-
-            Query insertQuery = connection.createQuery(insertSql);
-            for (int idx = 0; idx < 10000; idx++) {
-                int randomNumber = rand.nextInt(10000);
-                randomNumberList.add(randomNumber);
-
-                insertQuery.addParameter("val", randomNumber).addToBatch();
-            }
-
-            insertQuery.executeBatch();
-        }
-
-        List<Integer> resList;
-        try (Connection connection = sql2o.open()) {
-            resList = connection.createQuery(fetchSql).executeScalarList(Integer.class);
-        }
-
-        assertEquals(resList.size(), randomNumberList.size());
-    }
 }
