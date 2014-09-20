@@ -3,7 +3,6 @@ package org.sql2o.converters.joda;
 import org.joda.time.DateTime;
 import org.joda.time.DateTimeZone;
 import org.joda.time.LocalDateTime;
-import org.joda.time.LocalTime;
 import org.sql2o.converters.Converter;
 import org.sql2o.converters.ConverterException;
 
@@ -23,7 +22,7 @@ public class DateTimeConverter implements Converter<DateTime> {
     }
 
     public DateTimeConverter() {
-        this(DateTimeZone.UTC);
+        this(DateTimeZone.getDefault());
     }
 
     public DateTime convert(Object val) throws ConverterException {
