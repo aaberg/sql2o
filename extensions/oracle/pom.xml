@@ -1,9 +1,9 @@
 <project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
     <modelVersion>4.0.0</modelVersion>
-    <artifactId>sql2o-postgres</artifactId>
+    <artifactId>sql2o-oracle</artifactId>
     <packaging>jar</packaging>
-    <name>sql2o-postgres</name>
-    <description>Postgres extension for sql2o</description>
+    <name>sql2o-oracle</name>
+    <description>Oracle extension for sql2o</description>
     <url>http://www.sql2o.org</url>
     <parent>
         <groupId>org.sql2o.extensions</groupId>
@@ -12,24 +12,25 @@
     </parent>
 
     <dependencies>
-
         <dependency>
             <groupId>org.sql2o</groupId>
             <artifactId>sql2o</artifactId>
-            <version>${version}</version>
+            <version>2.0.0-SNAPSHOT</version>
+        </dependency>
+        <dependency>
+            <groupId>com.oracle</groupId>
+            <artifactId>ojdbc6</artifactId>
+            <version>11.2.0.3</version>
         </dependency>
 
+        <!-- optional dependencies -->
         <dependency>
-            <groupId>com.google.code.gson</groupId>
-            <artifactId>gson</artifactId>
-            <version>2.2.4</version>
+            <groupId>joda-time</groupId>
+            <artifactId>joda-time</artifactId>
+            <version>2.0</version>
+            <optional>true</optional>
         </dependency>
-        <dependency>
-            <scope>compile</scope>
-            <groupId>postgresql</groupId>
-            <artifactId>postgresql</artifactId>
-            <version>9.1-901.jdbc4</version>
-        </dependency>
+
     </dependencies>
 
     <build>
