@@ -373,6 +373,7 @@ public class IssuesTest {
                 "select id, intval, strval\n" +
                 "-- a 'comment'\n" +
                 "from testIgnoreSqlComments\n" +
+                "/* and, it's another type of comment!*/" +
                 "where intval = :param";
 
         try (Connection connection = sql2o.open()) {

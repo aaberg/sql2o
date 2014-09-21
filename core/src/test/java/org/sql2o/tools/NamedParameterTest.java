@@ -1,6 +1,8 @@
 package org.sql2o.tools;
 
 import junit.framework.TestCase;
+import org.sql2o.quirks.parameterparsing.SqlParameterParsingStrategy;
+import org.sql2o.quirks.parameterparsing.impl.DefaultSqlParameterParsingStrategy;
 
 import java.util.HashMap;
 import java.util.List;

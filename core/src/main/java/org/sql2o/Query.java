@@ -53,7 +53,7 @@ public class Query implements AutoCloseable {
 
         paramNameToIdxMap = new HashMap<>();
 
-        parsedQuery = connection.getSql2o().getSqlParameterParsingStrategy().parseSql(queryText, paramNameToIdxMap);
+        parsedQuery = connection.getSql2o().getQuirks().getSqlParameterParsingStrategy().parseSql(queryText, paramNameToIdxMap);
         try {
             if (returnGeneratedKeys) {
                 statement = connection.getJdbcConnection().prepareStatement(parsedQuery, Statement.RETURN_GENERATED_KEYS);
