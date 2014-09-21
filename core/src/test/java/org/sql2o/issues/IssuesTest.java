@@ -17,10 +17,10 @@ import org.sql2o.issues.pojos.KeyValueEntity;
 import java.sql.Driver;
 import java.sql.DriverManager;
 import java.sql.SQLException;
-import java.util.*;
+import java.util.Arrays;
+import java.util.Collection;
+import java.util.List;
 
-import static org.hamcrest.CoreMatchers.equalTo;
-import static org.hamcrest.CoreMatchers.is;
 import static org.junit.Assert.*;
 
 /**
@@ -351,42 +351,47 @@ public class IssuesTest {
     }
 
     /**
-     * Attempt to recreate an issue reported by a colleague. He fetch a list of integers from a table with a 'select distinct' query,
-     * when using executeAndFetchTable he got the correct dataset, but when using executeScalarList, he only got a subset of the resultset.
-     * He uses MS SQL Server with official Microsoft drivers.
-     *
-     * I was not able to recreate the error with the following test method.
+     * Reproduce issue #142 (https://github.com/aaberg/sql2o/issues/142)
      */
     @Test
-    public void testWrongNumberOfResultsOnFetchScalarList() {
+    public void testIgnoreSqlComments() {
 
-        String createSql = "create table testWrongNumberOfResultsOnFetchScalarList(col1 integer)";
-        String insertSql = "insert into testWrongNumberOfResultsOnFetchScalarList(col1) values (:val)";
+        class ThePojo {
+            public int id;
+            public int intval;
+            public String strval;
+        }
 
-        String fetchSql = "select distinct col1 from testWrongNumberOfResultsOnFetchScalarList";
+        String createSql = "create table testIgnoreSqlComments(id integer primary key, intval integer, strval varchar(100))";
 
-        Set<Integer> randomNumberList = new HashSet<>();
+        String insertQuery =
+                "insert into testIgnoreSqlComments (id, intval, strval)\n " +
+                "-- It's a comment!\n" +
+                "values (:id, :intval, :strval);";
+
+        String fetchQuery =
+                "select id, intval, strval\n" +
+                "-- a 'comment'\n" +
+                "from testIgnoreSqlComments\n" +
+                "where intval = :param";
 
         try (Connection connection = sql2o.open()) {
             connection.createQuery(createSql).executeUpdate();
-            Random rand = new Random();
 
-            Query insertQuery = connection.createQuery(insertSql);
-            for (int idx = 0; idx < 10000; idx++) {
-                int randomNumber = rand.nextInt(10000);
-                randomNumberList.add(randomNumber);
-
-                insertQuery.addParameter("val", randomNumber).addToBatch();
+            for (int idx = 0; idx < 100; idx++) {
+                int intval = idx % 10;
+                connection.createQuery(insertQuery)
+                        .addParameter("id", idx)
+                        .addParameter("intval", intval)
+                        .addParameter("strval", "teststring" + idx)
+                        .executeUpdate();
             }
 
-            insertQuery.executeBatch();
-        }
+            List<ThePojo> resultList = connection.createQuery(fetchQuery)
+                    .addParameter("param", 5)
+                    .executeAndFetch(ThePojo.class);
 
-        List<Integer> resList;
-        try (Connection connection = sql2o.open()) {
-            resList = connection.createQuery(fetchSql).executeScalarList(Integer.class);
+            assertEquals(10, resultList.size());
         }
-
-        assertEquals(resList.size(), randomNumberList.size());
     }
 }
