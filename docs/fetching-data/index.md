@@ -53,7 +53,7 @@ public List<Task> getTasksBetweenDates(Date fromDate, Date toDate){
         "WHERE duedate >= :fromDate AND duedate < :toDate";
 
     try(Connection con = sql2o.open()) {
-        return sql2o.createQuery(sql)
+        return con.createQuery(sql)
             .addParameter("fromDate", fromDate)
             .addParameter("toDate", toDate)
             .executeAndFetch(Task.class);
