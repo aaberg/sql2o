@@ -34,8 +34,9 @@ public class Sql2o {
     private SqlParameterParsingStrategy sqlParameterParsingStrategy = new DefaultSqlParameterParsingStrategy();
 
     private final static Logger logger = LocalLoggerFactory.getLogger(Sql2o.class);
+	private ConnectionHandlerFactory connectionHandlerFactory;
 
-    public Sql2o(String jndiLookup) {
+	public Sql2o(String jndiLookup) {
         this(JndiDataSource.getJndiDatasource(jndiLookup));
     }
 
@@ -95,9 +96,18 @@ public class Sql2o {
         this.dataSource = dataSource;
         this.quirks=quirks;
         this.defaultColumnMappings = new HashMap<String, String>();
+	    this.connectionHandlerFactory = new Sql2oConnectionHandlerFactory( this );
     }
 
-    Quirks getQuirks() {
+	public void setConnectionHandlerFactory( ConnectionHandlerFactory connectionHandlerFactory )	{
+		this.connectionHandlerFactory = connectionHandlerFactory;
+	}
+
+	public ConnectionHandlerFactory getConnectionHandlerFactory()	{
+		return connectionHandlerFactory;
+	}
+
+	Quirks getQuirks() {
         return quirks;
     }
 
@@ -170,7 +180,8 @@ public class Sql2o {
      */
     @Deprecated
     public Query createQuery(String query, String name, boolean returnGeneratedKeys) {
-        return new Connection(this, true).createQuery(query, name, returnGeneratedKeys);
+	    java.sql.Connection jdbcConnection = connectionHandlerFactory.getConnectionHandler().getJdbcConnection();
+	    return new Connection( jdbcConnection, this, true ).createQuery( query, name, returnGeneratedKeys );
     }
 
     /**
@@ -205,10 +216,10 @@ public class Sql2o {
      * </code>
      */
     @Deprecated
-    public Query createQuery(String query, String name){
-
-        Connection connection = new Connection(this, true);
-        return connection.createQuery(query, name);
+    public Query createQuery(String query, String name) {
+	    java.sql.Connection jdbcConnection = connectionHandlerFactory.getConnectionHandler().getJdbcConnection();
+	    Connection connection = new Connection( jdbcConnection, this, true );
+	    return connection.createQuery( query, name );
     }
 
     /**
@@ -233,10 +244,11 @@ public class Sql2o {
      * @return instance of the {@link org.sql2o.Connection} class.
      */
     public Connection open() {
-        return new Connection(this, false);
-    }
+		java.sql.Connection jdbcConnection = connectionHandlerFactory.getConnectionHandler().getJdbcConnection();
+		return new Connection( jdbcConnection, this, false );
+	}
 
-    /**
+	/**
      * Invokes the run method on the {@link org.sql2o.StatementRunnableWithResult} instance. This method guarantees that
      * the connection is closed properly, when either the run method completes or if an exception occurs.
      * @param runnable
@@ -307,18 +319,21 @@ public class Sql2o {
      * @param isolationLevel the isolation level of the transaction
      * @return the {@link Connection} instance to use to run statements in the transaction.
      */
-    public Connection beginTransaction(int isolationLevel){
+    public Connection beginTransaction(int isolationLevel) {
+	    java.sql.Connection jdbcConnection = connectionHandlerFactory.getConnectionHandler().getJdbcConnection();
+	    Connection connection = new Connection( jdbcConnection, this, false );
 
-        Connection connection = new Connection(this, false);
+	    try
+	    {
+		    connection.getJdbcConnection().setAutoCommit( false );
+		    connection.getJdbcConnection().setTransactionIsolation( isolationLevel );
+	    }
+	    catch( SQLException e )
+	    {
+		    throw new RuntimeException( e );
+	    }
 
-        try {
-            connection.getJdbcConnection().setAutoCommit(false);
-            connection.getJdbcConnection().setTransactionIsolation(isolationLevel);
-        } catch (SQLException e) {
-            throw new RuntimeException(e);
-        }
-
-        return connection;
+	    return connection;
     }
 
     /**
