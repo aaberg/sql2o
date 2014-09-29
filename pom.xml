@@ -17,6 +17,7 @@
 
     <modules>
         <module>core</module>
+        <module>sql2o-spring</module>
     </modules>
 
     <developers>

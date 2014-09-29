@@ -51,7 +51,7 @@ public class Connection implements AutoCloseable {
     }
 
     Connection(Sql2o sql2o, boolean autoClose) {
-	    this( sql2o.getConnectionHandlerFactory().getConnectionHandler().getJdbcConnection(), sql2o, autoClose );
+	    this( sql2o.getConnectionHandler().getJdbcConnection(), sql2o, autoClose );
     }
 
 	Connection internalRollback( boolean closeConnection )
@@ -91,7 +91,7 @@ public class Connection implements AutoCloseable {
 
         try {
             if (jdbcConnection.isClosed()){
-                jdbcConnection = sql2o.getConnectionHandlerFactory().getConnectionHandler().getJdbcConnection();
+                jdbcConnection = sql2o.getConnectionHandler().getJdbcConnection();
             }
         } catch (SQLException e) {
             throw new RuntimeException(e);
@@ -128,7 +128,7 @@ public class Connection implements AutoCloseable {
     }
 
     public Connection rollback(boolean closeConnection) {
-	    return sql2o.getConnectionHandlerFactory().getConnectionHandler().handleRollback( this, closeConnection );
+	    return sql2o.getConnectionHandler().handleRollback( this, closeConnection );
     }
 
     public Sql2o commit(){
@@ -136,7 +136,7 @@ public class Connection implements AutoCloseable {
     }
 
     public Connection commit(boolean closeConnection) {
-	    return sql2o.getConnectionHandlerFactory().getConnectionHandler().handleCommit( this, closeConnection );
+	    return sql2o.getConnectionHandler().handleCommit( this, closeConnection );
     }
 
 	Connection internalCommit( boolean closeConnection )
@@ -261,7 +261,7 @@ public class Connection implements AutoCloseable {
 
     @Override
     public void close() {
-	    sql2o.getConnectionHandlerFactory().getConnectionHandler().handleClose( this );
+	    sql2o.getConnectionHandler().handleClose( this );
     }
 
 	void internalClose() {
