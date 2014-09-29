@@ -33,7 +33,7 @@ public class Connection implements AutoCloseable {
     
     private boolean rollbackOnException = true;
 
-    public boolean isRollbackOnException() {
+	public boolean isRollbackOnException() {
         return rollbackOnException;
     }
 
@@ -44,14 +44,31 @@ public class Connection implements AutoCloseable {
 
     final boolean autoClose;
 
-    Connection(Sql2o sql2o, boolean autoClose) {
-
-        this.autoClose = autoClose;
-        this.sql2o = sql2o;
-        createConnection();
+    Connection(java.sql.Connection jdbcConnection, Sql2o sql2o, boolean autoClose) {
+	    this.jdbcConnection = jdbcConnection;
+	    this.autoClose = autoClose;
+	    this.sql2o = sql2o;
     }
 
-    void onException() {
+    Connection(Sql2o sql2o, boolean autoClose) {
+	    this( sql2o.getConnectionHandler().getJdbcConnection(), sql2o, autoClose );
+    }
+
+	Connection internalRollback( boolean closeConnection )
+	{
+		try {
+			jdbcConnection.rollback();
+		}
+		catch (SQLException e) {
+			logger.warn("Could not roll back transaction. message: {}", e);
+		}
+		finally {
+			if(closeConnection) this.closeJdbcConnection();
+		}
+		return this;
+	}
+
+	void onException() {
         if (isRollbackOnException()) {
             rollback();
         }
@@ -74,7 +91,7 @@ public class Connection implements AutoCloseable {
 
         try {
             if (jdbcConnection.isClosed()){
-                createConnection();
+                jdbcConnection = sql2o.getConnectionHandler().getJdbcConnection();
             }
         } catch (SQLException e) {
             throw new RuntimeException(e);
@@ -110,38 +127,34 @@ public class Connection implements AutoCloseable {
         return this.rollback(true).sql2o;
     }
 
-    public Connection rollback(boolean closeConnection){
-        try {
-            jdbcConnection.rollback();
-        }
-        catch (SQLException e) {
-            logger.warn("Could not roll back transaction. message: {}", e);
-        }
-        finally {
-            if(closeConnection) this.closeJdbcConnection();
-        }
-        return this;
+    public Connection rollback(boolean closeConnection) {
+	    return sql2o.getConnectionHandler().handleRollback( this, closeConnection );
     }
 
     public Sql2o commit(){
         return this.commit(true).sql2o;
     }
 
-    public Connection commit(boolean closeConnection){
-        try {
-            jdbcConnection.commit();
-        }
-        catch (SQLException e) {
-            throw new Sql2oException(e);
-        }
-        finally {
-            if(closeConnection)
-                this.closeJdbcConnection();
-        }
-        return this;
+    public Connection commit(boolean closeConnection) {
+	    return sql2o.getConnectionHandler().handleCommit( this, closeConnection );
     }
 
-    public int getResult(){
+	Connection internalCommit( boolean closeConnection )
+	{
+		try {
+		    jdbcConnection.commit();
+		}
+		catch (SQLException e) {
+		    throw new Sql2oException(e);
+		}
+		finally {
+		    if(closeConnection)
+		        this.closeJdbcConnection();
+		}
+		return this;
+	}
+
+	public int getResult(){
         if (this.result == null){
             throw new Sql2oException("It is required to call executeUpdate() method before calling getResult().");
         }
@@ -246,51 +259,47 @@ public class Connection implements AutoCloseable {
         statements.remove(statement);
     }
 
+    @Override
     public void close() {
-        boolean connectionIsClosed;
-        try {
-            connectionIsClosed = jdbcConnection.isClosed();
-        } catch (SQLException e) {
-            throw new Sql2oException("Sql2o encountered a problem while trying to determine whether the connection is closed.", e);
-        }
-
-        if (!connectionIsClosed) {
-
-            for (Statement statement : statements) {
-                try {
-                    getSql2o().getQuirks().closeStatement(statement);
-                } catch (Throwable e) {
-                    logger.warn("Could not close statement.", e);
-                }
-            }
-            statements.clear();
-
-            boolean autoCommit = false;
-            try {
-                autoCommit = jdbcConnection.getAutoCommit();
-            }
-            catch (SQLException e) {
-                logger.warn("Could not determine connection auto commit mode.", e);
-            }
-
-            // if in transaction, rollback, otherwise just close
-            if (autoCommit) {
-                this.closeJdbcConnection();
-            }
-            else {
-                this.rollback(true);
-            }
-        }
+	    sql2o.getConnectionHandler().handleClose( this );
     }
 
-    private void createConnection(){
-        try{
-            this.jdbcConnection = this.sql2o.getDataSource().getConnection();
-        }
-        catch(Exception ex){
-            throw new Sql2oException("Could not acquire a connection from DataSource - " + ex.getMessage(), ex);
-        }
-    }
+	void internalClose() {
+		boolean connectionIsClosed;
+		try {
+		    connectionIsClosed = jdbcConnection.isClosed();
+		} catch (SQLException e) {
+		    throw new Sql2oException("Sql2o encountered a problem while trying to determine whether the connection is closed.", e);
+		}
+
+		if (!connectionIsClosed) {
+
+		    for (Statement statement : statements) {
+		        try {
+		            getSql2o().getQuirks().closeStatement(statement);
+		        } catch (Throwable e) {
+		            logger.warn("Could not close statement.", e);
+		        }
+		    }
+		    statements.clear();
+
+		    boolean autoCommit = false;
+		    try {
+		        autoCommit = jdbcConnection.getAutoCommit();
+		    }
+		    catch (SQLException e) {
+		        logger.warn("Could not determine connection auto commit mode.", e);
+		    }
+
+		    // if in transaction, rollback, otherwise just close
+		    if (autoCommit) {
+		        this.closeJdbcConnection();
+		    }
+		    else {
+		        this.rollback(true);
+		    }
+		}
+	}
 
     private void closeJdbcConnection() {
         try {
