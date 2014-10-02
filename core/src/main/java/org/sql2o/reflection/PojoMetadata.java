@@ -79,6 +79,7 @@ public class PojoMetadata {
 
     private PropertyAndFieldInfo initializePropertyInfo() {
 
+        HashMap<String, Getter> propertyGetters = new HashMap<String, Getter>();
         HashMap<String, Setter> propertySetters = new HashMap<String, Setter>();
         HashMap<String, Field> fields = new HashMap<String, Field>();
 
@@ -88,6 +89,7 @@ public class PojoMetadata {
             for (Field f : theClass.getDeclaredFields()) {
                 String propertyName = f.getName();
                 propertyName = caseSensitive ? propertyName : propertyName.toLowerCase();
+                propertyGetters.put(propertyName, factoryFacade.newGetter(f));
                 propertySetters.put(propertyName, factoryFacade.newSetter(f));
                 fields.put(propertyName, f);
             }
@@ -95,6 +97,18 @@ public class PojoMetadata {
             // prepare methods. Methods will override fields, if both exists.
             for (Method m : theClass.getDeclaredMethods()) {
                 if (m.getParameterTypes().length!=1) continue;
+
+                if (m.getName().startsWith("get")) {
+                    String propertyName = m.getName().substring(3);
+                    if (caseSensitive) {
+                        propertyName = propertyName.substring(0, 1).toLowerCase() + propertyName.substring(1);
+                    } else {
+                        propertyName = propertyName.toLowerCase();
+                    }
+
+                    propertyGetters.put(propertyName, factoryFacade.newGetter(m));
+                }
+
                 if (m.getName().startsWith("set")) {
                     String propertyName = m.getName().substring(3);
                     if (caseSensitive) {
@@ -109,12 +123,43 @@ public class PojoMetadata {
             theClass = theClass.getSuperclass();
         } while (!theClass.equals(Object.class));
 
-        return new PropertyAndFieldInfo(propertySetters, fields, objectConstructor);
+        return new PropertyAndFieldInfo(propertyGetters, propertySetters, fields, objectConstructor);
 
     }
 
     public Map<String, String> getColumnMappings() {
         return columnMappings;
+    }
+
+    public Getter getPropertyGetter(String propertyName) {
+
+        Getter getter = getPropertyGetterIfExists(propertyName);
+
+        if (getter != null) {
+            return getter;
+        } else {
+            String errorMsg = "Property with name '" + propertyName + "' not found on class " + this.clazz.toString();
+            if (this.caseSensitive) {
+                errorMsg += " (You have turned on case sensitive property search. Is this intentional?)";
+            }
+            throw new Sql2oException(errorMsg);
+        }
+    }
+
+    public Getter getPropertyGetterIfExists(String propertyName) {
+
+        String name = this.caseSensitive ? propertyName : propertyName.toLowerCase();
+
+        if (this.columnMappings.containsKey(name)) {
+            name = this.columnMappings.get(name);
+        }
+
+        if (autoDeriveColumnNames) {
+            name = UnderscoreToCamelCase.convert(name);
+            if (!this.caseSensitive) name = name.toLowerCase();
+        }
+
+        return propertyInfo.propertyGetters.get(name);
     }
 
     public Setter getPropertySetter(String propertyName) {
@@ -181,11 +226,16 @@ public class PojoMetadata {
     private static class PropertyAndFieldInfo {
         // since this class is private we can just use field access
         // to make HotSpot a little less work for inlining
+        public final Map<String, Getter> propertyGetters;
         public final Map<String, Setter> propertySetters;
         public final Map<String, Field> fields;
         public final ObjectConstructor objectConstructor;
 
-        private PropertyAndFieldInfo(Map<String, Setter> propertySetters, Map<String, Field> fields, ObjectConstructor objectConstructor) {
+        private PropertyAndFieldInfo(
+            Map<String, Getter> propertyGetters, Map<String, Setter> propertySetters,
+            Map<String, Field> fields, ObjectConstructor objectConstructor) {
+
+            this.propertyGetters = propertyGetters;
             this.propertySetters = propertySetters;
             this.fields = fields;
             this.objectConstructor = objectConstructor;

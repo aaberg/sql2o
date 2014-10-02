@@ -11,7 +11,7 @@ import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 
 @SuppressWarnings("UnusedDeclaration")
-public class MethodAccessorsGenerator implements MethodSetterFactory, ObjectConstructorFactory {
+public class MethodAccessorsGenerator implements MethodGetterFactory, MethodSetterFactory, ObjectConstructorFactory {
     private static final ThreadLocal<Object> generatorObjectHolder;
     private static final MethodAccessor generateMethod;
     private static final MethodAccessor generateConstructor;
@@ -114,6 +114,25 @@ public class MethodAccessorsGenerator implements MethodSetterFactory, ObjectCons
         } catch (InvocationTargetException e) {
             throw new RuntimeException(e);
         }
+    }
+
+    public Getter newGetter(final Method method) {
+        final Class type = method.getReturnType();
+        final MethodAccessor methodAccessor = newMethodAccessor(method);
+
+        return new Getter() {
+            public Object getProperty(Object obj) {
+                try {
+                    return methodAccessor.invoke(obj, null);
+                } catch (InvocationTargetException e) {
+                    throw new Sql2oException("error while calling getter method with name " + method.getName() + " on class " + obj.getClass().toString(), e);
+                }
+            }
+
+            public Class getType() {
+                return type;
+            }
+        };
     }
 
     public Setter newSetter(final Method method) {

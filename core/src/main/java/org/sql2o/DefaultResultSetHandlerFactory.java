@@ -3,6 +3,7 @@ package org.sql2o;
 import org.sql2o.converters.Converter;
 import org.sql2o.converters.ConverterException;
 import org.sql2o.quirks.Quirks;
+import org.sql2o.reflection.Getter;
 import org.sql2o.reflection.Pojo;
 import org.sql2o.reflection.PojoMetadata;
 import org.sql2o.reflection.Setter;
@@ -20,6 +21,50 @@ public class DefaultResultSetHandlerFactory<T> implements ResultSetHandlerFactor
     public DefaultResultSetHandlerFactory(PojoMetadata pojoMetadata, Quirks quirks) {
         this.metadata = pojoMetadata;
         this.quirks = quirks;
+    }
+
+    @SuppressWarnings("unchecked")
+    private static Getter getGetter(
+            final Quirks quirks,
+            final String propertyPath,
+            final PojoMetadata metadata) {
+        int index = propertyPath.indexOf('.');
+        if (index <= 0) {
+            // Simple path - fast way
+            final Getter getter = metadata.getPropertyGetterIfExists(propertyPath);
+            // behavior change: do not throw if POJO contains less properties
+            if (getter == null) return null;
+            final Converter converter = quirks.converterOf(getter.getType());
+            // getter without converter
+            if (converter == null) return getter;
+            return new Getter() {
+                public Object getProperty(Object obj) {
+                    try {
+                        return converter.convert(getter.getProperty(obj));
+                    } catch (ConverterException e) {
+                        throw new Sql2oException("Error trying to convert column " + propertyPath + " to type " + getter.getType(), e);
+                    }
+                }
+
+                public Class getType() {
+                    return getter.getType();
+                }
+            };
+        }
+        // dot path - long way
+        // i'm too lazy now to rewrite this case so I just call old unoptimized code...
+        // TODO: rewrite, get rid of POJO class
+        return new Getter() {
+            public Object getProperty(Object obj) {
+                Pojo pojo = new Pojo(metadata, metadata.isCaseSensitive(), obj);
+                return pojo.getProperty(propertyPath, quirks);
+            }
+
+            public Class getType() {
+                // doesn't used anyway
+                return Object.class;
+            }
+        };
     }
 
     @SuppressWarnings("unchecked")
@@ -135,14 +180,28 @@ public class DefaultResultSetHandlerFactory<T> implements ResultSetHandlerFactor
 
     @SuppressWarnings("unchecked")
     private ResultSetHandler<T> newResultSetHandler0(final ResultSetMetaData meta) throws SQLException {
+        final Getter[] getters;
         final Setter[] setters;
         final Converter converter;
         final boolean useExecuteScalar;
-        //TODO: it's possible to cache converter/setters
+        //TODO: it's possible to cache converter/setters/getters
         // cache key is ResultSetMetadata + Bean type
 
         converter = quirks.converterOf(metadata.getType());
         final int columnCount = meta.getColumnCount();
+
+        getters = new Getter[columnCount + 1];   // getters[0] is always null
+        for (int i = 1; i <= columnCount; i++) {
+            String colName = quirks.getColumnName(meta, i);
+            // behavior change: do not throw if POJO contains less properties
+            getters[i] = getGetter(quirks, colName, metadata);
+
+            // If more than 1 column is fetched (we cannot fall back to executeScalar),
+            // and the getter doesn't exist, throw exception.
+            if (getters[i] == null && columnCount > 1) {
+                throw new Sql2oException("Could not map " + colName + " to any property.");
+            }
+        }
 
         setters = new Setter[columnCount + 1];   // setters[0] is always null
         for (int i = 1; i <= columnCount; i++) {
