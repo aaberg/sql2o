@@ -198,22 +198,9 @@ public class PojoMetadata {
     }
 
     public Object getValueOfProperty(String propertyName, Object object) {
-        String name = this.caseSensitive ? propertyName : propertyName.toLowerCase();
+        Getter getter = getPropertyGetter(propertyName);
 
-        Field field = this.propertyInfo.fields.get(name);
-
-        boolean accesible = field.isAccessible();
-
-        try {
-            field.setAccessible(true);
-
-            return field.get(object);
-        } catch (IllegalAccessException e) {
-            throw new Sql2oException("could not read value of field " + field.getName() + " on class " + object.getClass().toString(), e);
-        }
-        finally {
-            field.setAccessible(accesible);
-        }
+        return getter.getProperty(object);
     }
 
     private static class Cache extends AbstractCache<Class, PropertyAndFieldInfo, PojoMetadata> {
