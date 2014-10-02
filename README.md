@@ -1,3 +1,6 @@
+# NOTE: 2014-10-02
+This is a fork of the sql2o project.  It contains a small set of changes to support Spring transaction management (@Transactional annotation) and so that it can be used with the Spring DataSourceTransactionManager. If the pull request we issued against the base project get accepted then we'll kill this.  Until then, this is the project we are using in production.
+
 # sql2o
 
 Sql2o is a small java library, with the purpose of making database interaction easy.
