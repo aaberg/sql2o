@@ -4,6 +4,8 @@ import org.joda.time.LocalDate;
 import org.sql2o.converters.Converter;
 import org.sql2o.converters.ConverterException;
 
+import java.sql.Date;
+
 /**
  * Created by lars on 01.05.14.
  */
@@ -25,6 +27,6 @@ public class LocalDateConverter implements Converter<LocalDate> {
 
     @Override
     public Object toDatabaseParam(LocalDate val) {
-        return new java.sql.Date(val.toDateTimeAtStartOfDay().getMillis());
+	    return new Date( val.getYear()-1900, val.getMonthOfYear()-1, val.getDayOfMonth() );
     }
 }
