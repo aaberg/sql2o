@@ -42,4 +42,14 @@ public class SpringSql2oConnectionHandler implements ConnectionHandler
 	public void handleClose( Connection connection ) {
 		throw new Sql2oException( "close() should not be invoked explicitly - the Spring Transaction Manager is managing this" );
 	}
+
+	@Override
+	public boolean isRollbackOnException() {
+		return false;
+	}
+
+	@Override
+	public void setRollbackOnException( boolean rollbackOnException ) {
+		throw new Sql2oException( "Cannot set this - rollback is managed by the Spring Transaction Manager" );
+	}
 }

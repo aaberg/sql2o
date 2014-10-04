@@ -3,6 +3,7 @@ package org.sql2o;
 public class Sql2oConnectionHandler implements ConnectionHandler
 {
 	private final Sql2o sql2o;
+	private boolean rollbackOnException = true;
 
 	public Sql2oConnectionHandler( Sql2o sql2o ) {
 		this.sql2o = sql2o;
@@ -31,5 +32,15 @@ public class Sql2oConnectionHandler implements ConnectionHandler
 	@Override
 	public void handleClose( Connection connection ) {
 		connection.internalClose();
+	}
+
+	@Override
+	public boolean isRollbackOnException() {
+		return rollbackOnException;
+	}
+
+	@Override
+	public void setRollbackOnException( boolean rollbackOnException ) {
+		this.rollbackOnException = rollbackOnException;
 	}
 }

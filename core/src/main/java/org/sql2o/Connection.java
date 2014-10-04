@@ -31,15 +31,13 @@ public class Connection implements AutoCloseable {
     private List<Object> keys;
     private boolean canGetKeys;
     
-    private boolean rollbackOnException = true;
-
 	public boolean isRollbackOnException() {
-        return rollbackOnException;
+        return sql2o.getConnectionHandler().isRollbackOnException();
     }
 
     public Connection setRollbackOnException(boolean rollbackOnException) {
-        this.rollbackOnException = rollbackOnException;
-        return this;
+	    sql2o.getConnectionHandler().setRollbackOnException( rollbackOnException );
+	    return this;
     }
 
     final boolean autoClose;

@@ -12,4 +12,7 @@ public interface ConnectionHandler
 	public Connection handleCommit( Connection connection, boolean closeConnection );
 	public Connection handleRollback( Connection connection, boolean closeConnection );
 	public void handleClose( Connection connection );
+
+	boolean isRollbackOnException();
+	void setRollbackOnException( boolean rollbackOnException );
 }
