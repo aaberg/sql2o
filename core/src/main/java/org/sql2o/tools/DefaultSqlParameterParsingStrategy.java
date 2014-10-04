@@ -1,6 +1,7 @@
 package org.sql2o.tools;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 
@@ -34,6 +35,11 @@ public class DefaultSqlParameterParsingStrategy implements SqlParameterParsingSt
                     inSingleQuote=true;
                 } else if(c=='"') {
                     inDoubleQuote=true;
+                } else if( c=='?') {
+	                String paramName = "p" + index;
+	                List<Integer> indexList = Collections.singletonList( index );
+	                paramMap.put( paramName, indexList );
+	                index++;
                 } else if(previousChar!=':' && c==':' && i+1<length &&
                         Character.isJavaIdentifierStart(statement.charAt(i+1))) {
                     int j=i+2;
