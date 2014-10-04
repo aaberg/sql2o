@@ -40,6 +40,12 @@ public class DateTimeConverter implements Converter<DateTime> {
     }
 
     public Object toDatabaseParam(DateTime val) {
-        return new Timestamp(val.getMillis());
+	    Timestamp timestamp = new Timestamp( val.getYear()-1900,
+	                                         val.getMonthOfYear()-1,
+	                                         val.getDayOfMonth(),
+	                                         val.getHourOfDay(),
+	                                         val.getMinuteOfHour(),
+	                                         val.getSecondOfMinute(), val.getMillisOfSecond() * 1000000);
+	    return timestamp;
     }
 }
