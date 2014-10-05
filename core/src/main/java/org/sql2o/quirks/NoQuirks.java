@@ -2,6 +2,8 @@ package org.sql2o.quirks;
 
 import org.sql2o.converters.Convert;
 import org.sql2o.converters.Converter;
+import org.sql2o.quirks.parameterparsing.impl.DefaultSqlParameterParsingStrategy;
+import org.sql2o.quirks.parameterparsing.SqlParameterParsingStrategy;
 
 import java.io.InputStream;
 import java.sql.*;
@@ -18,6 +20,7 @@ import java.util.Map;
  */
 public class NoQuirks implements Quirks {
     protected final Map<Class,Converter>  converters;
+    private final SqlParameterParsingStrategy sqlParameterParsingStrategy = new DefaultSqlParameterParsingStrategy();
 
     public NoQuirks(Map<Class, Converter> converters) {
         // protective copy
@@ -111,5 +114,10 @@ public class NoQuirks implements Quirks {
     @Override
     public void closeStatement(Statement statement) throws SQLException {
         statement.close();
+    }
+
+    @Override
+    public SqlParameterParsingStrategy getSqlParameterParsingStrategy() {
+        return this.sqlParameterParsingStrategy;
     }
 }

@@ -1,13 +1,13 @@
 package org.sql2o.quirks;
 
 import org.sql2o.converters.Converter;
+import org.sql2o.quirks.parameterparsing.SqlParameterParsingStrategy;
 
 import java.io.InputStream;
 import java.sql.*;
 import java.sql.ResultSet;
 import java.sql.ResultSetMetaData;
 import java.sql.SQLException;
-import java.util.Map;
 
 /**
  * Interface for JDBC driver specific quirks.
@@ -49,4 +49,6 @@ public interface Quirks {
     Object getRSVal(ResultSet rs, int idx) throws SQLException;
 
     void closeStatement(Statement statement) throws SQLException;
+
+    SqlParameterParsingStrategy getSqlParameterParsingStrategy();
 }

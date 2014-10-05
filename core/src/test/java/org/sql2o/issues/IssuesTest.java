@@ -17,10 +17,10 @@ import org.sql2o.issues.pojos.KeyValueEntity;
 import java.sql.Driver;
 import java.sql.DriverManager;
 import java.sql.SQLException;
-import java.util.*;
+import java.util.Arrays;
+import java.util.Collection;
+import java.util.List;
 
-import static org.hamcrest.CoreMatchers.equalTo;
-import static org.hamcrest.CoreMatchers.is;
 import static org.junit.Assert.*;
 
 /**
@@ -348,5 +348,51 @@ public class IssuesTest {
 
         assertEquals(11, (int)t.rows().get(0).getInteger("id"));
         assertEquals("something else", t.rows().get(0).getString("name"));
+    }
+
+    /**
+     * Reproduce issue #142 (https://github.com/aaberg/sql2o/issues/142)
+     */
+    @Test
+    public void testIgnoreSqlComments() {
+
+        class ThePojo {
+            public int id;
+            public int intval;
+            public String strval;
+        }
+
+        String createSql = "create table testIgnoreSqlComments(id integer primary key, intval integer, strval varchar(100))";
+
+        String insertQuery =
+                "insert into testIgnoreSqlComments (id, intval, strval)\n " +
+                "-- It's a comment!\n" +
+                "values (:id, :intval, :strval);";
+
+        String fetchQuery =
+                "select id, intval, strval\n" +
+                "-- a 'comment'\n" +
+                "from testIgnoreSqlComments\n" +
+                "/* and, it's another type of comment!*/" +
+                "where intval = :param";
+
+        try (Connection connection = sql2o.open()) {
+            connection.createQuery(createSql).executeUpdate();
+
+            for (int idx = 0; idx < 100; idx++) {
+                int intval = idx % 10;
+                connection.createQuery(insertQuery)
+                        .addParameter("id", idx)
+                        .addParameter("intval", intval)
+                        .addParameter("strval", "teststring" + idx)
+                        .executeUpdate();
+            }
+
+            List<ThePojo> resultList = connection.createQuery(fetchQuery)
+                    .addParameter("param", 5)
+                    .executeAndFetch(ThePojo.class);
+
+            assertEquals(10, resultList.size());
+        }
     }
 }

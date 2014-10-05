@@ -4,8 +4,6 @@ import org.sql2o.logging.LocalLoggerFactory;
 import org.sql2o.logging.Logger;
 import org.sql2o.quirks.Quirks;
 import org.sql2o.quirks.QuirksDetector;
-import org.sql2o.tools.DefaultSqlParameterParsingStrategy;
-import org.sql2o.tools.SqlParameterParsingStrategy;
 
 import javax.sql.DataSource;
 import java.sql.SQLException;
@@ -31,7 +29,6 @@ public class Sql2o {
     private final DataSource dataSource;
     private Map<String, String> defaultColumnMappings;
     private boolean defaultCaseSensitive;
-    private SqlParameterParsingStrategy sqlParameterParsingStrategy = new DefaultSqlParameterParsingStrategy();
 
     private final static Logger logger = LocalLoggerFactory.getLogger(Sql2o.class);
 
@@ -97,7 +94,7 @@ public class Sql2o {
         this.defaultColumnMappings = new HashMap<String, String>();
     }
 
-    Quirks getQuirks() {
+    public Quirks getQuirks() {
         return quirks;
     }
 
@@ -144,14 +141,6 @@ public class Sql2o {
      */
     public void setDefaultCaseSensitive(boolean defaultCaseSensitive) {
         this.defaultCaseSensitive = defaultCaseSensitive;
-    }
-
-    public SqlParameterParsingStrategy getSqlParameterParsingStrategy() {
-        return sqlParameterParsingStrategy;
-    }
-
-    public void setSqlParameterParsingStrategy(SqlParameterParsingStrategy sqlParameterParsingStrategy) {
-        this.sqlParameterParsingStrategy = sqlParameterParsingStrategy;
     }
 
     /**

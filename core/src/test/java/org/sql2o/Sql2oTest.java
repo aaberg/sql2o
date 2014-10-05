@@ -1269,6 +1269,27 @@ public class Sql2oTest {
         }
     }
 
+    @Test
+    public void testClob() {
+        try (Connection connection = sql2o.open()) {
+            connection.createQuery("create table testClob(id integer primary key, val clob)")
+                    .executeUpdate();
+
+            connection.createQuery("insert into testClob (id, val) values (:id, :val)")
+                    .addParameter("id", 1)
+                    .addParameter("val", "something")
+                    .executeUpdate();
+
+            String val = connection.createQuery("select val from testClob where id = :id")
+                    .addParameter("id", 1)
+                    .executeScalar(String.class);
+
+            assertThat(val, is(equalTo("something")));
+        }
+
+
+    }
+
     /************** Helper stuff ******************/
 
     private void createAndFillUserTable() {

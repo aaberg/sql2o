@@ -53,7 +53,7 @@ public class Query implements AutoCloseable {
 
         paramNameToIdxMap = new HashMap<>();
 
-        parsedQuery = connection.getSql2o().getSqlParameterParsingStrategy().parseSql(queryText, paramNameToIdxMap);
+        parsedQuery = connection.getSql2o().getQuirks().getSqlParameterParsingStrategy().parseSql(queryText, paramNameToIdxMap);
         try {
             if (returnGeneratedKeys) {
                 statement = connection.getJdbcConnection().prepareStatement(parsedQuery, Statement.RETURN_GENERATED_KEYS);
@@ -166,15 +166,6 @@ public class Query implements AutoCloseable {
         return this;
     }
 
-    @SuppressWarnings("unchecked")
-    public Query addParameter(String name, Object value) {
-        return value == null
-                ? addParameter(name, Object.class, value)
-                : addParameter(name,
-                    (Class<Object>) value.getClass(),
-                    value);
-    }
-
     public Query withParams(Object... paramValues){
         int i=0;
         for (Object paramValue : paramValues) {
@@ -183,6 +174,14 @@ public class Query implements AutoCloseable {
         return this;
     }
 
+    @SuppressWarnings("unchecked")
+    public Query addParameter(String name, Object value) {
+        return value == null
+                ? addParameter(name, Object.class, value)
+                : addParameter(name,
+                    (Class<Object>) value.getClass(),
+                    value);
+    }
 
     public Query addParameter(String name, final InputStream value){
         addParameterInternal(name, new ParameterSetter() {
