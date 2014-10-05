@@ -94,7 +94,7 @@ public class Sql2o {
         this.defaultColumnMappings = new HashMap<String, String>();
     }
 
-    Quirks getQuirks() {
+    public Quirks getQuirks() {
         return quirks;
     }
 
