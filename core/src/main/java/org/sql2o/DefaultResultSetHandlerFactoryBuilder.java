@@ -4,14 +4,21 @@ import org.sql2o.quirks.Quirks;
 import org.sql2o.reflection.PojoMetadata;
 
 import java.util.Map;
+import java.util.Set;
 
 public class DefaultResultSetHandlerFactoryBuilder implements ResultSetHandlerFactoryBuilder {
     private boolean caseSensitive;
     private boolean autoDeriveColumnNames;
     private Map<String, String> columnMappings;
     private Quirks quirks;
+	private Set<String> ignoredColumns;
 
-    public boolean isCaseSensitive() {
+	@Override
+	public void setIgnoredColumns( Set<String> ignoredColumns ) {
+		this.ignoredColumns = ignoredColumns;
+	}
+
+	public boolean isCaseSensitive() {
         return caseSensitive;
     }
 
@@ -45,7 +52,7 @@ public class DefaultResultSetHandlerFactoryBuilder implements ResultSetHandlerFa
 
     @SuppressWarnings("unchecked")
     public <T> ResultSetHandlerFactory<T> newFactory(Class<T> clazz) {
-        PojoMetadata pojoMetadata = new PojoMetadata(clazz, caseSensitive, autoDeriveColumnNames, columnMappings);
+        PojoMetadata pojoMetadata = new PojoMetadata(clazz, caseSensitive, autoDeriveColumnNames, columnMappings, ignoredColumns);
         return new DefaultResultSetHandlerFactory(pojoMetadata, quirks);
     }
 

@@ -2,7 +2,6 @@ package org.sql2o.reflection;
 
 import org.sql2o.Sql2oException;
 import org.sql2o.tools.AbstractCache;
-import org.sql2o.tools.FeatureDetector;
 import org.sql2o.tools.UnderscoreToCamelCase;
 
 import java.lang.reflect.Field;
@@ -10,6 +9,7 @@ import java.lang.reflect.Method;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Set;
 
 /**
  * Stores metadata for a POJO.
@@ -21,8 +21,9 @@ public class PojoMetadata {
     private final PropertyAndFieldInfo propertyInfo;
     private final Map<String, String> columnMappings;
     private final FactoryFacade factoryFacade = FactoryFacade.getInstance();
+	private final Set<String> ignoredColumns;
 
-    public boolean isCaseSensitive() {
+	public boolean isCaseSensitive() {
         return caseSensitive;
     }
 
@@ -56,21 +57,28 @@ public class PojoMetadata {
         return result;
     }
 
-    public PojoMetadata(Class clazz, boolean caseSensitive, boolean autoDeriveColumnNames, Map<String, String> columnMappings) {
+    public PojoMetadata( Class clazz,
+                         boolean caseSensitive,
+                         boolean autoDeriveColumnNames,
+                         Map<String, String> columnMappings,
+                         Set<String> ignoredColumns ) {
         this.caseSensitive = caseSensitive;
         this.autoDeriveColumnNames = autoDeriveColumnNames;
         this.clazz = clazz;
         this.columnMappings = columnMappings == null ? Collections.<String,String>emptyMap() : columnMappings;
-
-        this.propertyInfo = getPropertyInfoThroughCache();
-
+	    this.ignoredColumns = ignoredColumns;
+	    this.propertyInfo = getPropertyInfoThroughCache();
     }
 
     public ObjectConstructor getObjectConstructor() {
         return propertyInfo.objectConstructor;
     }
 
-    private PropertyAndFieldInfo getPropertyInfoThroughCache() {
+	public Set<String> getIgnoredColumns() {
+		return ignoredColumns;
+	}
+
+	private PropertyAndFieldInfo getPropertyInfoThroughCache() {
         return (caseSensitive
                 ? caseSensitiveTrue
                 : caseSensitiveFalse)
