@@ -11,5 +11,14 @@ public class ComplexEntity {
     
     public int id;
 
-    public EntityWithPrivateFields entity;
+    private EntityWithPrivateFields entity;
+
+    public EntityWithPrivateFields getEntity() {
+       return entity;
+    }
+
+    public void setEntity(EntityWithPrivateFields entity) {
+        this.entity = entity;
+    }
+
 }

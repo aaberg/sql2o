@@ -30,6 +30,59 @@ public class Pojo {
     }
 
     @SuppressWarnings("unchecked")
+    public Object getProperty(String propertyPath, Quirks quirks){
+        // String.split uses RegularExpression
+        // this is overkill for every column for every row
+        int index = propertyPath.indexOf('.');
+
+        Getter getter;
+
+        if (index > 0) {
+            final String substring = propertyPath.substring(0, index);
+
+            getter = metadata.getPropertyGetter(substring);
+
+            String newPath = propertyPath.substring(index+1);
+
+            Object subValue = this.metadata.getValueOfProperty(substring, this.object);
+
+            if (subValue == null){
+                try {
+                    subValue = getter.getType().newInstance();
+                } catch (InstantiationException e) {
+                    throw new Sql2oException("Could not instantiate a new instance of class "+ getter.getType().toString(), e);
+                } catch (IllegalAccessException e) {
+                    throw new Sql2oException("Could not instantiate a new instance of class "+ getter.getType().toString(), e);
+                }
+
+                return getter.getProperty(this.object);
+            }
+
+            PojoMetadata subMetadata = new PojoMetadata(getter.getType(), this.caseSensitive, this.metadata.isAutoDeriveColumnNames(), this.metadata.getColumnMappings());
+            Pojo subPojo = new Pojo(subMetadata, this.caseSensitive, subValue);
+
+            return subPojo.getProperty(newPath, quirks);
+        }
+        else{
+            getter = metadata.getPropertyGetter(propertyPath);
+
+            Converter converter;
+
+            try {
+                converter = throwIfNull(getter.getType(), quirks.converterOf(getter.getType()));
+            } catch (ConverterException e) {
+                throw new Sql2oException("Cannot convert column " + propertyPath + " to type " + getter.getType(), e);
+            }
+
+            try {
+                return converter.convert(getter.getProperty(this.object));
+            } catch (ConverterException e) {
+                throw new Sql2oException("Error trying to convert column " + propertyPath + " to type " + getter.getType(), e);
+            }
+        }
+    }
+
+    @SuppressWarnings("unchecked")
     public void setProperty(String propertyPath, Object value, Quirks quirks){
         // String.split uses RegularExpression
         // this is overkill for every column for every row
