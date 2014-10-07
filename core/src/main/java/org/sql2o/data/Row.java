@@ -135,7 +135,15 @@ public class Row {
         return this.<String>getObject(columnName, String.class);
     }
 
-    /**
+	public Boolean getBoolean(int columnIndex) {
+		return this.<Boolean>getObject( columnIndex, Boolean.class );
+	}
+
+	public Boolean getBoolean(String columnName) {
+		return this.<Boolean>getObject( columnName, Boolean.class );
+	}
+
+	/**
      * View row as a simple map.
      */
     @SuppressWarnings("NullableProblems")

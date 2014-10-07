@@ -185,7 +185,20 @@ public class Query implements AutoCloseable {
     public Query withParams(Object... paramValues){
         int i=0;
         for (Object paramValue : paramValues) {
-            addParameter("p" + (++i), paramValue);
+	        if( paramValue instanceof Collection ) {
+		        if( paramValue instanceof List ) {
+			        List list = (List) paramValue;
+			        for( Object val : list ) {
+				        addParameter( "p" + (++i), paramValue );
+			        }
+		        }
+		        else {
+			        throw new Sql2oException( "I can only handle ordered Collections - i.e. a List" );
+		        }
+	        }
+	        else {
+		        addParameter( "p" + (++i), paramValue );
+	        }
         }
         return this;
     }
