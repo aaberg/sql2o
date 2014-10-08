@@ -33,7 +33,11 @@ Sql2o                                                               | 75ms (25% 
 
 ## Contributing
 
-Want to contribute? Here's how to set up.
+Want to contribute? Awesome! Here's how to set up.
+
+#### Coding guidelines.
+
+Please follow [these guidelines](https://github.com/aaberg/sql2o/wiki/Coding-guidelines) when hacking on sql2o.
 
 #### Download oracle driver
 
