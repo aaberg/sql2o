@@ -37,7 +37,7 @@ Want to contribute? Awesome! Here's how to set up.
 
 #### Coding guidelines.
 
-Please follow [these guidelines](https://github.com/aaberg/sql2o/wiki/Coding-guidelines) when hacking on sql2o.
+When hacking sql2o, please follow [these coding guidelines](https://github.com/aaberg/sql2o/wiki/Coding-guidelines).
 
 #### Download oracle driver
 
