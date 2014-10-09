@@ -1,6 +1,10 @@
 package org.sql2o.issues;
 
 import org.junit.Test;
+import org.junit.runner.RunWith;
+import org.junit.runners.Parameterized;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.sql2o.Connection;
 import org.sql2o.Sql2o;
 import org.sql2o.converters.Convert;
@@ -9,6 +13,8 @@ import org.sql2o.data.Row;
 import org.sql2o.data.Table;
 import org.sql2o.quirks.PostgresQuirks;
 
+import java.util.Arrays;
+import java.util.Collection;
 import java.util.UUID;
 
 import static org.hamcrest.CoreMatchers.equalTo;
@@ -23,13 +29,26 @@ import static org.junit.Assert.*;
  * Test dedicated for postgres issues. Seems like the postgres jdbc driver behaves somewhat different from other jdbc drivers.
  * This test assumes that there is a local PostgreSQL server with a testdb database which can be accessed by user: test, pass: testtest
  */
+@RunWith(Parameterized.class)
 public class PostgresTest {
 
     private Sql2o sql2o;
 
+    @Parameterized.Parameters(name = "{index} - {4}")
+    public static Collection<Object[]> getData(){
+        return Arrays.asList(new Object[][]{
+                {"jdbc:postgresql:testdb", "test", "testtest", "Official postgres driver"},
+                {"jdbc:pgsql://localhost/testdb", "test", "testtest", "Impossibl postgres driver"}
+        });
+    }
 
-    public PostgresTest() {
-        sql2o = new Sql2o("jdbc:postgresql:testdb", "test", "testtest", new PostgresQuirks(){
+    private Logger logger = LoggerFactory.getLogger(PostgresTest.class);
+
+    public PostgresTest(String url, String user, String pass, String testName) {
+
+        logger.info(testName);
+
+        sql2o = new Sql2o(url, user, pass, new PostgresQuirks(){
             {
                 // make sure we use default UUID converter.
                 converters.put(UUID.class, new UUIDConverter());
