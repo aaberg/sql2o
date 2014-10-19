@@ -64,7 +64,7 @@
         <connection>scm:git:git@github.com:aaberg/sql2o.git</connection>
         <developerConnection>scm:git:git@github.com:aaberg/sql2o.git</developerConnection>
         <url>git@github.com:aaberg/sql2o.git</url>
-      <tag>HEAD</tag>
+      <tag>sql2o-parent-1.5.3</tag>
   </scm>
 
     <dependencies>
