@@ -5,6 +5,18 @@ base_url: ../
 ---
 # change log
 
+## sql2o 1.5.3 released
+_<small>19 okt 2014 <a href="https://github.com/aaberg">Lars Aaberg</a> </small>_
+
+####- Changed behaviour of bind() method <a href="https://github.com/aaberg/sql2o/issues/160"><span class="badge badge-info">#160</span></a>
+>The bind method will no longer try to bind properties, if the corresponding parameter has already been added manually.
+>_<small> Proposed by [Yngve Sneen Lindal](https://github.com/yngvesl), fixed by [Lars Aaberg](https://github.com/aaberg)</small>_
+
+####- Fixed bug if an sql comment contained single quote character in a comment <a href="https://github.com/aaberg/sql2o/issues/142"><span class="badge badge-info">#142</span></a>
+>_<small> Issue detected by [migel](https://github.com/migel), fixed by [Lars Aaberg](https://github.com/aaberg)</small>_
+
+
+
 ## sql2o 1.5.2 released
 _<small>18 sep 2014 <a href="https://github.com/aaberg">Lars Aaberg</a> </small>_
 
