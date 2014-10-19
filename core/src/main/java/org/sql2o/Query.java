@@ -35,6 +35,7 @@ public class Query implements AutoCloseable {
     private String name;
     private boolean returnGeneratedKeys;
     private final Map<String, List<Integer>> paramNameToIdxMap;
+    private final Set<String> addedParameters;
     private final String parsedQuery;
 
     private ResultSetHandlerFactoryBuilder resultSetHandlerFactoryBuilder;
@@ -52,6 +53,7 @@ public class Query implements AutoCloseable {
         this.caseSensitive = connection.getSql2o().isDefaultCaseSensitive();
 
         paramNameToIdxMap = new HashMap<>();
+        addedParameters = new HashSet<>();
 
         parsedQuery = connection.getSql2o().getQuirks().getSqlParameterParsingStrategy().parseSql(queryText, paramNameToIdxMap);
         try {
@@ -117,6 +119,7 @@ public class Query implements AutoCloseable {
     // ------------------------------------------------
 
     private void addParameterInternal(String name, ParameterSetter parameterSetter) {
+        addedParameters.add(name);
         for (int paramIdx : this.getParamNameToIdxMap().get(name)) {
             try {
                 parameterSetter.setParameter(paramIdx);
@@ -267,8 +270,10 @@ public class Query implements AutoCloseable {
         Class clazz = pojo.getClass();
         Map<String, PojoIntrospector.ReadableProperty> propertyMap = PojoIntrospector.readableProperties(clazz);
         for (PojoIntrospector.ReadableProperty property : propertyMap.values()) {
+            if (addedParameters.contains( property.name )) continue;
             try {
                 if( this.getParamNameToIdxMap().containsKey(property.name)) {
+
                     @SuppressWarnings("unchecked")
                     final Class<Object> type = (Class<Object>) property.type;
                     this.addParameter(property.name, type, property.get(pojo));
