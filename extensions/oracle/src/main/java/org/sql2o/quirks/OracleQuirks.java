@@ -10,38 +10,35 @@
 
 package org.sql2o.quirks;
 
-import org.sql2o.GenericDatasource;
+import org.sql2o.converters.Converter;
 
-import javax.xml.ws.Service;
-import java.util.ServiceLoader;
+import java.sql.ResultSet;
+import java.sql.SQLException;
+import java.util.Map;
 
-/**
- * Automatically detects which quirks implementation to use. Falls back on NoQuirks.
- */
-public class QuirksDetector{
-    static final ServiceLoader<QuirksProvider> providers = ServiceLoader.load(QuirksProvider.class);
-
-    public static Quirks forURL(String jdbcUrl) {
-
-        for (QuirksProvider quirksProvider : ServiceLoader.load(QuirksProvider.class)) {
-            if (quirksProvider.isUsableForUrl(jdbcUrl)){
-                return quirksProvider.provide();
-            }
-        }
-
-        return new NoQuirks();
+public class OracleQuirks extends NoQuirks {
+    public OracleQuirks() {
+        super();
     }
 
-    public static Quirks forObject(Object jdbcObject) {
+    public OracleQuirks(Map<Class, Converter> converters) {
+        super(converters);
+    }
 
-        String jdbcObjectClassName = jdbcObject.getClass().getCanonicalName();
-
-        for (QuirksProvider quirksProvider : ServiceLoader.load(QuirksProvider.class)) {
-            if (quirksProvider.isUsableForClass(jdbcObjectClassName)){
-                return quirksProvider.provide();
-            }
+    @Override
+    public Object getRSVal(ResultSet rs, int idx) throws SQLException {
+        Object o = super.getRSVal(rs, idx);
+        // oracle timestamps are not always convertible to a java Date. If ResultSet.getTimestamp is used instead of
+        // ResultSet.getObject, a normal java.sql.Timestamp instance is returnd.
+        if (o != null && o.getClass().getCanonicalName().startsWith("oracle.sql.TIMESTAMP")){
+            //TODO: use TIMESTAMP.dateValue
+            o = rs.getTimestamp(idx);
         }
+        return o;
+    }
 
-        return new NoQuirks();
+    @Override
+    public boolean returnGeneratedKeysByDefault() {
+        return false;
     }
 }

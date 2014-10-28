@@ -10,38 +10,29 @@
 
 package org.sql2o.quirks;
 
-import org.sql2o.GenericDatasource;
+import org.sql2o.converters.Converter;
 
-import javax.xml.ws.Service;
-import java.util.ServiceLoader;
+import java.sql.ResultSetMetaData;
+import java.sql.SQLException;
+import java.util.Map;
 
 /**
- * Automatically detects which quirks implementation to use. Falls back on NoQuirks.
+ * @author aldenquimby@gmail.com
+ * @since 4/6/14
  */
-public class QuirksDetector{
-    static final ServiceLoader<QuirksProvider> providers = ServiceLoader.load(QuirksProvider.class);
-
-    public static Quirks forURL(String jdbcUrl) {
-
-        for (QuirksProvider quirksProvider : ServiceLoader.load(QuirksProvider.class)) {
-            if (quirksProvider.isUsableForUrl(jdbcUrl)){
-                return quirksProvider.provide();
-            }
-        }
-
-        return new NoQuirks();
+public class Db2Quirks extends NoQuirks {
+    public Db2Quirks() {
+        super();
     }
 
-    public static Quirks forObject(Object jdbcObject) {
+    public Db2Quirks(Map<Class, Converter> converters) {
+        super(converters);
+    }
+    // Db2 works perfect with java.sql.Timestamp
+    // checked on DATE|TIME|TIMESTAMP column types
 
-        String jdbcObjectClassName = jdbcObject.getClass().getCanonicalName();
-
-        for (QuirksProvider quirksProvider : ServiceLoader.load(QuirksProvider.class)) {
-            if (quirksProvider.isUsableForClass(jdbcObjectClassName)){
-                return quirksProvider.provide();
-            }
-        }
-
-        return new NoQuirks();
+    @Override
+    public String getColumnName(ResultSetMetaData meta, int colIdx) throws SQLException {
+        return meta.getColumnName(colIdx);
     }
 }

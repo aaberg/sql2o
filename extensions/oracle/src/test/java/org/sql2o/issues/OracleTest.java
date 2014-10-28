@@ -1,9 +1,21 @@
+/*
+ * Copyright (c) 2014 Lars Aaberg
+ *
+ * Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation files (the "Software"), to deal in the Software without restriction, including without limitation the rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to permit persons to whom the Software is furnished to do so, subject to the following conditions:
+ *
+ * The above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software.
+ *
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+ */
+
 package org.sql2o.issues;
 
 import org.joda.time.DateTime;
 import org.joda.time.LocalDate;
 import org.junit.Test;
+import org.sql2o.Connection;
 import org.sql2o.Sql2o;
+import org.sql2o.Sql2oException;
 
 import java.sql.Driver;
 import java.sql.DriverManager;
@@ -32,11 +44,8 @@ public class OracleTest {
         } catch (Throwable t) {
             throw new RuntimeException(t);
         }
-        // new oracle developer day VM
-        this.sql2o = new Sql2o("jdbc:oracle:thin:@//localhost:1521/PDB1", "pmuser", "oracle");
 
-        // older oracle developer day VM
-        //this.sql2o = new Sql2o("jdbc:oracle:thin:@localhost:1521:orcl", "test", "test");
+        this.sql2o = new Sql2o("jdbc:oracle:thin:@//localhost:1521/orcl", "test", "test");
     }
 
     /**
@@ -51,7 +60,7 @@ public class OracleTest {
      *
      *
      */
-//    @Test
+    @Test
     public void testForIssue8OracleTimestamps() {
         String sql = "select CURRENT_TIMESTAMP from dual";
 
@@ -65,7 +74,7 @@ public class OracleTest {
     }
 
 
-//    @Test
+    @Test
     public void testForIssue12ErrorReadingClobValue() {
         final String sql = "select to_clob('test') val from dual";
 

@@ -10,44 +10,27 @@
 
 <project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
     <modelVersion>4.0.0</modelVersion>
-    <groupId>org.sql2o.extensions</groupId>
-    <artifactId>extensions-parent</artifactId>
-    <name>Sql2o - Extensions</name>
-    <packaging>pom</packaging>
-
+    <artifactId>sql2o-db2</artifactId>
+    <packaging>jar</packaging>
+    <name>sql2o-db2</name>
+    <description>DB2 extension for db2</description>
+    <url>http://www.sql2o.org</url>
     <parent>
-        <groupId>org.sql2o</groupId>
-        <artifactId>sql2o-parent</artifactId>
+        <groupId>org.sql2o.extensions</groupId>
+        <artifactId>extensions-parent</artifactId>
         <version>1.6.0-SNAPSHOT</version>
     </parent>
 
-    <modules>
-        <module>postgres</module>
-        <module>oracle</module>
-        <module>db2</module>
-    </modules>
-
     <dependencies>
-        <!-- All dependencies depends on sql2o core project -->
+
+        <!-- optional dependencies -->
         <dependency>
-            <groupId>org.sql2o</groupId>
-            <artifactId>sql2o</artifactId>
-            <version>${version}</version>
+            <groupId>joda-time</groupId>
+            <artifactId>joda-time</artifactId>
+            <version>2.0</version>
+            <optional>true</optional>
         </dependency>
+
     </dependencies>
 
-    <build>
-        <plugins>
-            <plugin>
-                <groupId>org.apache.maven.plugins</groupId>
-                <artifactId>maven-jar-plugin</artifactId>
-                <version>2.4</version>
-                <configuration>
-                    <archive>
-                        <manifestFile>src/main/resources/META-INF/MANIFEST.MF</manifestFile>
-                    </archive>
-                </configuration>
-            </plugin>
-        </plugins>
-    </build>
 </project>

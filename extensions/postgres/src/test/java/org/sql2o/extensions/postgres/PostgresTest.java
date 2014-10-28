@@ -1,4 +1,4 @@
-package org.sql2o.issues;
+package org.sql2o.extensions.postgres;
 
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -7,7 +7,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.sql2o.Connection;
 import org.sql2o.Sql2o;
-import org.sql2o.converters.Convert;
 import org.sql2o.converters.UUIDConverter;
 import org.sql2o.data.Row;
 import org.sql2o.data.Table;
@@ -38,7 +37,7 @@ public class PostgresTest {
     public static Collection<Object[]> getData(){
         return Arrays.asList(new Object[][]{
                 {"jdbc:postgresql:testdb", "test", "testtest", "Official postgres driver"},
-                {"jdbc:pgsql://localhost/testdb", "test", "testtest", "Impossibl postgres driver"}
+//                {"jdbc:pgsql://localhost/testdb", "test", "testtest", "Impossibl postgres driver"}
         });
     }
 

@@ -10,38 +10,24 @@
 
 package org.sql2o.quirks;
 
-import org.sql2o.GenericDatasource;
-
-import javax.xml.ws.Service;
-import java.util.ServiceLoader;
-
 /**
- * Automatically detects which quirks implementation to use. Falls back on NoQuirks.
+ * Created by lars on 28.10.14.
  */
-public class QuirksDetector{
-    static final ServiceLoader<QuirksProvider> providers = ServiceLoader.load(QuirksProvider.class);
-
-    public static Quirks forURL(String jdbcUrl) {
-
-        for (QuirksProvider quirksProvider : ServiceLoader.load(QuirksProvider.class)) {
-            if (quirksProvider.isUsableForUrl(jdbcUrl)){
-                return quirksProvider.provide();
-            }
-        }
-
-        return new NoQuirks();
+public class Db2QuirksProvider implements QuirksProvider {
+    @Override
+    public Quirks provide() {
+        return new Db2Quirks();
     }
 
-    public static Quirks forObject(Object jdbcObject) {
+    @Override
+    public boolean isUsableForUrl(String url) {
+        return url.startsWith("jdbc:db2:")
+                || url.startsWith("jdbc:db2j:net:")
+                || url.startsWith("jdbc:db2os390");
+    }
 
-        String jdbcObjectClassName = jdbcObject.getClass().getCanonicalName();
-
-        for (QuirksProvider quirksProvider : ServiceLoader.load(QuirksProvider.class)) {
-            if (quirksProvider.isUsableForClass(jdbcObjectClassName)){
-                return quirksProvider.provide();
-            }
-        }
-
-        return new NoQuirks();
+    @Override
+    public boolean isUsableForClass(String className) {
+        return className.startsWith("com.ibm.db2.jcc.DB2");
     }
 }

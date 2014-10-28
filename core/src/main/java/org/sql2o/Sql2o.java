@@ -48,14 +48,6 @@ public class Sql2o {
     }
 
     /**
-     * Use {@link #Sql2o(String, String, String, org.sql2o.quirks.Quirks)}.
-     */
-    @Deprecated
-    public Sql2o(String url, String user, String pass, QuirksMode quirksMode) {
-        this(new GenericDatasource(url, user, pass), quirksMode);
-    }
-
-    /**
      * Created a new instance of the Sql2o class. Internally this constructor will create a {@link GenericDatasource},
      * and call the {@link Sql2o#Sql2o(javax.sql.DataSource)} constructor which takes a DataSource as parameter.
      * @param url    JDBC database url
@@ -73,14 +65,6 @@ public class Sql2o {
      */
     public Sql2o(DataSource dataSource) {
         this(dataSource, QuirksDetector.forObject(dataSource));
-    }
-
-    /**
-     * Use {@link #Sql2o(javax.sql.DataSource, org.sql2o.quirks.Quirks)}.
-     */
-    @Deprecated
-    public Sql2o(DataSource dataSource, QuirksMode quirksMode) {
-        this(dataSource, quirksMode.quirks);
     }
 
     /**
