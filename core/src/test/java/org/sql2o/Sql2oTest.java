@@ -35,55 +35,13 @@ import static org.junit.Assert.*;
  * Most sql2o tests are in this class.
  */
 @RunWith(Parameterized.class)
-public class Sql2oTest {
-
-    @Parameterized.Parameters(name = "{index} - {4}")
-    public static Collection<Object[]> getData(){
-        return Arrays.asList(new Object[][]{
-                {null, "jdbc:h2:mem:test;DB_CLOSE_DELAY=-1","sa", "", "H2 test" },
-                {new jdbcDriver(), "jdbc:hsqldb:mem:testmemdb", "SA", "", "HyperSQL DB test"}
-        });
-    }
-
-
-    private final Sql2o sql2o;// = new Sql2o(this.url, this.user, this.pass);
-    private String url;
-    private String user;
-    private String pass;
-    private boolean isHyperSql;
-
-    public Sql2oTest(Driver driverToRegister, String url, String user, String pass, String testName){
-
-        if (driverToRegister != null) {
-            try {
-                DriverManager.registerDriver(driverToRegister);
-            } catch (SQLException e) {
-                throw new RuntimeException("could not register driver '" + driverToRegister.getClass().getName() + "'", e);
-            }
-        }
-
-        this.sql2o = new Sql2o(url, user, pass);
-
-        HashMap<String, String> defaultColumnMap = new HashMap<String,String>();
-        defaultColumnMap.put("ID", "id");
-        defaultColumnMap.put("NAME", "name");
-        defaultColumnMap.put("EMAIL", "email");
-        defaultColumnMap.put("TEXT", "text");
-        defaultColumnMap.put("ANUMBER", "aNumber");
-        defaultColumnMap.put("ALONGNUMBER", "aLongNumber");
-        sql2o.setDefaultColumnMappings(defaultColumnMap);
-
-        this.url = url;
-        this.user = user;
-        this.pass = pass;
-        this.isHyperSql = "HyperSQL DB test".equals( testName );
-
-        if (this.isHyperSql) {
-            sql2o.createQuery("set database sql syntax MSS true").executeUpdate();
-        }
-    }
+public class Sql2oTest extends BaseMemDbTest {
 
     private int insertIntoUsers = 0;
+
+    public Sql2oTest(DbType dbType, String testName) {
+        super(dbType, testName);
+    }
 
     //@Test  TODO. commented out. Can't get test to work without an application server.
     public void testCreateSql2oFromJndi() throws Exception {
@@ -97,9 +55,9 @@ public class Sql2oTest {
         ic.createSubcontext("java:comp/env");
 
         JDBCDataSource datasource = new JDBCDataSource();
-        datasource.setUrl(url);
-        datasource.setUser(user);
-        datasource.setPassword(pass);
+        datasource.setUrl(dbType.url);
+        datasource.setUser(dbType.user);
+        datasource.setPassword(dbType.pass);
 
         ic.bind("java:comp/env/Sql2o", datasource);
 
@@ -402,7 +360,7 @@ public class Sql2oTest {
         // return value of auto generated keys is DB dependent.
         // H2 will always just return the last generated identity.
         // HyperSQL returns all generated identities (which is more ideal).
-        if (this.isHyperSql) {
+        if (this.dbType == DbType.HyperSQL) {
             assertTrue(keys.length == 2);
         }
         else {
@@ -439,7 +397,7 @@ public class Sql2oTest {
         // return value of auto generated keys is DB dependent.
         // H2 will always just return the last generated identity.
         // HyperSQL returns all generated identities (which is more ideal).
-        if (this.isHyperSql) {
+        if (this.dbType == DbType.HyperSQL) {
             assertTrue(keys.size() == vals.size());
         }
         else {
@@ -497,7 +455,7 @@ public class Sql2oTest {
 
     @Test
     public void testGlobalDbMappings(){
-        Sql2o sql2o1 = new Sql2o(url, user, pass);
+        Sql2o sql2o1 = new Sql2o(dbType.url, dbType.user, dbType.pass);
 
         Map<String,String> defaultColMaps = new HashMap<String, String>();
         defaultColMaps.put("caption", "text");
