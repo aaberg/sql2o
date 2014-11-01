@@ -84,7 +84,9 @@ public abstract class ResultSetIteratorBase<T> implements Iterator<T> {
             if (!rs.next())
                 return null;
 
-            return new ResultSetValue(readNext());
+            @SuppressWarnings("unchecked")
+            ResultSetValue<T> resultSetValue = new <T>ResultSetValue(readNext());
+            return resultSetValue;
         }
         catch (SQLException ex) {
             throw new Sql2oException("Database error: " + ex.getMessage(), ex);
