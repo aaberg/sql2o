@@ -14,7 +14,6 @@ import java.sql.SQLException;
 public class PojoResultSetIterator<T> extends ResultSetIteratorBase<T> {
     private ResultSetHandler<T> handler;
 
-    @SuppressWarnings("unchecked")
     public PojoResultSetIterator(ResultSet rs, boolean isCaseSensitive, Quirks quirks, ResultSetHandlerFactory<T> factory) {
         super(rs, isCaseSensitive, quirks);
         try {

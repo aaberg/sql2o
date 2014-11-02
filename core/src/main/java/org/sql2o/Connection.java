@@ -6,6 +6,7 @@ import org.sql2o.logging.LocalLoggerFactory;
 import org.sql2o.logging.Logger;
 import org.sql2o.quirks.Quirks;
 
+import java.io.Closeable;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
@@ -19,7 +20,7 @@ import static org.sql2o.converters.Convert.throwIfNull;
 /**
  * Represents a connection to the database with a transaction.
  */
-public class Connection implements AutoCloseable {
+public class Connection implements AutoCloseable, Closeable {
     
     private final static Logger logger = LocalLoggerFactory.getLogger(Connection.class);
 

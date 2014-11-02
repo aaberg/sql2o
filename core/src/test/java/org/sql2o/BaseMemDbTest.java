@@ -20,11 +20,10 @@ import java.util.Collection;
 /**
  * Created by lars on 01.11.14.
  */
-@RunWith(Parameterized.class)
+
 public class BaseMemDbTest {
 
-
-    enum DbType{
+    public enum DbType{
         H2("jdbc:h2:mem:test;DB_CLOSE_DELAY=-1", "sa", ""),
         HyperSQL("jdbc:hsqldb:mem:testmemdb", "SA", "");
 

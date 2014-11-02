@@ -177,7 +177,7 @@ public class Query implements AutoCloseable {
     @SuppressWarnings("unchecked")
     public Query addParameter(String name, Object value) {
         return value == null
-                ? addParameter(name, Object.class, value)
+                ? addParameter(name, Object.class, null)
                 : addParameter(name,
                     (Class<Object>) value.getClass(),
                     value);
@@ -277,10 +277,7 @@ public class Query implements AutoCloseable {
             catch(IllegalArgumentException ex) {
                 logger.debug("Ignoring Illegal Arguments", ex);
             }
-            catch(IllegalAccessException ex) {
-                throw new RuntimeException(ex);
-            }
-            catch (InvocationTargetException ex) {
+            catch(IllegalAccessException | InvocationTargetException ex) {
                 throw new RuntimeException(ex);
             }
         }
@@ -398,7 +395,7 @@ public class Query implements AutoCloseable {
         final Quirks quirks = getConnection().getSql2o().getQuirks();
         return new ResultSetIterableBase<T>() {
             public Iterator<T> iterator() {
-                return new PojoResultSetIterator<T>(rs, isCaseSensitive(), quirks, resultSetHandlerFactory);
+                return new PojoResultSetIterator<>(rs, isCaseSensitive(), quirks, resultSetHandlerFactory);
             }
         };
     }
@@ -433,7 +430,7 @@ public class Query implements AutoCloseable {
     }
 
     public <T> List<T> executeAndFetch(ResultSetHandlerFactory<T> factory){
-        List<T> list = new ArrayList<T>();
+        List<T> list = new ArrayList<>();
 
         // if sql2o moves to java 7 at some point, this could be much cleaner using try-with-resources
         ResultSetIterable<T> iterable = null;
@@ -489,7 +486,7 @@ public class Query implements AutoCloseable {
 
     public Table executeAndFetchTable() {
         LazyTable lt =  executeAndFetchTableLazy();
-        List<Row> rows = new ArrayList<Row>();
+        List<Row> rows = new ArrayList<>();
         try {
             for (Row item : lt.rows()) {
                 rows.add(item);
@@ -658,8 +655,8 @@ public class Query implements AutoCloseable {
 
     public Query setColumnMappings(Map<String, String> mappings){
 
-        this.caseSensitiveColumnMappings = new HashMap<String, String>();
-        this.columnMappings = new HashMap<String, String>();
+        this.caseSensitiveColumnMappings = new HashMap<>();
+        this.columnMappings = new HashMap<>();
 
         for (Map.Entry<String,String> entry : mappings.entrySet()){
             this.caseSensitiveColumnMappings.put(entry.getKey(), entry.getValue());

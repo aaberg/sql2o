@@ -24,10 +24,7 @@ public class DefaultResultSetHandlerFactory<T> implements ResultSetHandlerFactor
     }
 
     @SuppressWarnings("unchecked")
-    private static Getter getGetter(
-            final Quirks quirks,
-            final String propertyPath,
-            final PojoMetadata metadata) {
+    private static Getter getGetter(final Quirks quirks, final String propertyPath, final PojoMetadata metadata) {
         int index = propertyPath.indexOf('.');
         if (index <= 0) {
             // Simple path - fast way
