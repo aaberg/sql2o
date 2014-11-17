@@ -615,13 +615,34 @@ public class Query implements AutoCloseable {
     public <V> V executeScalar(Converter<V> converter){
         try {
             //noinspection unchecked
-            return converter.convert(executeScalar());
+            return converter.convert( executeScalar() );
         } catch (ConverterException e) {
             throw new Sql2oException("Error occured while converting value from database", e);
         }
     }
 
+    public <V> V executeScalar( ResultSetHandler<V> resultSetHandler )
+    {
+        long start = System.currentTimeMillis();
+        try {
+            ResultSet rs = this.statement.executeQuery();
+            V v = resultSetHandler.handle( rs );
+            long end = System.currentTimeMillis();
+            logger.debug("total: {} ms; executed scalar [{}]", new Object[]{
+                    end - start,
+                    this.getName() == null ? "No name" : this.getName()
+            });
 
+            return v;
+        }
+        catch (SQLException e) {
+            this.connection.onException();
+            throw new Sql2oException("Database error occurred while running executeScalar(ResultSetHandler): " + e.getMessage(), e);
+        }
+        finally{
+            closeConnectionIfNecessary();
+        }
+    }
 
     public <T> List<T> executeScalarList(final Class<T> returnType){
         return executeAndFetch(newScalarResultSetHandler(returnType));
