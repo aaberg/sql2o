@@ -1,6 +1,25 @@
 # NOTE: 2014-11-17
-This is a fork of the sql2o project.  It contains a small set of changes to support Spring transaction management (@Transactional annotation) so that it can be used with the Spring DataSourceTransactionManager. There are also additional helper methods for querying common use cases we encountered.  If the pull request we issued against the base project gets accepted then we'll kill this.  Until then, this is the project we are using in production.
+This is a fork of the sql2o project.  It contains a small set of changes to support Spring transaction management (@Transactional annotation) so that it can be used with the Spring DataSourceTransactionManager. There are also additional helper methods for querying common use cases we encountered.  If the pull request we issued against the base project gets accepted then we'll kill this fork.  Until then, this is the project we are using in production.
 
+### Spring Transaction Config
+
+```xml
+       <!--Not required, but allows use of @Transactional annotation-->
+       <tx:annotation-driven transaction-manager="txManager"/>
+
+       <bean id="txManager" class="org.springframework.jdbc.datasource.DataSourceTransactionManager">
+              <property name="dataSource" ref="dataSource"/>
+       </bean>
+
+       <bean id="sql2o" class="org.sql2o.Sql2o">
+              <constructor-arg type="javax.sql.DataSource" ref="dataSource"/>
+              <property name="connectionHandler" ref="sql2oConnectionHandler"/>
+       </bean>
+
+       <bean id="sql2oConnectionHandler" class="org.sql2o.SpringSql2oConnectionHandler">
+              <constructor-arg ref="sql2o"/>
+       </bean>
+```
 # sql2o
 
 Sql2o is a small java library, with the purpose of making database interaction easy.
