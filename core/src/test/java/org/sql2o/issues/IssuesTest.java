@@ -292,7 +292,8 @@ public class IssuesTest {
 
         String createQuery = "create table testErrorWhenFieldDoesntExist(id_val integer primary key, str_val varchar(100))";
 
-        try (Connection connection = sql2o.open()) {
+        Connection connection = sql2o.open();
+        try {
             connection.createQuery(createQuery).executeUpdate();
 
             String insertSql = "insert into testErrorWhenFieldDoesntExist(id_val, str_val) values (:val1, :val2)";
@@ -311,6 +312,9 @@ public class IssuesTest {
             }
             assertNotNull(ex);
 
+        } finally {
+            if (connection != null)
+                connection.close();
         }
     }
 
@@ -336,10 +340,14 @@ public class IssuesTest {
 
         ThePojo p;
         Table t;
-        try (Connection connection = sql2o.open()) {
+        Connection connection = sql2o.open();
+        try {
             p = connection.createQuery(sql).executeAndFetchFirst(ThePojo.class);
 
             t = connection.createQuery(sql).executeAndFetchTable();
+        } finally {
+            if (connection != null)
+                connection.close();
         }
 
 
@@ -377,7 +385,8 @@ public class IssuesTest {
                 "/* and, it's another type of comment!*/" +
                 "where intval = :param";
 
-        try (Connection connection = sql2o.open()) {
+        Connection connection = sql2o.open();
+        try {
             connection.createQuery(createSql).executeUpdate();
 
             for (int idx = 0; idx < 100; idx++) {
@@ -394,6 +403,9 @@ public class IssuesTest {
                     .executeAndFetch(ThePojo.class);
 
             assertEquals(10, resultList.size());
+        } finally {
+            if (connection != null)
+                connection.close();
         }
     }
 
@@ -408,7 +420,8 @@ public class IssuesTest {
 
         String insertSql = "insert into testIssue160_preventDoubleBind (id, val) values (:id, :val)";
 
-        try (Connection connection = sql2o.open()) {
+        Connection connection = sql2o.open();
+        try {
             connection.createQuery(createSql).executeUpdate();
 
             Pojo p1 = new Pojo() {{
@@ -426,6 +439,9 @@ public class IssuesTest {
             int rowCnt = connection.createQuery("select count(*) from testIssue160_preventDoubleBind").executeScalar(Integer.class);
 
             assertEquals(1, rowCnt);
+        } finally {
+            if (connection != null)
+                connection.close();
         }
     }
 }

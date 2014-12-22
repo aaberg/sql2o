@@ -114,7 +114,8 @@ public class Sql2oTest {
     public void testExecuteAndFetch(){
         createAndFillUserTable();
 
-        try (Connection con = sql2o.open()) {
+        Connection con = sql2o.open();
+        try {
 
             Date before = new Date();
             List<User> allUsers = con.createQuery("select * from User").executeAndFetch(User.class);
@@ -135,6 +136,9 @@ public class Sql2oTest {
 
             assertTrue(allUsers.size() == insertIntoUsers);
 
+        } finally {
+            if (con != null)
+                con.close();
         }
         deleteUserTable();
     }
@@ -147,7 +151,8 @@ public class Sql2oTest {
                 "text varchar(255), " +
                 "aNumber int, " +
                 "aLongNumber bigint)";
-        try (Connection con = sql2o.open()) {
+        Connection con = sql2o.open();
+        try {
             con.createQuery(sql, "testExecuteAndFetchWithNulls").executeUpdate();
 
 
@@ -171,6 +176,9 @@ public class Sql2oTest {
 
             assertNull(fetched.get(2).aLongNumber);
             assertNotNull(fetched.get(3).aLongNumber);
+        } finally {
+            if (con != null)
+                con.close();
         }
     }
 
@@ -1063,14 +1071,18 @@ public class Sql2oTest {
 
         Connection con = sql2o.open();
 
-        try (ResultSetIterable<User> userIterable = con.createQuery("select * from User")
-                .executeAndFetchLazy(User.class)) {
+        ResultSetIterable<User> userIterable = con.createQuery("select * from User")
+                .executeAndFetchLazy(User.class);
+        try {
 
             userIterable.setAutoCloseConnection(true);
 
             for (User u : userIterable) {
                 assertThat(u.getEmail(), is(not(nullValue())));
             }
+        } finally {
+            if (userIterable != null)
+                userIterable.close();
         }
 
         assertTrue(con.getJdbcConnection().isClosed());
@@ -1244,7 +1256,8 @@ public class Sql2oTest {
             }
         }
 
-        try (Connection con = sql2o.open()) {
+        Connection con = sql2o.open();
+        try {
             con.createQuery(createTableSql).executeUpdate();
             con.createQuery(insertSql).addParameter("id", 1).addParameter("val", "test1").executeUpdate();
 
@@ -1266,12 +1279,16 @@ public class Sql2oTest {
             assertEquals(1, p.getIdVal());
             assertEquals("test1", p.getAnotherVeryExcitingValue());
 
+        } finally {
+            if (con != null)
+                con.close();
         }
     }
 
     @Test
     public void testClob() {
-        try (Connection connection = sql2o.open()) {
+        Connection connection = sql2o.open();
+        try {
             connection.createQuery("create table testClob(id integer primary key, val clob)")
                     .executeUpdate();
 
@@ -1285,6 +1302,9 @@ public class Sql2oTest {
                     .executeScalar(String.class);
 
             assertThat(val, is(equalTo("something")));
+        } finally {
+            if (connection != null)
+                connection.close();
         }
 
 

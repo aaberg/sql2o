@@ -33,7 +33,7 @@ public class ParameterParser implements CharParser{
         String name = sql.substring(startIdx + 1, idx + 1);
         List<Integer> indices = parameterMap.get(name);
         if (indices == null) {
-            indices = new ArrayList<>();
+            indices = new ArrayList<Integer>();
             parameterMap.put(name, indices);
         }
         indices.add(paramIdx++);

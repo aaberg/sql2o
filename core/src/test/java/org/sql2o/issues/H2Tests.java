@@ -34,10 +34,14 @@ public class H2Tests {
 
         assertThat(sql2o.getQuirks(), is(instanceOf(NoQuirks.class)));
 
-        try (Connection connection = sql2o.open()) {
+        Connection connection = sql2o.open();
+        try {
             int val = connection.createQuery("select 42").executeScalar(Integer.class);
 
             assertThat(val, is(equalTo(42)));
+        } finally {
+            if (connection != null)
+                connection.close();
         }
     }
 }
