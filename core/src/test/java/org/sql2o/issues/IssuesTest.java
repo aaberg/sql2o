@@ -428,4 +428,25 @@ public class IssuesTest {
             assertEquals(1, rowCnt);
         }
     }
+
+    /**
+     * Testing for github issue #134.
+     * Add option to ignore mapping errors
+     */
+    @Test
+    public void testIssue134ThrowOnMappingErrorProperty() {
+        String sql = "select 1 id, 'foo' val1, 'bar' val2 from (values(0))";
+
+        class Pojo{
+            public int id;
+            public String val1;
+        }
+
+        try (Connection connection = sql2o.open()) {
+            Pojo pojo = connection.createQuery(sql).executeAndFetchFirst(Pojo.class);
+
+            assertEquals(1, pojo.id);
+            assertEquals("foo", pojo.val1);
+        }
+    }
 }
