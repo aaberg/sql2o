@@ -53,7 +53,7 @@ public class Connection implements AutoCloseable {
 
     void onException() {
         if (isRollbackOnException()) {
-            rollback();
+            rollback(this.autoClose);
         }
     }
 
