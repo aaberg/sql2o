@@ -22,7 +22,7 @@ import static org.sql2o.converters.Convert.throwIfNull;
  * Represents a sql2o statement. With sql2o, all statements are instances of the Query class.
  */
 @SuppressWarnings("UnusedDeclaration")
-public class Query implements AutoCloseable {
+public class Query {
 
     private final static Logger logger = LocalLoggerFactory.getLogger(Query.class);
 
@@ -53,8 +53,8 @@ public class Query implements AutoCloseable {
         this.setColumnMappings(connection.getSql2o().getDefaultColumnMappings());
         this.caseSensitive = connection.getSql2o().isDefaultCaseSensitive();
 
-        paramNameToIdxMap = new HashMap<>();
-        addedParameters = new HashSet<>();
+        paramNameToIdxMap = new HashMap<String, List<Integer>>();
+        addedParameters = new HashSet<String>();
 
         parsedQuery = connection.getSql2o().getQuirks().getSqlParameterParsingStrategy().parseSql(queryText, paramNameToIdxMap);
         try {
@@ -292,7 +292,10 @@ public class Query implements AutoCloseable {
             catch(IllegalArgumentException ex) {
                 logger.debug("Ignoring Illegal Arguments", ex);
             }
-            catch(IllegalAccessException | InvocationTargetException ex) {
+            catch(IllegalAccessException ex) {
+                throw new RuntimeException(ex);
+            }
+            catch(InvocationTargetException ex) {
                 throw new RuntimeException(ex);
             }
         }

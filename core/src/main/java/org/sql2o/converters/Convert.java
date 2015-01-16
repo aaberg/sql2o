@@ -9,6 +9,9 @@ import org.sql2o.tools.FeatureDetector;
 import java.io.ByteArrayInputStream;
 import java.io.InputStream;
 import java.math.BigDecimal;
+import java.sql.Date;
+import java.sql.Time;
+import java.sql.Timestamp;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.ServiceLoader;
@@ -62,6 +65,11 @@ public class Convert {
                     protected java.sql.Date fromMilliseconds(long millisecond) {
                         return new java.sql.Date(millisecond);
                     }
+
+                    @Override
+                    public Object toDatabaseParam(Date val) {
+                        return val;
+                    }
                 });
         mapToFill.put(java.sql.Time.class,
                 new AbstractDateConverter<java.sql.Time>(java.sql.Time.class) {
@@ -69,12 +77,22 @@ public class Convert {
                     protected java.sql.Time fromMilliseconds(long millisecond) {
                         return new java.sql.Time(millisecond);
                     }
+
+                    @Override
+                    public Object toDatabaseParam(Time val) {
+                        return val;
+                    }
                 });
         mapToFill.put(java.sql.Timestamp.class,
                 new AbstractDateConverter<java.sql.Timestamp>(java.sql.Timestamp.class) {
                     @Override
                     protected java.sql.Timestamp fromMilliseconds(long millisecond) {
                         return new java.sql.Timestamp(millisecond);
+                    }
+
+                    @Override
+                    public Object toDatabaseParam(Timestamp val) {
+                        return val;
                     }
                 });
 

@@ -148,7 +148,9 @@ public class MethodAccessorsGenerator implements MethodSetterFactory, ObjectCons
                     public Object newInstance() {
                         try {
                             return constructorAccessor.newInstance(null);
-                        } catch (InstantiationException | InvocationTargetException e) {
+                        } catch (InstantiationException e) {
+                            throw new Sql2oException("Could not create a new instance of class " + cls, e);
+                        } catch (InvocationTargetException e) {
                             throw new Sql2oException("Could not create a new instance of class " + cls, e);
                         }
                     }

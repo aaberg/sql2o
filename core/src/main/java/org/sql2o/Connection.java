@@ -19,7 +19,7 @@ import static org.sql2o.converters.Convert.throwIfNull;
 /**
  * Represents a connection to the database with a transaction.
  */
-public class Connection implements AutoCloseable {
+public class Connection {
     
     private final static Logger logger = LocalLoggerFactory.getLogger(Connection.class);
 
@@ -237,7 +237,7 @@ public class Connection implements AutoCloseable {
         this.canGetKeys = canGetKeys;
     }
 
-    private final Set<Statement> statements = new HashSet<>();
+    private final Set<Statement> statements = new HashSet<Statement>();
 
     void registerStatement(Statement statement){
         statements.add(statement);

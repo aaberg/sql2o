@@ -8,3 +8,8 @@ _site/
 
 # OSX
 .DS_Store
+
+# eclipse
+*.settings*
+.classpath
+.project

@@ -6,7 +6,7 @@ package org.sql2o;
  *
  * @author aldenquimby@gmail.com
  */
-public interface ResultSetIterable<T> extends Iterable<T>, AutoCloseable {
+public interface ResultSetIterable<T> extends Iterable<T> {
     // override close to not throw
     void close();
 
