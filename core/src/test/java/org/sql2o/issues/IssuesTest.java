@@ -457,4 +457,25 @@ public class IssuesTest {
             assertEquals("foo", pojo.val1);
         }
     }
+
+    @Test
+    public void testIssue166OneCharacterParameterFail() {
+        try (Connection connection = sql2o.open()) {
+            connection.createQuery("create table testIssue166OneCharacterParameterFail(id integer, val varchar(10))")
+                    .executeUpdate();
+
+            // This because of the :v parameter.
+            connection.createQuery("insert into testIssue166OneCharacterParameterFail(id, val) values(:id, :v)")
+                    .addParameter("id", 1)
+                    .addParameter("v", "foobar")
+                    .executeUpdate();
+
+
+            int cnt = connection.createQuery("select count(*) from testIssue166OneCharacterParameterFail where id = :p")
+                    .addParameter("p", 1)
+                    .executeScalar(Integer.class);
+
+            assertEquals(1, cnt);
+        }
+    }
 }
