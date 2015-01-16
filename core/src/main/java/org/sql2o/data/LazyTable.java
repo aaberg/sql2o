@@ -7,7 +7,7 @@ import java.util.List;
 /**
  * @author aldenquimby@gmail.com
  */
-public class LazyTable implements AutoCloseable {
+public class LazyTable {
     private String name;
     private ResultSetIterable<Row> rows;
     private List<Column> columns;
