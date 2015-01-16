@@ -12,21 +12,25 @@ import java.util.Map;
  * To change this template use File | Settings | File Templates.
  */
 public interface ResultSetHandlerFactoryBuilder {
-    public boolean isCaseSensitive();
+    boolean isCaseSensitive();
 
-    public void setCaseSensitive(boolean caseSensitive);
+    void setCaseSensitive(boolean caseSensitive);
 
-    public boolean isAutoDeriveColumnNames();
+    boolean isAutoDeriveColumnNames();
 
-    public void setAutoDeriveColumnNames(boolean autoDeriveColumnNames);
+    void setAutoDeriveColumnNames(boolean autoDeriveColumnNames);
 
-    public Map<String, String> getColumnMappings();
+    boolean isThrowOnMappingError();
 
-    public void setColumnMappings(Map<String, String> columnMappings);
+    void throwOnMappingError(boolean throwOnMappingError);
 
-    public Quirks getQuirks();
+    Map<String, String> getColumnMappings();
 
-    public void setQuirks(Quirks quirksMode);
+    void setColumnMappings(Map<String, String> columnMappings);
 
-    public <E> ResultSetHandlerFactory<E> newFactory(Class<E> clazz);
+    Quirks getQuirks();
+
+    void setQuirks(Quirks quirksMode);
+
+    <E> ResultSetHandlerFactory<E> newFactory(Class<E> clazz);
 }

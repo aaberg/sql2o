@@ -2,7 +2,6 @@ package org.sql2o.reflection;
 
 import org.sql2o.Sql2oException;
 import org.sql2o.tools.AbstractCache;
-import org.sql2o.tools.FeatureDetector;
 import org.sql2o.tools.UnderscoreToCamelCase;
 
 import java.lang.reflect.Field;
@@ -22,6 +21,11 @@ public class PojoMetadata {
     private final Map<String, String> columnMappings;
     private final FactoryFacade factoryFacade = FactoryFacade.getInstance();
 
+    private boolean caseSensitive;
+    private boolean autoDeriveColumnNames;
+    public final boolean throwOnMappingFailure;
+    private Class clazz;
+
     public boolean isCaseSensitive() {
         return caseSensitive;
     }
@@ -29,10 +33,6 @@ public class PojoMetadata {
     public boolean isAutoDeriveColumnNames() {
         return autoDeriveColumnNames;
     }
-
-    private boolean caseSensitive;
-    private boolean autoDeriveColumnNames;
-    private Class clazz;
 
     @Override
     public boolean equals(Object o) {
@@ -56,13 +56,14 @@ public class PojoMetadata {
         return result;
     }
 
-    public PojoMetadata(Class clazz, boolean caseSensitive, boolean autoDeriveColumnNames, Map<String, String> columnMappings) {
+    public PojoMetadata(Class clazz, boolean caseSensitive, boolean autoDeriveColumnNames, Map<String, String> columnMappings, boolean throwOnMappingError) {
         this.caseSensitive = caseSensitive;
         this.autoDeriveColumnNames = autoDeriveColumnNames;
         this.clazz = clazz;
         this.columnMappings = columnMappings == null ? Collections.<String,String>emptyMap() : columnMappings;
 
         this.propertyInfo = getPropertyInfoThroughCache();
+        this.throwOnMappingFailure = throwOnMappingError;
 
     }
 

@@ -32,6 +32,7 @@ public class Query implements AutoCloseable {
     private final PreparedStatement statement;
     private boolean caseSensitive;
     private boolean autoDeriveColumnNames;
+    private boolean throwOnMappingFailure = true;
     private String name;
     private boolean returnGeneratedKeys;
     private final Map<String, List<Integer>> paramNameToIdxMap;
@@ -89,6 +90,15 @@ public class Query implements AutoCloseable {
     public Query setAutoDeriveColumnNames(boolean autoDeriveColumnNames) {
         this.autoDeriveColumnNames = autoDeriveColumnNames;
         return this;
+    }
+
+    public Query throwOnMappingFailure(boolean throwOnMappingFailure) {
+        this.throwOnMappingFailure = throwOnMappingFailure;
+        return this;
+    }
+
+    public boolean isThrowOnMappingFailure() {
+        return throwOnMappingFailure;
     }
 
     public Connection getConnection(){
@@ -381,10 +391,11 @@ public class Query implements AutoCloseable {
         final Quirks quirks = getConnection().getSql2o().getQuirks();
         ResultSetHandlerFactoryBuilder builder = getResultSetHandlerFactoryBuilder();
         if(builder==null) builder=new DefaultResultSetHandlerFactoryBuilder();
-        builder.setAutoDeriveColumnNames(autoDeriveColumnNames);
-        builder.setCaseSensitive(caseSensitive);
-        builder.setColumnMappings(columnMappings);
+        builder.setAutoDeriveColumnNames(this.autoDeriveColumnNames);
+        builder.setCaseSensitive(this.caseSensitive);
+        builder.setColumnMappings(this.columnMappings);
         builder.setQuirks(quirks);
+        builder.throwOnMappingError(this.throwOnMappingFailure);
         return builder.newFactory(returnType);
     }
 
