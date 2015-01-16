@@ -24,7 +24,7 @@ public class ParameterParser implements CharParser{
     @Override
     public int parse(char c, int idx, StringBuilder parsedSql, String sql, int length) {
         int startIdx = idx;
-        idx += 2;
+        idx += 1;
 
         while (idx + 1 < length && Character.isJavaIdentifierPart(sql.charAt(idx + 1))) {
             idx += 1;

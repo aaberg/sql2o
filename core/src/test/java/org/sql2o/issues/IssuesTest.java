@@ -104,57 +104,6 @@ public class IssuesTest {
         }
     }
 
-
-    /**
-     *  Tests for issue #3 https://github.com/aaberg/sql2o/issues/3
-     *
-     *  Issue: If an exception occures in the database, while executing batch update,
-     *  the database connection is not closed correctly.
-     */
-    @Test public void testForConnectionStateAfterBatchException() throws SQLException {
-        sql2o.createQuery("create table issue3table(id integer identity primary key, val varchar(5))").executeUpdate();
-        
-        boolean failed = false;
-
-        Connection connection = sql2o.beginTransaction();
-
-        try{
-            connection.createQuery("insert into issue3table(val) values(:val)")
-                .addParameter("val", "abcde").addToBatch()
-                .addParameter("val", "abcdefg").addToBatch() // should fail
-                .addParameter("val", "hello").addToBatch()
-                .executeBatch().commit();
-        }
-        catch(Sql2oException ex){
-            failed = true;
-            System.out.println("expected exception occured, msg: " + ex.getMessage());
-        }
-
-        assertTrue(failed);
-
-        assertTrue("Assert that connection is correctly closed (with transaction)", connection.getJdbcConnection().isClosed() );
-        
-        // same test, but not in a transaction
-        Query query = sql2o.createQuery("insert into issue3table(val) values(:val)")
-            .addParameter("val", "abcde").addToBatch()
-            .addParameter("val", "abcdefg").addToBatch() // should fail
-            .addParameter("val", "hello").addToBatch();
-        
-        boolean failed2 = false;
-        try{
-            query.executeBatch();
-        }
-        catch(Sql2oException ex){
-            failed2 = true;
-            System.out.println("expected error: " + ex.toString());
-        }
-
-        assertTrue(failed2);
-
-        assertTrue("Assert that connection is correctly closed (no transaction)", query.getConnection().getJdbcConnection().isClosed());
-            
-    }
-
     /**
      *  Tests for issue #4 https://github.com/aaberg/sql2o/issues/4
      *
@@ -471,6 +420,27 @@ public class IssuesTest {
 
             assertEquals(1, pojo.id);
             assertEquals("foo", pojo.val1);
+        }
+    }
+
+    @Test
+    public void testIssue166OneCharacterParameterFail() {
+        try (Connection connection = sql2o.open()) {
+            connection.createQuery("create table testIssue166OneCharacterParameterFail(id integer, val varchar(10))")
+                    .executeUpdate();
+
+            // This because of the :v parameter.
+            connection.createQuery("insert into testIssue166OneCharacterParameterFail(id, val) values(:id, :v)")
+                    .addParameter("id", 1)
+                    .addParameter("v", "foobar")
+                    .executeUpdate();
+
+
+            int cnt = connection.createQuery("select count(*) from testIssue166OneCharacterParameterFail where id = :p")
+                    .addParameter("p", 1)
+                    .executeScalar(Integer.class);
+
+            assertEquals(1, cnt);
         }
     }
 }

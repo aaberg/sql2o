@@ -53,7 +53,7 @@ public class Connection {
 
     void onException() {
         if (isRollbackOnException()) {
-            rollback();
+            rollback(this.autoClose);
         }
     }
 
