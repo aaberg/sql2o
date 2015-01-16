@@ -407,7 +407,9 @@ public class IssuesTest {
             public String val1;
         }
 
-        try (Connection connection = sql2o.open()) {
+        Connection connection = null;
+        try {
+            connection = sql2o.open();
 
             try {
                 Pojo pojo = connection.createQuery(sql).executeAndFetchFirst(Pojo.class);
@@ -421,11 +423,16 @@ public class IssuesTest {
             assertEquals(1, pojo.id);
             assertEquals("foo", pojo.val1);
         }
+        finally {
+            connection.close();
+        }
     }
 
     @Test
     public void testIssue166OneCharacterParameterFail() {
-        try (Connection connection = sql2o.open()) {
+        Connection connection = null;
+        try  {
+            connection = sql2o.open();
             connection.createQuery("create table testIssue166OneCharacterParameterFail(id integer, val varchar(10))")
                     .executeUpdate();
 
@@ -441,6 +448,8 @@ public class IssuesTest {
                     .executeScalar(Integer.class);
 
             assertEquals(1, cnt);
+        } finally {
+            connection.close();
         }
     }
 }
