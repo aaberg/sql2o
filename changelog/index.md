@@ -5,6 +5,21 @@ base_url: ../
 ---
 # change log
 
+## sql2o 1.5.4 released
+_<small>16 jan 2015 <a href="https://github.com/aaberg">Lars Aaberg</a> </small>_
+
+####- Fixed parameter parsing bug that caused an exception if parameter name was only one character <a href="https://github.com/aaberg/sql2o/issues/166"><span class="badge badge-info">#166</span></a>
+>Added throwOnMappingFailure.
+>_<small>fixed by [Lars Aaberg](https://github.com/aaberg)</small>_
+
+####- Fixed autoclose on exception bug <a href="https://github.com/aaberg/sql2o/issues/162"><span class="badge badge-info">#162</span></a>
+>_<small>fixed by [Lars Aaberg](https://github.com/aaberg)</small>_
+
+####- Add option to ignore mapping errors <a href="https://github.com/aaberg/sql2o/issues/134"><span class="badge badge-info">#134</span></a>
+>Added throwOnMappingFailure(boolean).
+>_<small>fixed by [Lars Aaberg](https://github.com/aaberg)</small>_
+
+
 ## sql2o 1.5.3 released
 _<small>19 okt 2014 <a href="https://github.com/aaberg">Lars Aaberg</a> </small>_
 
@@ -36,7 +51,7 @@ _<small>18 sep 2014 <a href="https://github.com/aaberg">Lars Aaberg</a> </small>
 >_<small>Contributed by [migel](https://github.com/migel)</small>_
 
 ####- Fixed IndexOutOfRange exception <a href="https://github.com/aaberg/sql2o/issues/148"><span class="badge badge-info">#148</span></a>
->The exception was thrown when using executeAndFetchTable method with a dataset where more than one column had the same name. 
+>The exception was thrown when using executeAndFetchTable method with a dataset where more than one column had the same name.
 >_<small>Contributed by [Lars Aaberg](https://github.com/aaberg)</small>_
 
 [@l_aaberg](https://twitter.com/l_aaberg)
@@ -82,8 +97,8 @@ _<small>29 may 2014 <a href="https://github.com/aaberg">Lars Aaberg</a> </small>
 
 I am proud to announce the release of sql2o 1.5.0-RC1! In this release, a lot of refactoring has been done that improves performance and flexibility of the library. This is a release candidate, so if no major errors are found, this will become version 1.5.0
 
-**A special thanks to [Dmitry Alexandrov](https://github.com/dimzon) for all his good ideas, and all the work he has put into this release.**	
-    
+**A special thanks to [Dmitry Alexandrov](https://github.com/dimzon) for all his good ideas, and all the work he has put into this release.**
+
 <br/>
 [List of changes on github](https://github.com/aaberg/sql2o/issues?labels=&milestone=8&page=1&state=closed)
 
@@ -102,7 +117,7 @@ I am proud to announce the release of sql2o 1.5.0-RC1! In this release, a lot of
 
 ####- Better jodatime handling <a href="https://github.com/aaberg/sql2o/pull/112"><span class="badge badge-info">#112</span></a>
 >This pull request also improves logging, StringConverter, FeatureDetector.
->_<small>Contributed by [Dmitry Alexandrov](https://github.com/dimzon)</small>_	
+>_<small>Contributed by [Dmitry Alexandrov](https://github.com/dimzon)</small>_
 
 ####- Keep tack of all statements created on connection, and close them when connection is closed <a href="https://github.com/dimzon/sql2o/commit/ffecad1bda59895e573f9d32e52526439aec1384"><span class="badge badge-info">ffecad1</span></a>
 >_<small>Contributed by [Dmitry Alexandrov](https://github.com/dimzon)</small>_
@@ -118,13 +133,13 @@ I am proud to announce the release of sql2o 1.5.0-RC1! In this release, a lot of
 >_<small>Contributed by [Dmitry Alexandrov](https://github.com/dimzon)</small>_
 
 ####- Fixed incompatibility bug in some converters <a href="https://github.com/aaberg/sql2o/issues/102"><span class="badge badge-info">#102</span></a>
->_<small>Contributed by [Dmitry Alexandrov](https://github.com/dimzon)</small>_	
+>_<small>Contributed by [Dmitry Alexandrov](https://github.com/dimzon)</small>_
 
 ####- Fixed bug in EnumConverter <a href="https://github.com/aaberg/sql2o/issues/101"><span class="badge badge-info">#101</span></a>
->_<small>Contributed by [Dmitry Alexandrov](https://github.com/dimzon)</small>_	
+>_<small>Contributed by [Dmitry Alexandrov](https://github.com/dimzon)</small>_
 
 ####- Fixed thread safety issue on Convert class <a href="https://github.com/aaberg/sql2o/issues/100"><span class="badge badge-info">#100</span></a>
->_<small>Contributed by [Dmitry Alexandrov](https://github.com/dimzon)</small>_	
+>_<small>Contributed by [Dmitry Alexandrov](https://github.com/dimzon)</small>_
 
 ####- Added support for custom resultset mapper <a href="https://github.com/aaberg/sql2o/pull/97"><span class="badge badge-info">#97</span></a>
 >_<small>Contributed by [Dmitry Alexandrov](https://github.com/dimzon)</small>_
@@ -279,7 +294,7 @@ A special thanks to [Alden Quimby](https://github.com/aldenquimby), who has done
 _<small>21 jan 2014 <a href="https://github.com/aaberg">Lars Aaberg</a> </small>_
 
 #####- Bug fix   <a href="https://github.com/aaberg/sql2o/issues/41"><span class="badge badge-info">#41</span></a>
->when using the Query.addParameter(String, Date) method, IBM DB2 jdbc driver would throw an exception when column is 'date' datatype   
+>when using the Query.addParameter(String, Date) method, IBM DB2 jdbc driver would throw an exception when column is 'date' datatype
 >_<small>Fixed by [Lars Aaberg](https://github.com/aaberg)</small>_
 
 
@@ -296,8 +311,8 @@ _<small>14 jan 2014 <a href="https://github.com/aaberg">Lars Aaberg</a> </small>
 
 
 #####- getObject() method now has an overload that uses a registered converter. <a href="https://github.com/aaberg/sql2o/issues/32"><span class="badge badge-info">#32</span></a>
->Example   
->MyModel value = query.getObject(“colname”, MyModel.class);    
+>Example
+>MyModel value = query.getObject(“colname”, MyModel.class);
 >_<small>contributed by [Lars Aaberg](https://github.com/aaberg)</small>_
 
 
@@ -309,15 +324,15 @@ _<small>14 jan 2014 <a href="https://github.com/aaberg">Lars Aaberg</a> </small>
 >_<small>contributed by [Lars Aaberg](https://github.com/aaberg)</small>_
 
 
-#####- Added JNDI support  <a href="https://github.com/aaberg/sql2o/pull/21"><span class="badge badge-info">#21</span></a>   
+#####- Added JNDI support  <a href="https://github.com/aaberg/sql2o/pull/21"><span class="badge badge-info">#21</span></a>
 >_<small>Contributed by [Manuel de la Peña](https://github.com/mdelapenya)</small>_
 
 
-#####- Added Query.bind(Object bean) method   <a href="https://github.com/aaberg/sql2o/pull/20"><span class="badge badge-info">#20</span></a>   
->Example:   
->String sql = “insert into mytable(co1, col2, col3) values (:prop1, :prop2, prop3)”;   
->If we have a POJO with properties prop1, prop2 and prop3, we can call:   
->sql2o.createQuery(sql).bind(myPojo).executeUpdate();   
+#####- Added Query.bind(Object bean) method   <a href="https://github.com/aaberg/sql2o/pull/20"><span class="badge badge-info">#20</span></a>
+>Example:
+>String sql = “insert into mytable(co1, col2, col3) values (:prop1, :prop2, prop3)”;
+>If we have a POJO with properties prop1, prop2 and prop3, we can call:
+>sql2o.createQuery(sql).bind(myPojo).executeUpdate();
 >_<small>Contributed by [Juan Noriega](https://github.com/jsnoriegam)</small>_
 
 
