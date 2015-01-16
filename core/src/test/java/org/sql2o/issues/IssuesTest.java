@@ -443,7 +443,15 @@ public class IssuesTest {
         }
 
         try (Connection connection = sql2o.open()) {
-            Pojo pojo = connection.createQuery(sql).executeAndFetchFirst(Pojo.class);
+
+            try {
+                Pojo pojo = connection.createQuery(sql).executeAndFetchFirst(Pojo.class);
+                fail("Expeced an exception to be thrown");
+            } catch(Sql2oException e) {
+                assertEquals("Could not map VAL2 to any property.", e.getMessage());
+            }
+
+            Pojo pojo = connection.createQuery(sql).throwOnMappingFailure(false).executeAndFetchFirst(Pojo.class);
 
             assertEquals(1, pojo.id);
             assertEquals("foo", pojo.val1);

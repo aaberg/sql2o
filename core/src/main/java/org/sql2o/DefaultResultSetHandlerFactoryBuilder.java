@@ -8,6 +8,7 @@ import java.util.Map;
 public class DefaultResultSetHandlerFactoryBuilder implements ResultSetHandlerFactoryBuilder {
     private boolean caseSensitive;
     private boolean autoDeriveColumnNames;
+    private boolean throwOnMappingError;
     private Map<String, String> columnMappings;
     private Quirks quirks;
 
@@ -27,6 +28,16 @@ public class DefaultResultSetHandlerFactoryBuilder implements ResultSetHandlerFa
         this.autoDeriveColumnNames = autoDeriveColumnNames;
     }
 
+    @Override
+    public boolean isThrowOnMappingError() {
+        return throwOnMappingError;
+    }
+
+    @Override
+    public void throwOnMappingError(boolean throwOnMappingError) {
+        this.throwOnMappingError = throwOnMappingError;
+    }
+
     public Map<String, String> getColumnMappings() {
         return columnMappings;
     }
@@ -43,9 +54,11 @@ public class DefaultResultSetHandlerFactoryBuilder implements ResultSetHandlerFa
         this.quirks = quirks;
     }
 
+
+
     @SuppressWarnings("unchecked")
     public <T> ResultSetHandlerFactory<T> newFactory(Class<T> clazz) {
-        PojoMetadata pojoMetadata = new PojoMetadata(clazz, caseSensitive, autoDeriveColumnNames, columnMappings);
+        PojoMetadata pojoMetadata = new PojoMetadata(clazz, caseSensitive, autoDeriveColumnNames, columnMappings, throwOnMappingError);
         return new DefaultResultSetHandlerFactory(pojoMetadata, quirks);
     }
 

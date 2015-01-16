@@ -147,12 +147,12 @@ public class DefaultResultSetHandlerFactory<T> implements ResultSetHandlerFactor
         setters = new Setter[columnCount + 1];   // setters[0] is always null
         for (int i = 1; i <= columnCount; i++) {
             String colName = quirks.getColumnName(meta, i);
-            // behavior change: do not throw if POJO contains less properties
+
             setters[i] = getSetter(quirks, colName, metadata);
 
             // If more than 1 column is fetched (we cannot fall back to executeScalar),
             // and the setter doesn't exist, throw exception.
-            if (setters[i] == null && columnCount > 1) {
+            if (this.metadata.throwOnMappingFailure && setters[i] == null && columnCount > 1) {
                 throw new Sql2oException("Could not map " + colName + " to any property.");
             }
         }
