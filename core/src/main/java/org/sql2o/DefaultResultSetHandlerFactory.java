@@ -196,7 +196,7 @@ public class DefaultResultSetHandlerFactory<T> implements ResultSetHandlerFactor
             // If more than 1 column is fetched (we cannot fall back to executeScalar),
             // and the getter doesn't exist, throw exception.
             if (getters[i] == null && columnCount > 1) {
-                throw new Sql2oException("Could not map " + colName + " to any property.");
+                 throw new Sql2oException("Could not map " + colName + " to any property.");
             }
         }
 
