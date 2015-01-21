@@ -130,6 +130,9 @@ public class Query implements AutoCloseable {
 
     private void addParameterInternal(String name, ParameterSetter parameterSetter) {
         addedParameters.add(name);
+        if (!this.getParamNameToIdxMap().containsKey(name)) {
+            throw new Sql2oException("Failed to add parameter with name '" + name + "'. No parameter with that name is declared in the sql.");
+        }
         for (int paramIdx : this.getParamNameToIdxMap().get(name)) {
             try {
                 parameterSetter.setParameter(paramIdx);

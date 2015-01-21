@@ -427,4 +427,22 @@ public class IssuesTest {
             assertEquals(1, cnt);
         }
     }
+
+    @Test
+    public void testIssue149NullPointerWhenUsingWrongParameterName() {
+
+        try(Connection connection = sql2o.open()) {
+            connection.createQuery("create table issue149 (id integer primary key, val varchar(20))").executeUpdate();
+            connection.createQuery("insert into issue149(id, val) values (:id, :val)")
+                    .addParameter("id", 1)
+                    .addParameter("asdsa", "something") // spell-error in parameter name
+                    .executeUpdate();
+
+            fail("Expected exception!!");
+        } catch(Sql2oException ex) {
+            // awesome!
+        } catch(Throwable t) {
+            fail("A " + t.getClass().getName() + " was thrown, but An " + Sql2oException.class.getName() + " was expected");
+        }
+    }
 }
