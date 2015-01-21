@@ -1,5 +1,6 @@
 package org.sql2o.quirks;
 
+import org.sql2o.Sql2oException;
 import org.sql2o.converters.Convert;
 import org.sql2o.converters.Converter;
 import org.sql2o.quirks.parameterparsing.impl.DefaultSqlParameterParsingStrategy;
@@ -104,6 +105,15 @@ public class NoQuirks implements Quirks {
             statement.setNull(paramIdx, Types.TIME);
         } else {
             statement.setTime(paramIdx, value);
+        }
+    }
+
+    @Override
+    public void setParameter(PreparedStatement statement, int paramIdx, boolean value) throws Sql2oException {
+        try {
+            statement.setBoolean(paramIdx, value);
+        } catch (SQLException e) {
+            throw new Sql2oException("Error setting boolean parameter for param " + paramIdx + " - " + e.getMessage(), e);
         }
     }
 

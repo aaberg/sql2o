@@ -276,6 +276,16 @@ public class Query implements AutoCloseable {
         return this;
     }
 
+    public Query addParameter(String name, final boolean value) {
+        addParameterInternal(name, new ParameterSetter() {
+            @Override
+            public void setParameter(int paramIdx) throws SQLException {
+                getConnection().getSql2o().getQuirks().setParameter(statement, paramIdx, value);
+            }
+        });
+        return this;
+    }
+
     public Query bind(final Object pojo) {
         Class clazz = pojo.getClass();
         Map<String, PojoIntrospector.ReadableProperty> propertyMap = PojoIntrospector.readableProperties(clazz);

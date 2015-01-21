@@ -1,5 +1,6 @@
 package org.sql2o.quirks;
 
+import org.sql2o.Sql2oException;
 import org.sql2o.converters.Converter;
 import org.sql2o.quirks.parameterparsing.SqlParameterParsingStrategy;
 
@@ -45,6 +46,7 @@ public interface Quirks {
     void setParameter(PreparedStatement statement, int paramIdx, String value) throws SQLException;
     void setParameter(PreparedStatement statement, int paramIdx, Timestamp value) throws SQLException;
     void setParameter(PreparedStatement statement, int paramIdx, Time value) throws SQLException;
+    void setParameter(PreparedStatement statement, int paramIdx, boolean value) throws Sql2oException;
 
     Object getRSVal(ResultSet rs, int idx) throws SQLException;
 
