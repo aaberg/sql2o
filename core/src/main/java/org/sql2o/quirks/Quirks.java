@@ -46,7 +46,8 @@ public interface Quirks {
     void setParameter(PreparedStatement statement, int paramIdx, String value) throws SQLException;
     void setParameter(PreparedStatement statement, int paramIdx, Timestamp value) throws SQLException;
     void setParameter(PreparedStatement statement, int paramIdx, Time value) throws SQLException;
-    void setParameter(PreparedStatement statement, int paramIdx, boolean value) throws Sql2oException;
+    void setParameter(PreparedStatement statement, int paramIdx, boolean value) throws SQLException;
+    void setParameter(PreparedStatement statement, int paramIdx, Boolean value) throws SQLException;
 
     Object getRSVal(ResultSet rs, int idx) throws SQLException;
 
