@@ -29,30 +29,11 @@ import static org.junit.Assert.*;
  * This test assumes that there is a local PostgreSQL server with a testdb database which can be accessed by user: test, pass: testtest
  */
 @RunWith(Parameterized.class)
-public class PostgresTest {
-
-    private Sql2o sql2o;
-
-    @Parameterized.Parameters(name = "{index} - {4}")
-    public static Collection<Object[]> getData(){
-        return Arrays.asList(new Object[][]{
-                {"jdbc:postgresql:testdb", "test", "testtest", "Official postgres driver"},
-//                {"jdbc:pgsql://localhost/testdb", "test", "testtest", "Impossibl postgres driver"}
-        });
-    }
-
-    private Logger logger = LoggerFactory.getLogger(PostgresTest.class);
+public class PostgresTest extends PostgresTestSupport {
 
     public PostgresTest(String url, String user, String pass, String testName) {
-
-        logger.info(testName);
-
-        sql2o = new Sql2o(url, user, pass, new PostgresQuirks(){
-            {
-                // make sure we use default UUID converter.
-                converters.put(UUID.class, new UUIDConverter());
-            }
-        });
+        super(url, user, pass, testName);
+        logger.info("starting PostgresTest");
     }
 
     @Test
