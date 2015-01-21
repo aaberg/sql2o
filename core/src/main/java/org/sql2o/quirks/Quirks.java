@@ -9,6 +9,7 @@ import java.sql.*;
 import java.sql.ResultSet;
 import java.sql.ResultSetMetaData;
 import java.sql.SQLException;
+import java.util.UUID;
 
 /**
  * Interface for JDBC driver specific quirks.
@@ -48,6 +49,7 @@ public interface Quirks {
     void setParameter(PreparedStatement statement, int paramIdx, Time value) throws SQLException;
     void setParameter(PreparedStatement statement, int paramIdx, boolean value) throws SQLException;
     void setParameter(PreparedStatement statement, int paramIdx, Boolean value) throws SQLException;
+    void setParameter(PreparedStatement statement, int paramIdx, UUID value) throws SQLException;
 
     Object getRSVal(ResultSet rs, int idx) throws SQLException;
 

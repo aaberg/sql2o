@@ -14,6 +14,7 @@ import java.sql.SQLException;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.UUID;
 
 /**
  * @author aldenquimby@gmail.com
@@ -125,6 +126,11 @@ public class NoQuirks implements Quirks {
             statement.setNull(paramIdx, Types.BOOLEAN);
         else
             statement.setBoolean(paramIdx, value);
+    }
+
+    @Override
+    public void setParameter(PreparedStatement statement, int paramIdx, UUID value) throws SQLException {
+        statement.setObject(paramIdx, value);
     }
 
     @Override
