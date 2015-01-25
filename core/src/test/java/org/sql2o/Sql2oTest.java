@@ -1,7 +1,6 @@
 package org.sql2o;
 
 import org.hsqldb.jdbc.JDBCDataSource;
-import org.hsqldb.jdbcDriver;
 import org.joda.time.DateTime;
 import org.joda.time.LocalTime;
 import org.joda.time.Period;
@@ -20,9 +19,10 @@ import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.math.BigDecimal;
-import java.sql.*;
+import java.sql.SQLException;
+import java.sql.Time;
+import java.sql.Timestamp;
 import java.util.*;
-import java.util.Date;
 
 import static org.hamcrest.CoreMatchers.*;
 import static org.junit.Assert.*;
@@ -550,7 +550,7 @@ public class Sql2oTest extends BaseMemDbTest {
 
     @Test
     public void testComplexTypes(){
-        ComplexEntity pojo = sql2o.createQuery("select 1 id, 1 \"entity.id\", 'something' \"entity.value\" from (values(0))", "testComplexTypes").executeAndFetchFirst(ComplexEntity.class);
+        ComplexEntity pojo = sql2o.createQuery("select 1 id, 1 \"entity.id\", 'something' \"entity.value\" from (values(0))").setName("testComplexTypes").executeAndFetchFirst(ComplexEntity.class);
 
         assertEquals(1, pojo.id);
         assertEquals(1, pojo.getEntity().getId());

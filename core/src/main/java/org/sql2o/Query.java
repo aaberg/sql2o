@@ -46,9 +46,16 @@ public class Query implements AutoCloseable {
         return parsedQuery;
     }
 
-    public Query(Connection connection, String queryText, String name, boolean returnGeneratedKeys) {
+    public Query(Connection connection, String queryText, boolean returnGeneratedKeys) {
+        this(connection, queryText, returnGeneratedKeys, null);
+    }
+
+    public Query(Connection connection, String queryText, String[] columnNames) {
+        this(connection, queryText, false, columnNames);
+    }
+
+    private Query(Connection connection, String queryText, boolean returnGeneratedKeys, String[] columnNames) {
         this.connection = connection;
-        this.name = name;
         this.returnGeneratedKeys = returnGeneratedKeys;
         this.setColumnMappings(connection.getSql2o().getDefaultColumnMappings());
         this.caseSensitive = connection.getSql2o().isDefaultCaseSensitive();
@@ -58,7 +65,9 @@ public class Query implements AutoCloseable {
 
         parsedQuery = connection.getSql2o().getQuirks().getSqlParameterParsingStrategy().parseSql(queryText, paramNameToIdxMap);
         try {
-            if (returnGeneratedKeys) {
+            if (columnNames != null && columnNames.length > 0){
+                statement = connection.getJdbcConnection().prepareStatement(parsedQuery, columnNames);
+            } else if (returnGeneratedKeys) {
                 statement = connection.getJdbcConnection().prepareStatement(parsedQuery, Statement.RETURN_GENERATED_KEYS);
             } else {
                 statement = connection.getJdbcConnection().prepareStatement(parsedQuery);
@@ -107,6 +116,11 @@ public class Query implements AutoCloseable {
 
     public String getName() {
         return name;
+    }
+
+    public Query setName(String name) {
+        this.name = name;
+        return this;
     }
 
     public ResultSetHandlerFactoryBuilder getResultSetHandlerFactoryBuilder() {

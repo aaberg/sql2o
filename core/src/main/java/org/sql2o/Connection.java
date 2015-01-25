@@ -66,26 +66,38 @@ public class Connection implements AutoCloseable, Closeable {
         return sql2o;
     }
 
-    public Query createQuery(String queryText, String name){
+    public Query createQuery(String queryText){
         boolean returnGeneratedKeys = this.sql2o.getQuirks().returnGeneratedKeysByDefault();
-        return createQuery(queryText, name, returnGeneratedKeys);
+        return createQuery(queryText, returnGeneratedKeys);
     }
 
-    public Query createQuery(String queryText, String name, boolean returnGeneratedKeys){
+    public Query createQuery(String queryText, boolean returnGeneratedKeys){
 
         try {
             if (jdbcConnection.isClosed()){
                 createConnection();
             }
         } catch (SQLException e) {
-            throw new RuntimeException(e);
+            throw new Sql2oException("Error creating connection", e);
         }
 
-        return new Query(this, queryText, name, returnGeneratedKeys);
+        return new Query(this, queryText, returnGeneratedKeys);
+    }
+
+    public Query createQuery(String queryText, String ... columnNames) {
+        try {
+            if (jdbcConnection.isClosed()) {
+                createConnection();
+            }
+        } catch(SQLException e) {
+            throw new Sql2oException("Error creating connection", e);
+        }
+
+        return new Query(this, queryText, columnNames);
     }
 
     public Query createQueryWithParams(String queryText, Object... paramValues){
-        Query query = createQuery(queryText, null);
+        Query query = createQuery(queryText);
         boolean destroy = true;
         try {
             query.withParams(paramValues);
@@ -97,14 +109,6 @@ public class Connection implements AutoCloseable, Closeable {
             // but kill a query
             if(destroy) query.close();
         }
-    }
-
-    public Query createQuery(String queryText){
-        return createQuery(queryText, null);
-    }
-
-    public Query createQuery(String queryText, boolean returnGeneratedKeys) {
-        return createQuery(queryText, null, returnGeneratedKeys);
     }
 
     public Sql2o rollback(){

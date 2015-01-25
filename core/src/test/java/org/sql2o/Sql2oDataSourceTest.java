@@ -35,7 +35,7 @@ public class Sql2oDataSourceTest extends TestCase {
                         "text varchar(255), " +
                         "aNumber int, " +
                         "aLongNumber bigint)";
-        sql2o.createQuery(sql, "testExecuteAndFetchWithNulls").executeUpdate();
+        sql2o.createQuery(sql).setName("testExecuteAndFetchWithNulls").executeUpdate();
 
         sql2o.runInTransaction(new StatementRunnable() {
             public void run(Connection connection, Object argument) throws Throwable {
