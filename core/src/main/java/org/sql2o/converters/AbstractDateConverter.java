@@ -35,7 +35,7 @@ public abstract class AbstractDateConverter<E extends Date> implements Converter
         throw new ConverterException("Cannot convert type " + val.getClass().toString() + " to java.util.Date");
     }
 
-    public Timestamp toDatabaseParam(Date val) {
+    public Object toDatabaseParam(Date val) {
         if(val==null) return null;
         return (val instanceof Timestamp)
                 ? (Timestamp) val
