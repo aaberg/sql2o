@@ -181,7 +181,7 @@ public class Connection implements AutoCloseable, Closeable {
 
     public Object getKey(){
         if (!this.canGetKeys){
-            throw new Sql2oException("Keys where not fetched from database. Please call executeUpdate(true) to fetch keys");
+            throw new Sql2oException("Keys where not fetched from database. Please set the returnGeneratedKeys parameter in the createQuery() method to enable fetching of generated keys.");
         }
         if (this.keys != null && this.keys.size() > 0){
             return  keys.get(0);
