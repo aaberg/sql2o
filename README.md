@@ -1,4 +1,4 @@
-# sql2o [![Build Status](https://travis-ci.org/viftodi/sql2o.svg?branch=travis-test)](https://travis-ci.org/viftodi/sql2o)
+# sql2o [![Build Status](https://travis-ci.org/viftodi/sql2o.svg)](https://travis-ci.org/viftodi/sql2o)
 
 Sql2o is a small java library, with the purpose of making database interaction easy.
 When fetching data from the database, the ResultSet will automatically be filled into you POJO objects.
