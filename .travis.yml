@@ -1,5 +1,5 @@
 language: java
 install:
- - mvn compile -DskipTests=true -Dmaven.javadoc.skip=true -B -V -pl core,extensions,extensions/db2,extensions/posstgres
+ - mvn compile -DskipTests=true -Dmaven.javadoc.skip=true -B -V -pl core,extensions,extensions/db2,extensions/postgres
 script:
  - mvn test -Dmaven.javadoc.skip=true -B -V -pl core,extensions,extensions/db2
