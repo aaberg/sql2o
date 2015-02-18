@@ -1,5 +1,8 @@
 language: java
+before_script:
+ - psql -c "CREATE USER test WITH PASSWORD 'testtest';" -U postgres
+ - psql -c "CREATE DATABASE testdb WITH OWNER 'test';" -U postgres
 install:
  - mvn compile -DskipTests=true -Dmaven.javadoc.skip=true -B -V -pl core,extensions,extensions/db2,extensions/postgres
 script:
- - mvn test -Dmaven.javadoc.skip=true -B -V -pl core,extensions,extensions/db2
+ - mvn test -Dmaven.javadoc.skip=true -B -V -pl core,extensions,extensions/db2,extensions/postgres
