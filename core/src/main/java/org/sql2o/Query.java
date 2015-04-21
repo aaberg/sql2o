@@ -327,7 +327,6 @@ public class Query implements AutoCloseable {
         Class clazz = pojo.getClass();
         Map<String, PojoIntrospector.ReadableProperty> propertyMap = PojoIntrospector.readableProperties(clazz);
         for (PojoIntrospector.ReadableProperty property : propertyMap.values()) {
-            if (addedParameters.contains( property.name )) continue;
             try {
                 if( this.getParamNameToIdxMap().containsKey(property.name)) {
 

@@ -6,7 +6,6 @@ import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.Parameterized;
 import org.sql2o.Connection;
-import org.sql2o.Query;
 import org.sql2o.Sql2o;
 import org.sql2o.Sql2oException;
 import org.sql2o.data.Row;
@@ -20,7 +19,6 @@ import java.sql.SQLException;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.List;
-import java.util.UUID;
 
 import static org.junit.Assert.*;
 
@@ -343,38 +341,6 @@ public class IssuesTest {
                     .executeAndFetch(ThePojo.class);
 
             assertEquals(10, resultList.size());
-        }
-    }
-
-    @Test
-    public void testIssue160_preventDoubleBind() {
-        class Pojo {
-            public UUID id;
-            public String val;
-        }
-
-        String createSql = "create table testIssue160_preventDoubleBind(id varchar(200) primary key, val varchar(20))";
-
-        String insertSql = "insert into testIssue160_preventDoubleBind (id, val) values (:id, :val)";
-
-        try (Connection connection = sql2o.open()) {
-            connection.createQuery(createSql).executeUpdate();
-
-            Pojo p1 = new Pojo() {{
-                id = UUID.randomUUID();
-                val = "something";
-            }};
-
-            Query insQuery = connection.createQuery(insertSql);
-
-            insQuery.addParameter("id", p1.id.toString());
-
-            insQuery.bind(p1);
-            insQuery.executeUpdate();
-
-            int rowCnt = connection.createQuery("select count(*) from testIssue160_preventDoubleBind").executeScalar(Integer.class);
-
-            assertEquals(1, rowCnt);
         }
     }
 
