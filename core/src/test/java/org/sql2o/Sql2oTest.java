@@ -1,5 +1,6 @@
 package org.sql2o;
 
+import junit.framework.Assert;
 import org.hsqldb.jdbc.JDBCDataSource;
 import org.joda.time.DateTime;
 import org.joda.time.LocalTime;
@@ -36,6 +37,8 @@ import static org.junit.Assert.*;
  */
 @RunWith(Parameterized.class)
 public class Sql2oTest extends BaseMemDbTest {
+
+    private static final int NUMBER_OF_USERS_IN_THE_TEST = 10000;
 
     private int insertIntoUsers = 0;
 
@@ -1107,7 +1110,7 @@ public class Sql2oTest extends BaseMemDbTest {
 
         List<User> users = connection.createQuery("select * from User").executeAndFetch(User.class);
 
-        assertThat(users.size(), is(equalTo(10000)));
+        assertThat(users.size(), is(equalTo(NUMBER_OF_USERS_IN_THE_TEST)));
         assertThat(connection.getJdbcConnection().isClosed(), is(false));
 
         connection.close();
@@ -1248,6 +1251,24 @@ public class Sql2oTest extends BaseMemDbTest {
 
     }
 
+    @Test
+    public void testBindInIteration(){
+        try (Connection connection = sql2o.open()) {
+            createAndFillUserTable(connection, true);
+
+            List<User> users = connection.createQuery("select * from User order by id").executeAndFetch(User.class);
+
+            assertThat(users.size(), is(equalTo(NUMBER_OF_USERS_IN_THE_TEST)));
+
+            for (int idx = 0 ; idx < NUMBER_OF_USERS_IN_THE_TEST ; idx++){
+                User user = users.get(idx);
+                Assert.assertEquals("a name " + idx, user.name);
+                Assert.assertEquals(String.format("test%s@email.com", idx), user.getEmail());
+            }
+        }
+
+    }
+
     /************** Helper stuff ******************/
 
     private void createAndFillUserTable() {
@@ -1259,6 +1280,10 @@ public class Sql2oTest extends BaseMemDbTest {
     }
 
     private void createAndFillUserTable(Connection connection){
+        createAndFillUserTable(connection, false);
+    }
+
+    private void createAndFillUserTable(Connection connection, boolean useBind){
 
         try{
             connection.createQuery("drop table User").executeUpdate();
@@ -1266,20 +1291,21 @@ public class Sql2oTest extends BaseMemDbTest {
             // if it fails, its because the User table doesn't exists. Just ignore this.
         }
 
-        int rowCount = 10000;
+        int rowCount = NUMBER_OF_USERS_IN_THE_TEST;
         connection.createQuery(
                 "create table User(\n" +
-                "id int identity primary key,\n" +
-                "name varchar(20),\n" +
-                "email varchar(255),\n" +
-                "text varchar(100))").executeUpdate();
+                        "id int identity primary key,\n" +
+                        "name varchar(20),\n" +
+                        "email varchar(255),\n" +
+                        "text varchar(100))").executeUpdate();
 
         Query insQuery = connection.createQuery("insert into User(name, email, text) values (:name, :email, :text)");
+
+        UserInserter inserter = UserInserterFactory.buildUserInserter(useBind);
+
         Date before = new Date();
         for (int idx = 0; idx < rowCount; idx++){
-            insQuery.addParameter("name", "a name " + idx)
-                    .addParameter("email", String.format("test%s@email.com", idx))
-                    .addParameter("text", "some text").addToBatch();
+            inserter.insertUser(insQuery,idx);
         }
         insQuery.executeBatch();
         Date after = new Date();
@@ -1288,6 +1314,7 @@ public class Sql2oTest extends BaseMemDbTest {
         System.out.println(String.format("inserted %d rows into User table. Time used: %s ms", rowCount, span));
 
         insertIntoUsers += rowCount;
+
     }
 
     private void deleteUserTable(){
