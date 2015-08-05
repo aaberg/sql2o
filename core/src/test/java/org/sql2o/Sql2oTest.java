@@ -37,6 +37,8 @@ import static org.junit.Assert.*;
 @RunWith(Parameterized.class)
 public class Sql2oTest extends BaseMemDbTest {
 
+    private static final int NUMBER_OF_USERS_IN_THE_TEST = 10000;
+
     private int insertIntoUsers = 0;
 
     public Sql2oTest(DbType dbType, String testName) {
@@ -300,7 +302,7 @@ public class Sql2oTest extends BaseMemDbTest {
 
         String insQuery = "insert into testUpdateNoTransaction(id, value) values (:id, :value)";
         sql2o.createQuery(insQuery).addParameter("id",1).addParameter("value", "test1").executeUpdate()
-                .createQuery(insQuery).addParameter("id", 2).addParameter("value","val2").executeUpdate();
+                .createQuery(insQuery).addParameter("id", 2).addParameter("value", "val2").executeUpdate();
 
         assertTrue(connection.getJdbcConnection().isClosed());
     }
@@ -530,7 +532,7 @@ public class Sql2oTest extends BaseMemDbTest {
     }
 
     @Test
-    public void testStringConversion(){
+    public void testStringConversion() {
         StringConversionPojo pojo = sql2o.createQuery("select '1' val1, '2  ' val2, '' val3, '' val4, null val5 from (values(0))").executeAndFetchFirst(StringConversionPojo.class);
 
         assertEquals((Integer)1, pojo.val1);
@@ -739,7 +741,7 @@ public class Sql2oTest extends BaseMemDbTest {
 
     @Test
     public void testEnums() {
-        sql2o.createQuery( "create table EnumTest(id int identity primary key, enum_val varchar(10), enum_val2 int) ").executeUpdate();
+        sql2o.createQuery("create table EnumTest(id int identity primary key, enum_val varchar(10), enum_val2 int) ").executeUpdate();
 
         sql2o.createQuery("insert into EnumTest(enum_val, enum_val2) values (:val, :val2)")
                 .addParameter("val", TestEnum.HELLO).addParameter("val2", TestEnum.HELLO.ordinal()).addToBatch()
@@ -1107,7 +1109,7 @@ public class Sql2oTest extends BaseMemDbTest {
 
         List<User> users = connection.createQuery("select * from User").executeAndFetch(User.class);
 
-        assertThat(users.size(), is(equalTo(10000)));
+        assertThat(users.size(), is(equalTo(NUMBER_OF_USERS_IN_THE_TEST)));
         assertThat(connection.getJdbcConnection().isClosed(), is(false));
 
         connection.close();
@@ -1248,6 +1250,24 @@ public class Sql2oTest extends BaseMemDbTest {
 
     }
 
+    @Test
+    public void testBindInIteration() {
+        try (Connection connection = sql2o.open()) {
+            createAndFillUserTable(connection, true);
+
+            List<User> users = connection.createQuery("select * from User order by id").executeAndFetch(User.class);
+
+            assertThat(users.size(), is(equalTo(NUMBER_OF_USERS_IN_THE_TEST)));
+
+            for (int idx = 0; idx < NUMBER_OF_USERS_IN_THE_TEST; idx++) {
+                User user = users.get(idx);
+                assertThat("a name " + idx, is(equalTo(user.name)));
+                assertThat(String.format("test%s@email.com", idx), is(equalTo(user.getEmail())));
+            }
+        }
+
+    }
+
     /************** Helper stuff ******************/
 
     private void createAndFillUserTable() {
@@ -1258,7 +1278,12 @@ public class Sql2oTest extends BaseMemDbTest {
         connection.close();
     }
 
+
     private void createAndFillUserTable(Connection connection){
+        createAndFillUserTable(connection, false);
+    }
+
+    private void createAndFillUserTable(Connection connection, boolean useBind){
 
         try{
             connection.createQuery("drop table User").executeUpdate();
@@ -1266,20 +1291,21 @@ public class Sql2oTest extends BaseMemDbTest {
             // if it fails, its because the User table doesn't exists. Just ignore this.
         }
 
-        int rowCount = 10000;
+        int rowCount = NUMBER_OF_USERS_IN_THE_TEST;
         connection.createQuery(
                 "create table User(\n" +
-                "id int identity primary key,\n" +
-                "name varchar(20),\n" +
-                "email varchar(255),\n" +
-                "text varchar(100))").executeUpdate();
+                        "id int identity primary key,\n" +
+                        "name varchar(20),\n" +
+                        "email varchar(255),\n" +
+                        "text varchar(100))").executeUpdate();
 
         Query insQuery = connection.createQuery("insert into User(name, email, text) values (:name, :email, :text)");
+
+        UserInserter inserter = UserInserterFactory.buildUserInserter(useBind);
+
         Date before = new Date();
         for (int idx = 0; idx < rowCount; idx++){
-            insQuery.addParameter("name", "a name " + idx)
-                    .addParameter("email", String.format("test%s@email.com", idx))
-                    .addParameter("text", "some text").addToBatch();
+            inserter.insertUser(insQuery,idx);
         }
         insQuery.executeBatch();
         Date after = new Date();
@@ -1288,6 +1314,7 @@ public class Sql2oTest extends BaseMemDbTest {
         System.out.println(String.format("inserted %d rows into User table. Time used: %s ms", rowCount, span));
 
         insertIntoUsers += rowCount;
+
     }
 
     private void deleteUserTable(){
