@@ -1,5 +1,6 @@
 package org.sql2o.issues;
 
+import org.h2.jdbcx.JdbcDataSource;
 import org.joda.time.DateTime;
 import org.joda.time.DateTimeZone;
 import org.junit.Before;
@@ -10,6 +11,7 @@ import org.sql2o.Sql2o;
 import org.sql2o.converters.Converter;
 import org.sql2o.converters.joda.DateTimeConverter;
 import org.sql2o.data.Table;
+import org.sql2o.quirks.H2Quirks;
 import org.sql2o.quirks.NoQuirks;
 
 import javax.sql.DataSource;
@@ -26,12 +28,21 @@ public class H2Tests {
 
     DataSource ds;
 
+    String driverClassName;
+    String url;
+    String user;
+    String pass;
+
     @Before
     public void setUp() throws Exception {
+        driverClassName = "org.h2.Driver";
+        url = "jdbc:h2:mem:test;DB_CLOSE_DELAY=-1";
+        user = "sa";
+        pass = "";
         org.h2.jdbcx.JdbcDataSource datasource = new org.h2.jdbcx.JdbcDataSource();
-        datasource.setURL("jdbc:h2:mem:test;DB_CLOSE_DELAY=-1");
-        datasource.setUser("sa");
-        datasource.setPassword("");
+        datasource.setURL(url);
+        datasource.setUser(user);
+        datasource.setPassword(pass);
 
         ds = datasource;
     }
@@ -51,6 +62,20 @@ public class H2Tests {
 
             assertThat(val, is(equalTo(42)));
         }
+    }
+
+    @Test
+    public void testIssue172NPEWhenCreatingBasicDataSourceInline(){
+
+        DataSource ds = new JdbcDataSource() {{
+            setURL(url);
+            setUser(user);
+            setPassword(pass);
+        }};
+
+        Sql2o sql2o = new Sql2o(ds);
+
+        assertThat(sql2o.getQuirks(), is(instanceOf(H2Quirks.class)));
     }
 
     /**

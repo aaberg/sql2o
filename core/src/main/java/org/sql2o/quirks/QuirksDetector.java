@@ -12,6 +12,7 @@ package org.sql2o.quirks;
 
 import org.sql2o.GenericDatasource;
 
+import javax.sql.DataSource;
 import javax.xml.ws.Service;
 import java.util.ServiceLoader;
 
@@ -34,7 +35,9 @@ public class QuirksDetector{
 
     public static Quirks forObject(Object jdbcObject) {
 
-        String jdbcObjectClassName = jdbcObject.getClass().getCanonicalName();
+        String jdbcObjectClassName = jdbcObject.getClass().getName().contains("$") ?
+                jdbcObject.getClass().getSuperclass().getCanonicalName() :
+                jdbcObject.getClass().getCanonicalName();
 
         for (QuirksProvider quirksProvider : ServiceLoader.load(QuirksProvider.class)) {
             if (quirksProvider.isUsableForClass(jdbcObjectClassName)){
