@@ -371,6 +371,7 @@ public class Query implements AutoCloseable {
         public ResultSetIterableBase() {
             try {
                 start = System.currentTimeMillis();
+                logExecution();
                 rs = statement.executeQuery();
                 afterExecQuery = System.currentTimeMillis();
             }
@@ -564,6 +565,7 @@ public class Query implements AutoCloseable {
     public Connection executeUpdate(){
         long start = System.currentTimeMillis();
         try{
+            logExecution();
             this.connection.setResult(statement.executeUpdate());
             this.connection.setKeys(this.returnGeneratedKeys ? statement.getGeneratedKeys() : null);
             connection.setCanGetKeys(this.returnGeneratedKeys);
@@ -588,6 +590,7 @@ public class Query implements AutoCloseable {
     public Object executeScalar(){
         long start = System.currentTimeMillis();
         try {
+            logExecution();
             ResultSet rs = this.statement.executeQuery();
             if (rs.next()){
                 Object o = getQuirks().getRSVal(rs, 1);
@@ -623,6 +626,7 @@ public class Query implements AutoCloseable {
             //noinspection unchecked
             converter = throwIfNull(returnType, getQuirks().converterOf(returnType));
             //noinspection unchecked
+            logExecution();
             return executeScalar(converter);
         } catch (ConverterException e) {
             throw new Sql2oException("Error occured while converting value from database to type " + returnType, e);
@@ -679,6 +683,7 @@ public class Query implements AutoCloseable {
     public Connection executeBatch() throws Sql2oException {
         long start = System.currentTimeMillis();
         try {
+            logExecution();
             connection.setBatchResult(statement.executeBatch());
             try {
                 connection.setKeys(this.returnGeneratedKeys ? statement.getGeneratedKeys() : null);
@@ -750,5 +755,9 @@ public class Query implements AutoCloseable {
 
     private interface ParameterSetter{
         void setParameter(int paramIdx) throws SQLException;
+    }
+
+    private void logExecution() {
+        logger.debug("Executing query:{}{}", new Object[]{ System.lineSeparator(), this.parsedQuery } );
     }
 }
