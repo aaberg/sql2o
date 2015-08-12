@@ -11,14 +11,20 @@
 package org.sql2o.quirks;
 
 import org.sql2o.converters.Converter;
+import org.sql2o.converters.OracleUUIDConverter;
 
+import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.util.HashMap;
 import java.util.Map;
+import java.util.UUID;
 
 public class OracleQuirks extends NoQuirks {
     public OracleQuirks() {
-        super();
+        super(new HashMap<Class, Converter>() {{
+            put(UUID.class, new OracleUUIDConverter());
+        }});
     }
 
     public OracleQuirks(Map<Class, Converter> converters) {
@@ -40,5 +46,10 @@ public class OracleQuirks extends NoQuirks {
     @Override
     public boolean returnGeneratedKeysByDefault() {
         return false;
+    }
+
+    @Override
+    public void setParameter(PreparedStatement statement, int paramIdx, UUID value) throws SQLException {
+        statement.setBytes(paramIdx, (byte[])new OracleUUIDConverter().toDatabaseParam(value));
     }
 }

@@ -7,9 +7,11 @@ import org.joda.time.DateTime;
 import org.joda.time.LocalDate;
 import org.joda.time.LocalTime;
 import org.junit.Test;
+import org.sql2o.quirks.OracleQuirks;
 
 import java.sql.Timestamp;
 import java.util.Date;
+import java.util.UUID;
 
 /**
  * Created by lars on 01.05.14.
@@ -64,4 +66,18 @@ public class OracleConverterTest extends TestCase {
 
         assertEquals(lt, convertedTime);
     }
+
+    @Test
+    public void testUUIDConverter() throws ConverterException {
+        UUID uuid = UUID.randomUUID();
+        OracleQuirks orclQuirks = new OracleQuirks();
+        Converter<UUID> uuidConverter = new OracleUUIDConverter();
+
+        byte[] rawUuid = (byte[])uuidConverter.toDatabaseParam(uuid);
+
+        UUID reconvertedUuid = uuidConverter.convert(rawUuid);
+
+        assertEquals(uuid, reconvertedUuid);
+    }
+
 }

@@ -14,17 +14,21 @@ import org.joda.time.DateTime;
 import org.joda.time.LocalDate;
 import org.junit.Test;
 import org.sql2o.Connection;
+import org.sql2o.Query;
 import org.sql2o.Sql2o;
 import org.sql2o.Sql2oException;
+import org.sql2o.quirks.OracleQuirks;
 
 import java.sql.Driver;
 import java.sql.DriverManager;
 import java.util.Date;
+import java.util.UUID;
 
 import static org.hamcrest.CoreMatchers.equalTo;
 import static org.hamcrest.CoreMatchers.is;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertThat;
+import static org.junit.Assert.fail;
 
 /**
  * Created with IntelliJ IDEA.
@@ -45,7 +49,7 @@ public class OracleTest {
             throw new RuntimeException(t);
         }
 
-        this.sql2o = new Sql2o("jdbc:oracle:thin:@//localhost:1521/orcl", "test", "test");
+        this.sql2o = new Sql2o("jdbc:oracle:thin:@//localhost:1521/orcl", "test", "test", new OracleQuirks());
     }
 
     /**
@@ -80,6 +84,45 @@ public class OracleTest {
 
         String val = sql2o.createQuery(sql).executeScalar(String.class);
         assertEquals("test", val);
+    }
+
+    @Test
+    public void testUUiID() {
+
+        UUID uuid1 = UUID.randomUUID();
+        UUID uuid2 = UUID.randomUUID();
+
+        final String ddl = "create table testUUID(id integer primary key, uuidval raw(16))";
+        final String insertSql = "insert into testUUID(id, uuidval) values (:id, :val)";
+        final String selectSql = "select uuidval from testUUID where id = :id";
+
+        try {
+
+
+            try (Connection connection = sql2o.open()) {
+                connection.createQuery(ddl).executeUpdate();
+
+                Query insertQuery = connection.createQuery(insertSql);
+                insertQuery.addParameter("id", 1).addParameter("val", uuid1).executeUpdate();
+                insertQuery.addParameter("id", 2).addParameter("val", uuid2).executeUpdate();
+
+                Query selectQuery = connection.createQuery(selectSql);
+                UUID uuid1FromDb = selectQuery.addParameter("id", 1).executeScalar(UUID.class);
+                UUID uuid2FromDb = selectQuery.addParameter("id", 2).executeScalar(UUID.class);
+
+                assertEquals(uuid1, uuid1FromDb);
+                assertEquals(uuid2, uuid2FromDb);
+            }
+
+        } catch(Exception e){
+            e.printStackTrace();
+            fail("test failed. Exception");
+        } finally {
+            try (Connection con = sql2o.open()) {
+                con.createQuery("drop table testUUID").executeUpdate();
+            }
+        }
+
     }
 
 
