@@ -1,6 +1,5 @@
 package org.sql2o.converters;
 
-import junit.framework.TestCase;
 import oracle.sql.DATE;
 import oracle.sql.TIMESTAMP;
 import org.joda.time.DateTime;
@@ -9,14 +8,17 @@ import org.joda.time.LocalTime;
 import org.junit.Test;
 import org.sql2o.quirks.OracleQuirks;
 
+import javax.xml.bind.annotation.adapters.HexBinaryAdapter;
 import java.sql.Timestamp;
 import java.util.Date;
 import java.util.UUID;
 
+import static org.junit.Assert.assertEquals;
+
 /**
  * Created by lars on 01.05.14.
  */
-public class OracleConverterTest extends TestCase {
+public class OracleConverterTest {
 
     @Test
     public void testDateConversion( ) throws ConverterException {
@@ -78,6 +80,19 @@ public class OracleConverterTest extends TestCase {
         UUID reconvertedUuid = uuidConverter.convert(rawUuid);
 
         assertEquals(uuid, reconvertedUuid);
+
+        // convert bytes to hex and put hyphens into the string to recreate the UUID string representation, just to be
+        // sure everything is done correct.
+        String hex = new HexBinaryAdapter().marshal(rawUuid);
+        String hexUuid = String.format("%s-%s-%s-%s-%s",
+                hex.substring(0,8),
+                hex.substring(8,12),
+                hex.substring(12, 16),
+                hex.substring(16, 20),
+                hex.substring(20)).toLowerCase();
+
+
+        assertEquals(uuid.toString(), hexUuid);
     }
 
 }
