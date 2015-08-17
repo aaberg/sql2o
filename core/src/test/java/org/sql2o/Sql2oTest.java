@@ -214,6 +214,35 @@ public class Sql2oTest extends BaseMemDbTest {
         assertTrue(ciEntities2.size() == 20);
     }
 
+    @Test(expected = java.lang.IllegalArgumentException.class)
+    public void testSetMaxBatchRecords(){
+        try (Connection conn = this.sql2o.open()){
+            Query q = conn.createQuery("select 'test'");
+            q.setMaxBatchRecords(20);
+            assertTrue(q.getMaxBatchRecords() == 20);
+
+            q.setMaxBatchRecords(0);
+            assertTrue(q.getMaxBatchRecords() == 0);
+
+            q.setMaxBatchRecords(-1);
+        }
+    }
+
+    @Test
+    public void testBatchWithMaxBatchRecords(){
+        try (Connection connection = sql2o.open()) {
+            createAndFillUserTable(connection, true, 50);
+            genericTestOnUserData(connection);
+        }
+
+        //also test with an odd number
+
+        try (Connection connection = sql2o.open()) {
+            createAndFillUserTable(connection, true, 29);
+            genericTestOnUserData(connection);
+        }
+    }
+
     @Test
     public void testExecuteAndFetchResultSet() throws SQLException {
         List<Integer> list = sql2o.createQuery("select 1 val from (values(0)) union select 2 from (values(0)) union select 3 from (values(0))").executeScalarList(Integer.class);
@@ -1254,16 +1283,7 @@ public class Sql2oTest extends BaseMemDbTest {
     public void testBindInIteration() {
         try (Connection connection = sql2o.open()) {
             createAndFillUserTable(connection, true);
-
-            List<User> users = connection.createQuery("select * from User order by id").executeAndFetch(User.class);
-
-            assertThat(users.size(), is(equalTo(NUMBER_OF_USERS_IN_THE_TEST)));
-
-            for (int idx = 0; idx < NUMBER_OF_USERS_IN_THE_TEST; idx++) {
-                User user = users.get(idx);
-                assertThat("a name " + idx, is(equalTo(user.name)));
-                assertThat(String.format("test%s@email.com", idx), is(equalTo(user.getEmail())));
-            }
+            genericTestOnUserData(connection);
         }
 
     }
@@ -1284,6 +1304,10 @@ public class Sql2oTest extends BaseMemDbTest {
     }
 
     private void createAndFillUserTable(Connection connection, boolean useBind){
+        createAndFillUserTable(connection, useBind, 0);
+    }
+
+    private void createAndFillUserTable(Connection connection, boolean useBind, int maxBatchRecords){
 
         try{
             connection.createQuery("drop table User").executeUpdate();
@@ -1300,14 +1324,21 @@ public class Sql2oTest extends BaseMemDbTest {
                         "text varchar(100))").executeUpdate();
 
         Query insQuery = connection.createQuery("insert into User(name, email, text) values (:name, :email, :text)");
-
+        insQuery.setMaxBatchRecords(maxBatchRecords);
         UserInserter inserter = UserInserterFactory.buildUserInserter(useBind);
 
         Date before = new Date();
         for (int idx = 0; idx < rowCount; idx++){
             inserter.insertUser(insQuery,idx);
         }
-        insQuery.executeBatch();
+
+        /*
+         This check is required because the HSQL jdbc implementation
+         throws an exception if executeBatch is called without anything added to the batch.
+        */
+        if (insQuery.isExplicitExecuteBatchRequired()) {
+            insQuery.executeBatch();
+        }
         Date after = new Date();
         Long span = after.getTime() - before.getTime();
 
@@ -1315,6 +1346,18 @@ public class Sql2oTest extends BaseMemDbTest {
 
         insertIntoUsers += rowCount;
 
+    }
+
+    private void genericTestOnUserData(Connection connection){
+        List<User> users = connection.createQuery("select * from User order by id").executeAndFetch(User.class);
+
+        assertThat(users.size(), is(equalTo(NUMBER_OF_USERS_IN_THE_TEST)));
+
+        for (int idx = 0; idx < NUMBER_OF_USERS_IN_THE_TEST; idx++) {
+            User user = users.get(idx);
+            assertThat("a name " + idx, is(equalTo(user.name)));
+            assertThat(String.format("test%s@email.com", idx), is(equalTo(user.getEmail())));
+        }
     }
 
     private void deleteUserTable(){

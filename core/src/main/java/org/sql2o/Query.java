@@ -38,6 +38,8 @@ public class Query implements AutoCloseable {
     private final Map<String, List<Integer>> paramNameToIdxMap;
     private final Set<String> addedParameters;
     private final String parsedQuery;
+    private int maxBatchRecords = 0;
+    private int currentBatchRecords = 0;
 
     private ResultSetHandlerFactoryBuilder resultSetHandlerFactoryBuilder;
 
@@ -670,9 +672,65 @@ public class Query implements AutoCloseable {
 
     /************** batch stuff *******************/
 
+    /**
+     * Sets the number of batched commands this Query allows to be added
+     * before implicitly calling <code>executeBatch()</code> from <code>addToBatch()</code>. <br/>
+     *
+     * When set to 0, executeBatch is not called implicitly. This is the default behaviour. <br/>
+     *
+     * When using this, please take care about calling <code>exexcuteBatch()</code> after finished
+     * adding all commands to the batch because commands may remain unexecuted after the
+     * last <code>addToBatch()</code> call.
+     *
+     * @throws IllegalArgumentException Thrown if the value is negative.
+     */
+    public Query setMaxBatchRecords(int maxBatchRecords){
+        if (maxBatchRecords < 0){
+            throw new IllegalArgumentException("maxBatchRecords should be a nonnegative value");
+        }
+        this.maxBatchRecords = maxBatchRecords;
+        return this;
+    }
+
+    public int getMaxBatchRecords(){
+        return this.maxBatchRecords;
+    }
+
+    /**
+     * @return The current number of unexecuted batched statements
+     */
+    public int getCurrentBatchRecords() {
+        return this.currentBatchRecords;
+    }
+
+    /**
+     * @return True if maxBatchRecords is set and there are unexecuted batched commands or
+     * maxBatchRecords is not set
+     */
+    public boolean isExplicitExecuteBatchRequired(){
+        return (this.maxBatchRecords > 0 && this.currentBatchRecords > 0) || (this.maxBatchRecords == 0);
+    }
+
+    /**
+     * Adds a set of parameters to this <code>Query</code>
+     * object's batch of commands. <br/>
+     *
+     * If maxBatchRecords is more than 0, executeBatch is called upon adding that manny
+     * commands to the batch. <br/>
+     *
+     * The current number of batched commands is accessible via the <code>getCurrentBatchRecords()</code>
+     * method.
+     *
+     * @return
+     */
     public Query addToBatch(){
         try {
             statement.addBatch();
+            if (this.maxBatchRecords > 0){
+                if(++this.currentBatchRecords % this.maxBatchRecords == 0) {
+                    this.executeBatch();
+                }
+            }
         } catch (SQLException e) {
             throw new Sql2oException("Error while adding statement to batch", e);
         }
@@ -685,6 +743,7 @@ public class Query implements AutoCloseable {
         try {
             logExecution();
             connection.setBatchResult(statement.executeBatch());
+            this.currentBatchRecords = 0;
             try {
                 connection.setKeys(this.returnGeneratedKeys ? statement.getGeneratedKeys() : null);
                 connection.setCanGetKeys(this.returnGeneratedKeys);
