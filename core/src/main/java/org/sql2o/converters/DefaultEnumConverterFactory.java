@@ -25,7 +25,7 @@ public class DefaultEnumConverterFactory implements EnumConverterFactory {
             }
 
             public Object toDatabaseParam(Enum val) {
-                return val.toString();
+                return val.name();
             }
         };
     }
