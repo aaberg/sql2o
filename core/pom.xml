@@ -63,6 +63,14 @@
         	<version>1.6.4</version>
             <optional>true</optional>
         </dependency>
+        
+        <!-- #204 : enables to read the javax.persistence.Column annotation -->
+		<dependency>
+			<scope>provided</scope>
+			<groupId>javax.persistence</groupId>
+			<artifactId>persistence-api</artifactId>
+			<version>1.0.2</version>
+		</dependency>
 
         <!-- databases for verification -->
         <dependency>
