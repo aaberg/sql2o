@@ -46,6 +46,12 @@ public class ReadColumnAnnotationTest extends TestCase {
         assertNotNull(metadata.getPropertySetterIfExists("field4"));
     }
 
+    @Test
+    public void testUppercaseAnnotationFieldPojo() {
+        PojoMetadata metadata = newPojoMetadata(UpperCaseAnnotationField.class);
+        assertNotNull(metadata.getPropertySetterIfExists("field_1"));
+    }
+
     private PojoMetadata newPojoMetadata(Class<?> clazz) {
         return new PojoMetadata(clazz, false, false, ImmutableMap.<String, String> of(), true);
     }
@@ -88,6 +94,11 @@ public class ReadColumnAnnotationTest extends TestCase {
         void setField4(String field4) {
             this.field4 = field4;
         }
+    }
+    
+    private static class UpperCaseAnnotationField {
+        @Column(name = "FIELD_1")
+        private String field1;
     }
 
 }

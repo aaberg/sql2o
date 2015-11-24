@@ -102,8 +102,8 @@ public class PojoMetadata {
                 String propertyName = readAnnotatedColumnName(f, isJpaColumnInClasspath);
                 if(propertyName == null) {
                     propertyName = f.getName();
-                    propertyName = caseSensitive ? propertyName : propertyName.toLowerCase();
                 }
+                propertyName = caseSensitive ? propertyName : propertyName.toLowerCase();
                 
                 propertyGetters.put(propertyName, factoryFacade.newGetter(f));
                 propertySetters.put(propertyName, factoryFacade.newSetter(f));
@@ -129,11 +129,11 @@ public class PojoMetadata {
                     String propertyName = readAnnotatedColumnName(m, isJpaColumnInClasspath);
                     if(propertyName == null) {
                         propertyName = m.getName().substring(3);
-                        if (caseSensitive) {
-                            propertyName = propertyName.substring(0, 1).toLowerCase() + propertyName.substring(1);
-                        } else {
-                            propertyName = propertyName.toLowerCase();
-                        }
+                    }
+                    if (caseSensitive) {
+                        propertyName = propertyName.substring(0, 1).toLowerCase() + propertyName.substring(1);
+                    } else {
+                        propertyName = propertyName.toLowerCase();
                     }
 
                     propertySetters.put(propertyName, factoryFacade.newSetter(m));
