@@ -289,6 +289,26 @@ public class Sql2oTest extends BaseMemDbTest {
     }
 
     @Test
+    public void testColumnAnnotation(){
+        try(Connection connection = sql2o.open()) {
+            connection.createQuery("create table test_column_annotation(id int primary key, text_col varchar(20))").executeUpdate();
+
+            connection.createQuery("insert into test_column_annotation(id, text_col) values(:id, :text)")
+                .addParameter("id", 1).addParameter("text", "test1").addToBatch()
+                .addParameter("id", 2).addParameter("text", "test2").addToBatch()
+                .executeBatch();
+
+            List<ColumnEntity> result = connection.createQuery("select * from test_column_annotation").executeAndFetch(ColumnEntity.class);
+
+            assertTrue(result.size() == 2);
+            assertEquals(1, result.get(0).getId());
+            assertEquals("test1", result.get(0).getText());
+            assertEquals(2, result.get(1).getId());
+            assertEquals("test2", result.get(1).getText());
+        }
+    }
+
+    @Test
     public void testUtilDate(){
         sql2o.createQuery("create table testutildate(id int primary key, d1 datetime, d2 timestamp, d3 date)").executeUpdate();
 

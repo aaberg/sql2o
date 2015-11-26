@@ -1,14 +1,17 @@
 package org.sql2o.reflection;
 
-import org.sql2o.Sql2oException;
-import org.sql2o.tools.AbstractCache;
-import org.sql2o.tools.UnderscoreToCamelCase;
-
+import java.lang.reflect.AnnotatedElement;
 import java.lang.reflect.Field;
 import java.lang.reflect.Method;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
+
+import javax.persistence.Column;
+
+import org.sql2o.Sql2oException;
+import org.sql2o.tools.AbstractCache;
+import org.sql2o.tools.UnderscoreToCamelCase;
 
 /**
  * Stores metadata for a POJO.
@@ -84,12 +87,24 @@ public class PojoMetadata {
         HashMap<String, Setter> propertySetters = new HashMap<String, Setter>();
         HashMap<String, Field> fields = new HashMap<String, Field>();
 
+        boolean isJpaColumnInClasspath = false;
+        try {
+            Class.forName("javax.persistence.Column");
+            isJpaColumnInClasspath = true;
+        } catch (ClassNotFoundException e) {
+            // javax.persistence.Column is not in the classpath
+        }
+        
         Class theClass = clazz;
         ObjectConstructor objectConstructor = factoryFacade.newConstructor(theClass);
         do {
             for (Field f : theClass.getDeclaredFields()) {
-                String propertyName = f.getName();
+                String propertyName = readAnnotatedColumnName(f, isJpaColumnInClasspath);
+                if(propertyName == null) {
+                    propertyName = f.getName();
+                }
                 propertyName = caseSensitive ? propertyName : propertyName.toLowerCase();
+                
                 propertyGetters.put(propertyName, factoryFacade.newGetter(f));
                 propertySetters.put(propertyName, factoryFacade.newSetter(f));
                 fields.put(propertyName, f);
@@ -111,7 +126,10 @@ public class PojoMetadata {
                 }
 
                 if (m.getName().startsWith("set")) {
-                    String propertyName = m.getName().substring(3);
+                    String propertyName = readAnnotatedColumnName(m, isJpaColumnInClasspath);
+                    if(propertyName == null) {
+                        propertyName = m.getName().substring(3);
+                    }
                     if (caseSensitive) {
                         propertyName = propertyName.substring(0, 1).toLowerCase() + propertyName.substring(1);
                     } else {
@@ -202,6 +220,20 @@ public class PojoMetadata {
         Getter getter = getPropertyGetter(propertyName);
 
         return getter.getProperty(object);
+    }
+    
+    /**
+     * Try to read the {@link javax.persistence.Column} annotation and return the name of the column.
+     * Returns null if no {@link javax.persistence.Column} annotation is present or if the name of the column is empty
+     */
+    private String readAnnotatedColumnName(AnnotatedElement classMember, boolean isJpaColumnInClasspath) {
+        if(isJpaColumnInClasspath) {
+            Column columnInformation = classMember.getAnnotation(Column.class);
+            if(columnInformation != null && columnInformation.name() != null && !columnInformation.name().isEmpty()) {
+                return columnInformation.name();
+            }
+        }
+        return null;
     }
 
     private static class Cache extends AbstractCache<Class, PropertyAndFieldInfo, PojoMetadata> {
