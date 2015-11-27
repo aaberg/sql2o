@@ -37,7 +37,7 @@ public class Query implements AutoCloseable {
     private boolean returnGeneratedKeys;
     private final String[] columnNames;
     private final Map<String, List<Integer>> paramNameToIdxMap;
-    private final List<Parameter> parameters;
+    private final List<RequestParameter> parameters;
     private final String parsedQuery;
     private int maxBatchRecords = 0;
     private int currentBatchRecords = 0;
@@ -344,23 +344,27 @@ public class Query implements AutoCloseable {
     // -------------------- Execute -------------------
     // ------------------------------------------------
 
-    private PreparedStatement buildStatement() {
-        try {
-            if (columnNames != null && columnNames.length > 0){
-                preparedStatement = connection.getJdbcConnection().prepareStatement(parsedQuery, columnNames);
-            } else if (returnGeneratedKeys) {
-                preparedStatement = connection.getJdbcConnection().prepareStatement(parsedQuery, Statement.RETURN_GENERATED_KEYS);
-            } else {
-                preparedStatement = connection.getJdbcConnection().prepareStatement(parsedQuery);
+    private PreparedStatement buildPreparedStatement() {
+        if(preparedStatement == null) {
+            try {
+                if (columnNames != null && columnNames.length > 0){
+                    preparedStatement = connection.getJdbcConnection().prepareStatement(parsedQuery, columnNames);
+                } else if (returnGeneratedKeys) {
+                    preparedStatement = connection.getJdbcConnection().prepareStatement(parsedQuery, Statement.RETURN_GENERATED_KEYS);
+                } else {
+                    preparedStatement = connection.getJdbcConnection().prepareStatement(parsedQuery);
+                }
+            } catch(SQLException ex) {
+                throw new Sql2oException(String.format("Error preparing statement - %s", ex.getMessage()), ex);
             }
-        } catch(SQLException ex) {
-            throw new Sql2oException(String.format("Error preparing statement - %s", ex.getMessage()), ex);
+            connection.registerStatement(preparedStatement);
         }
-        connection.registerStatement(preparedStatement);
 
-        for(Parameter parameter : parameters) {
+        for(RequestParameter parameter : parameters) {
             parameter.execute(preparedStatement);
         }
+        // the parameters need to be cleared, so in case of batch, only new parameters will be added
+        parameters.clear();
 
         return preparedStatement;
     }
@@ -379,7 +383,7 @@ public class Query implements AutoCloseable {
             try {
                 start = System.currentTimeMillis();
                 logExecution();
-                rs = buildStatement().executeQuery();
+                rs = buildPreparedStatement().executeQuery();
                 afterExecQuery = System.currentTimeMillis();
             }
             catch (SQLException ex) {
@@ -573,7 +577,7 @@ public class Query implements AutoCloseable {
         long start = System.currentTimeMillis();
         try{
             logExecution();
-            PreparedStatement statement = buildStatement();
+            PreparedStatement statement = buildPreparedStatement();
             this.connection.setResult(statement.executeUpdate());
             this.connection.setKeys(this.returnGeneratedKeys ? statement.getGeneratedKeys() : null);
             connection.setCanGetKeys(this.returnGeneratedKeys);
@@ -599,7 +603,7 @@ public class Query implements AutoCloseable {
         long start = System.currentTimeMillis();
         try {
             logExecution();
-            ResultSet rs = buildStatement().executeQuery();
+            ResultSet rs = buildPreparedStatement().executeQuery();
             if (rs.next()){
                 Object o = getQuirks().getRSVal(rs, 1);
                 long end = System.currentTimeMillis();
@@ -728,21 +732,16 @@ public class Query implements AutoCloseable {
      * method.
      */
     public Query addToBatch(){
-        parameters.add(new Parameter() {
-            @Override
-            public void execute(PreparedStatement preparedStatement) {
-                try {
-                    preparedStatement.addBatch();
-                    if (Query.this.maxBatchRecords > 0){
-                        if(++Query.this.currentBatchRecords % Query.this.maxBatchRecords == 0) {
-                            Query.this.executeBatch();
-                        }
-                    }
-                } catch (SQLException e) {
-                    throw new Sql2oException("Error while adding statement to batch", e);
+        try {
+            buildPreparedStatement().addBatch();
+            if (Query.this.maxBatchRecords > 0){
+                if(++Query.this.currentBatchRecords % Query.this.maxBatchRecords == 0) {
+                    Query.this.executeBatch();
                 }
             }
-        });
+        } catch (SQLException e) {
+            throw new Sql2oException("Error while adding statement to batch", e);
+        }
 
         return this;
     }
@@ -751,7 +750,7 @@ public class Query implements AutoCloseable {
         long start = System.currentTimeMillis();
         try {
             logExecution();
-            PreparedStatement statement = buildStatement();
+            PreparedStatement statement = buildPreparedStatement();
             connection.setBatchResult(statement.executeBatch());
             this.currentBatchRecords = 0;
             try {
@@ -830,11 +829,7 @@ public class Query implements AutoCloseable {
         void setParameter(int paramIdx, PreparedStatement statement) throws SQLException;
     }
 
-    private interface Parameter {
-        void execute(PreparedStatement preparedStatement);
-    }
-
-    private class RequestParameter implements Parameter {
+    private class RequestParameter {
         String name;
         ParameterSetter parameterSetter;
 
@@ -843,9 +838,8 @@ public class Query implements AutoCloseable {
             this.parameterSetter = parameterSetter;
         }
 
-        @Override
         public void execute(PreparedStatement preparedStatement) {
-            for (int paramIdx : getParamNameToIdxMap().get(name)) {
+            for (int paramIdx : paramNameToIdxMap.get(name)) {
                 try {
                     parameterSetter.setParameter(paramIdx, preparedStatement);
                 } catch (SQLException e) {
