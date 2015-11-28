@@ -37,8 +37,8 @@ public class Query implements AutoCloseable {
     private boolean returnGeneratedKeys;
     private final String[] columnNames;
     private final Map<String, List<Integer>> paramNameToIdxMap;
-    private final List<RequestParameter> parameters;
-    private final String parsedQuery;
+    private final Map<String, ParameterSetter> parameters;
+    private String parsedQuery;
     private int maxBatchRecords = 0;
     private int currentBatchRecords = 0;
 
@@ -65,7 +65,7 @@ public class Query implements AutoCloseable {
         this.caseSensitive = connection.getSql2o().isDefaultCaseSensitive();
 
         paramNameToIdxMap = new HashMap<>();
-        parameters = new ArrayList<>();
+        parameters = new HashMap<>();
 
         parsedQuery = connection.getSql2o().getQuirks().getSqlParameterParsingStrategy().parseSql(queryText, paramNameToIdxMap);
     }
@@ -137,7 +137,7 @@ public class Query implements AutoCloseable {
         if (!this.getParamNameToIdxMap().containsKey(name)) {
             throw new Sql2oException("Failed to add parameter with name '" + name + "'. No parameter with that name is declared in the sql.");
         }
-        parameters.add(new RequestParameter(name, parameterSetter));
+        parameters.put(name, parameterSetter);
     }
 
     @SuppressWarnings("unchecked")
@@ -307,6 +307,72 @@ public class Query implements AutoCloseable {
         return this;
     }
 
+    /**
+     * Set an array parameter.<br>
+     * For example:
+     * <pre>
+     *     createQuery("SELECT * FROM user WHERE id IN(:ids)")
+     *      .addParameter("ids", 4, 5, 6)
+     *      .executeAndFetch(...)
+     * </pre>
+     * will generate the query : <code>SELECT * FROM user WHERE id IN(4,5,6)</code><br>
+     * <br>
+     * It is not possible to use array parameters with a batch <code>PreparedStatement</code>:
+     * since the text query passed to the <code>PreparedStatement</code> depends on the number of parameters in the array,
+     * array parameters are incompatible with batch mode.<br>
+     * <br>
+     * If the values array is empty, <code>null</code> will be set to the array parameter:
+     * <code>SELECT * FROM user WHERE id IN(NULL)</code>
+     *
+     * @throws NullPointerException if values parameter is null
+     */
+    public Query addParameter(String name, final Object ... values) {
+        if(values == null) {
+            throw new NullPointerException("Array parameter cannot be null");
+        }
+
+        addParameterInternal(name, new ParameterSetter(values.length) {
+            @Override
+            public void setParameter(int paramIdx, PreparedStatement statement) throws SQLException {
+                if(values.length == 0) {
+                    getConnection().getSql2o().getQuirks().setParameter(statement, paramIdx, (Object) null);
+                } else {
+                    for (Object value : values) {
+                        getConnection().getSql2o().getQuirks().setParameter(statement, paramIdx, value);
+                    }
+                }
+            }
+        });
+        return this;
+    }
+
+    /**
+     * Set an array parameter.<br>
+     * For example:
+     * <pre>
+     *     createQuery("SELECT * FROM user WHERE id IN(:ids)")
+     *      .addParameter("ids", 4, 5, 6)
+     *      .executeAndFetch(...)
+     * </pre>
+     * will generate the query : <code>SELECT * FROM user WHERE id IN(4,5,6)</code><br>
+     * <br>
+     * It is not possible to use array parameters with a batch <code>PreparedStatement</code>:
+     * since the text query passed to the <code>PreparedStatement</code> depends on the number of parameters in the array,
+     * array parameters are incompatible with batch mode.<br>
+     * <br>
+     * If the values array is empty, <code>null</code> will be set to the array parameter:
+     * <code>SELECT * FROM user WHERE id IN(NULL)</code>
+     *
+     * @throws NullPointerException if values parameter is null
+     */
+    public Query addParameter(String name, final List<?> values) {
+        if(values == null) {
+            throw new NullPointerException("Array parameter cannot be null");
+        }
+
+        return addParameter(name, values.toArray());
+    }
+
     public Query bind(final Object pojo) {
         Class clazz = pojo.getClass();
         Map<String, PojoIntrospector.ReadableProperty> propertyMap = PojoIntrospector.readableProperties(clazz);
@@ -345,6 +411,25 @@ public class Query implements AutoCloseable {
     // ------------------------------------------------
 
     private PreparedStatement buildPreparedStatement() {
+        return buildPreparedStatement(true);
+    }
+
+    private PreparedStatement buildPreparedStatement(boolean allowArrayParameters) {
+        // array parameter handling
+        List<ArrayParameters.ArrayParameter> arrayParameters = new ArrayList<>();
+        for(Map.Entry<String, ParameterSetter> parameter : parameters.entrySet()) {
+            if (parameter.getValue().parameterCount != 1) {
+                if (!allowArrayParameters) {
+                    throw new Sql2oException("Array parameters are not allowed in batch mode");
+                }
+                for(int i : paramNameToIdxMap.get(parameter.getKey())) {
+                    arrayParameters.add(new ArrayParameters.ArrayParameter(i, parameter.getValue().parameterCount));
+                }
+            }
+        }
+        parsedQuery = ArrayParameters.updateQueryWithArrayParameters(parsedQuery, arrayParameters);
+
+        // prepare statement creation
         if(preparedStatement == null) {
             try {
                 if (columnNames != null && columnNames.length > 0){
@@ -360,8 +445,15 @@ public class Query implements AutoCloseable {
             connection.registerStatement(preparedStatement);
         }
 
-        for(RequestParameter parameter : parameters) {
-            parameter.execute(preparedStatement);
+        // parameters assignation to query
+        for(Map.Entry<String, ParameterSetter> parameter : parameters.entrySet()) {
+            for (int paramIdx : paramNameToIdxMap.get(parameter.getKey())) {
+                try {
+                    parameter.getValue().setParameter(paramIdx, preparedStatement);
+                } catch (SQLException e) {
+                    throw new RuntimeException(String.format("Error adding parameter '%s' - %s", parameter.getKey(), e.getMessage()), e);
+                }
+            }
         }
         // the parameters need to be cleared, so in case of batch, only new parameters will be added
         parameters.clear();
@@ -733,10 +825,10 @@ public class Query implements AutoCloseable {
      */
     public Query addToBatch(){
         try {
-            buildPreparedStatement().addBatch();
-            if (Query.this.maxBatchRecords > 0){
-                if(++Query.this.currentBatchRecords % Query.this.maxBatchRecords == 0) {
-                    Query.this.executeBatch();
+            buildPreparedStatement(false).addBatch();
+            if (this.maxBatchRecords > 0){
+                if(++this.currentBatchRecords % this.maxBatchRecords == 0) {
+                    this.executeBatch();
                 }
             }
         } catch (SQLException e) {
@@ -825,28 +917,19 @@ public class Query implements AutoCloseable {
         logger.debug("Executing query:{}{}", new Object[]{ System.lineSeparator(), this.parsedQuery } );
     }
 
-    private interface ParameterSetter{
-        void setParameter(int paramIdx, PreparedStatement statement) throws SQLException;
-    }
+    private static abstract class ParameterSetter {
+        // the number of parameter to set ; always equals to 1 except when working on an array parameter
+        int parameterCount;
 
-    private class RequestParameter {
-        String name;
-        ParameterSetter parameterSetter;
-
-        RequestParameter(String name, ParameterSetter parameterSetter) {
-            this.name = name;
-            this.parameterSetter = parameterSetter;
+        public ParameterSetter() {
+            this(1);
         }
 
-        public void execute(PreparedStatement preparedStatement) {
-            for (int paramIdx : paramNameToIdxMap.get(name)) {
-                try {
-                    parameterSetter.setParameter(paramIdx, preparedStatement);
-                } catch (SQLException e) {
-                    throw new RuntimeException(String.format("Error adding parameter '%s' - %s", name, e.getMessage()), e);
-                }
-            }
+        ParameterSetter(int parameterCount) {
+            this.parameterCount = parameterCount;
         }
+
+        abstract void setParameter(int paramIdx, PreparedStatement statement) throws SQLException;
     }
 
 }
