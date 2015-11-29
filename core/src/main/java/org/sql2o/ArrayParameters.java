@@ -1,13 +1,11 @@
 package org.sql2o;
 
-import java.util.Collections;
-import java.util.Comparator;
-import java.util.Iterator;
-import java.util.List;
+
+import java.util.*;
 
 class ArrayParameters {
 
-	static class ArrayParameter {
+	static class ArrayParameter implements Comparable<ArrayParameter> {
 		// the index of the parameter array
 		int parameterIndex;
 		// the number of parameters to put in the query placeholder
@@ -17,27 +15,107 @@ class ArrayParameters {
 			this.parameterIndex = parameterIndex;
 			this.parameterCount = parameterCount;
 		}
+
+		@Override
+		public int compareTo(ArrayParameter o) {
+			return Integer.compare(parameterIndex, o.parameterIndex);
+		}
 	}
 
 	/**
-	 * Change the query to replace ? at each arrayParameters.parameterIndex
-	 * with ?,?,?.. multiple arrayParameters.parameterCount
+	 * Update both the query and the parameter indexes to include the array parameters.
 	 */
-	static String updateQueryWithArrayParameters(String parsedQuery, List<ArrayParameter> arrayParameters) {
-		if(arrayParameters.isEmpty()) {
+	static String updateQueryAndParametersIndexes(String parsedQuery,
+												  Map<String, List<Integer>> parameterNamesToIndexes,
+												  Map<String, Query.ParameterSetter> parameters,
+												  boolean allowArrayParameters) {
+		List<ArrayParameter> arrayParametersSortedAsc = arrayParametersSortedAsc(parameterNamesToIndexes, parameters, allowArrayParameters);
+		if(arrayParametersSortedAsc.isEmpty()) {
+			return parsedQuery;
+		}
+
+		updateParameterNamesToIndexes(parameterNamesToIndexes, arrayParametersSortedAsc);
+
+		return updateQueryWithArrayParameters(parsedQuery, arrayParametersSortedAsc);
+	}
+
+	/**
+	 * Update the indexes of each query parameter
+	 */
+	static Map<String, List<Integer>> updateParameterNamesToIndexes(Map<String, List<Integer>> parametersNameToIndex,
+																	List<ArrayParameter> arrayParametersSortedAsc) {
+		for(Map.Entry<String, List<Integer>> parameterNameToIndexes : parametersNameToIndex.entrySet()) {
+			boolean indexNeedsToBeUpdated = false;
+			List<Integer> newParameterIndex = new ArrayList<>(parameterNameToIndexes.getValue().size());
+			for(Integer parameterIndex : parameterNameToIndexes.getValue()) {
+				int newIndex = computeNewIndex(parameterIndex, arrayParametersSortedAsc);
+				newParameterIndex.add(newIndex);
+				if(newIndex != parameterIndex) {
+					indexNeedsToBeUpdated = true;
+				}
+			}
+			if(indexNeedsToBeUpdated) {
+				parameterNameToIndexes.setValue(newParameterIndex);
+			}
+		}
+
+		return parametersNameToIndex;
+	}
+
+
+	/**
+	 * Compute the new index of a parameter given the index positions of the array parameters.
+	 */
+	static int computeNewIndex(int index, List<ArrayParameter> arrayParametersSortedAsc) {
+		int newIndex = index;
+		for(ArrayParameter arrayParameter : arrayParametersSortedAsc) {
+			if(index > arrayParameter.parameterIndex) {
+				newIndex = newIndex + (
+						arrayParameter.parameterCount > 1 ?
+								arrayParameter.parameterCount - 1
+								: 0
+				);
+			} else {
+				return newIndex;
+			}
+		}
+		return newIndex;
+	}
+
+	/**
+	 * List all the array parameters
+	 */
+	private static List<ArrayParameter> arrayParametersSortedAsc(Map<String, List<Integer>> parameterNamesToIndexes,
+																 Map<String, Query.ParameterSetter> parameters,
+																 boolean allowArrayParameters) {
+		List<ArrayParameters.ArrayParameter> arrayParameters = new ArrayList<>();
+		for(Map.Entry<String, Query.ParameterSetter> parameter : parameters.entrySet()) {
+			if (parameter.getValue().parameterCount != 1) {
+				if (!allowArrayParameters) {
+					throw new Sql2oException("Array parameters are not allowed in batch mode");
+				}
+				for(int i : parameterNamesToIndexes.get(parameter.getKey())) {
+					arrayParameters.add(new ArrayParameters.ArrayParameter(i, parameter.getValue().parameterCount));
+				}
+			}
+		}
+		Collections.sort(arrayParameters);
+
+		return arrayParameters;
+	}
+
+	/**
+	 * Change the query to replace ? at each arrayParametersSortedAsc.parameterIndex
+	 * with ?,?,?.. multiple arrayParametersSortedAsc.parameterCount
+	 */
+	static String updateQueryWithArrayParameters(String parsedQuery, List<ArrayParameter> arrayParametersSortedAsc) {
+		if(arrayParametersSortedAsc.isEmpty()) {
 			return parsedQuery;
 		}
 
 		StringBuilder sb = new StringBuilder();
 
-		Collections.sort(arrayParameters, new Comparator<ArrayParameter>() {
-			@Override
-			public int compare(ArrayParameter o1, ArrayParameter o2) {
-				return Integer.compare(o1.parameterIndex, o2.parameterIndex);
-			}
-		});
-
-		Iterator<ArrayParameter> parameterToReplaceIt = arrayParameters.iterator();
+		Iterator<ArrayParameter> parameterToReplaceIt = arrayParametersSortedAsc.iterator();
 		ArrayParameter nextParameterToReplace = parameterToReplaceIt.next();
 		// PreparedStatement index starts at 1
 		int currentIndex = 1;

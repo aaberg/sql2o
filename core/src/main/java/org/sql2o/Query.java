@@ -338,7 +338,7 @@ public class Query implements AutoCloseable {
                     getConnection().getSql2o().getQuirks().setParameter(statement, paramIdx, (Object) null);
                 } else {
                     for (Object value : values) {
-                        getConnection().getSql2o().getQuirks().setParameter(statement, paramIdx, value);
+                        getConnection().getSql2o().getQuirks().setParameter(statement, paramIdx++, value);
                     }
                 }
             }
@@ -416,18 +416,7 @@ public class Query implements AutoCloseable {
 
     private PreparedStatement buildPreparedStatement(boolean allowArrayParameters) {
         // array parameter handling
-        List<ArrayParameters.ArrayParameter> arrayParameters = new ArrayList<>();
-        for(Map.Entry<String, ParameterSetter> parameter : parameters.entrySet()) {
-            if (parameter.getValue().parameterCount != 1) {
-                if (!allowArrayParameters) {
-                    throw new Sql2oException("Array parameters are not allowed in batch mode");
-                }
-                for(int i : paramNameToIdxMap.get(parameter.getKey())) {
-                    arrayParameters.add(new ArrayParameters.ArrayParameter(i, parameter.getValue().parameterCount));
-                }
-            }
-        }
-        parsedQuery = ArrayParameters.updateQueryWithArrayParameters(parsedQuery, arrayParameters);
+        parsedQuery = ArrayParameters.updateQueryAndParametersIndexes(parsedQuery, paramNameToIdxMap, parameters, allowArrayParameters);
 
         // prepare statement creation
         if(preparedStatement == null) {
@@ -917,7 +906,7 @@ public class Query implements AutoCloseable {
         logger.debug("Executing query:{}{}", new Object[]{ System.lineSeparator(), this.parsedQuery } );
     }
 
-    private static abstract class ParameterSetter {
+    static abstract class ParameterSetter {
         // the number of parameter to set ; always equals to 1 except when working on an array parameter
         int parameterCount;
 
