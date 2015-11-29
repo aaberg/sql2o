@@ -1379,6 +1379,14 @@ public class Sql2oTest extends BaseMemDbTest {
 
             assertTrue(result.size() == 3);
         }
+
+        try(Connection connection = sql2o.open()) {
+            connection.createQuery("insert into user (id, text_col) values(:id, :text)")
+                    .addParameter("id", 1, 2, 3).addParameter("text", "test1").addToBatch();
+            fail("Batch with array parameter is not supported");
+        } catch (Sql2oException e) {
+            // as expected
+        }
     }
 
     /************** Helper stuff ******************/
