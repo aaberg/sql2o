@@ -1387,6 +1387,24 @@ public class Sql2oTest extends BaseMemDbTest {
         } catch (Sql2oException e) {
             // as expected
         }
+
+        try(Connection connection = sql2o.open()) {
+            List<User> result = connection
+                    .createQuery("select * from user where id in(:ids)")
+                    .addParameter("ids", new int[]{1, 2, 3})
+                    .executeAndFetch(User.class);
+
+            assertTrue(result.size() == 3);
+        }
+
+        try(Connection connection = sql2o.open()) {
+            List<User> result = connection
+                    .createQuery("select * from user where id in(:ids)")
+                    .addParameter("ids", (Object) ImmutableList.of(1, 2, 3))
+                    .executeAndFetch(User.class);
+
+            assertTrue(result.size() == 3);
+        }
     }
 
     /************** Helper stuff ******************/

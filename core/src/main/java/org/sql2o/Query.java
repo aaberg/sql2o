@@ -12,7 +12,7 @@ import org.sql2o.quirks.Quirks;
 import org.sql2o.reflection.PojoIntrospector;
 
 import java.io.InputStream;
-import java.lang.reflect.InvocationTargetException;
+import java.lang.reflect.*;
 import java.sql.*;
 import java.util.*;
 
@@ -168,6 +168,14 @@ public class Query implements AutoCloseable {
         if(Time.class==parameterClass)
             return addParameter(name, (Time)value);
 
+        if(parameterClass.isArray()
+                // byte[] is used for blob already
+                && byte[].class != parameterClass) {
+            return addParameter(name, toObjectArray(value));
+        }
+        if(Collection.class.isAssignableFrom(parameterClass)) {
+            return addParameter(name, (Collection) value);
+        }
 
         final Object convertedValue = convertParameter(value);
 
@@ -890,6 +898,18 @@ public class Query implements AutoCloseable {
 
     private void logExecution() {
         logger.debug("Executing query:{}{}", new Object[]{ System.lineSeparator(), this.parsedQuery } );
+    }
+
+    // from http://stackoverflow.com/questions/5606338/cast-primitive-type-array-into-object-array-in-java
+    private static Object[] toObjectArray(Object val){
+        if (val instanceof Object[])
+            return (Object[])val;
+        int arrayLength = java.lang.reflect.Array.getLength(val);
+        Object[] outputArray = new Object[arrayLength];
+        for(int i = 0; i < arrayLength; ++i){
+            outputArray[i] = java.lang.reflect.Array.get(val, i);
+        }
+        return outputArray;
     }
 
     static abstract class ParameterSetter {
