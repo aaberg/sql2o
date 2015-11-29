@@ -34,8 +34,8 @@ public class ConnectionTest extends TestCase {
             }
         });
         org.sql2o.Connection cn = new org.sql2o.Connection(sql2o,false);
-        Query query = cn.createQueryWithParams("select :p1 name, :p2 age",
-                "Dmitry Alexandrov", 35);
+        cn.createQueryWithParams("select :p1 name, :p2 age", "Dmitry Alexandrov", 35).buildPreparedStatement();
+
         verify(dataSource,times(1)).getConnection();
         verify(jdbcConnection).isClosed();
         verify(jdbcConnection,times(1)).prepareStatement("select ? name, ? age");
@@ -63,16 +63,14 @@ public class ConnectionTest extends TestCase {
                 return false;
             }
         });
-        org.sql2o.Connection cn = new org.sql2o.Connection(sql2o,false);
-        try{
-            Query query = cn.createQueryWithParams("select :p1 name, :p2 age",
-                    "Dmitry Alexandrov", 35);
+        try(org.sql2o.Connection cn = sql2o.open()){
+            cn.createQueryWithParams("select :p1 name, :p2 age", "Dmitry Alexandrov", 35).buildPreparedStatement();
             fail("exception not thrown");
         } catch (MyException ex){
             // as designed
         }
         verify(dataSource,times(1)).getConnection();
-        verify(jdbcConnection).isClosed();
+        verify(jdbcConnection,atLeastOnce()).isClosed();
         verify(jdbcConnection,times(1)).prepareStatement("select ? name, ? age");
         verify(ps,times(1)).setString(1,"Dmitry Alexandrov");
         verify(ps,times(1)).setInt(2,35);

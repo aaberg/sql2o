@@ -97,18 +97,11 @@ public class Connection implements AutoCloseable, Closeable {
     }
 
     public Query createQueryWithParams(String queryText, Object... paramValues){
-        Query query = createQuery(queryText);
-        boolean destroy = true;
-        try {
-            query.withParams(paramValues);
-            destroy = false;
-            return query;
-        } finally {
-            // instead of re-wrapping exception
-            // just keep it as-is
-            // but kill a query
-            if(destroy) query.close();
-        }
+        // due to #146, creating a query will not create a statement anymore;
+        // the PreparedStatement will only be created once the query needs to be executed
+        // => there is no need to handle the query closing here anymore since there is nothing to close
+        return createQuery(queryText)
+                .withParams(paramValues);
     }
 
     public Sql2o rollback(){
