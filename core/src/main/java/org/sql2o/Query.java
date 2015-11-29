@@ -395,7 +395,8 @@ public class Query implements AutoCloseable {
     // -------------------- Execute -------------------
     // ------------------------------------------------
 
-    private PreparedStatement buildPreparedStatement() {
+    // visible for testing
+    PreparedStatement buildPreparedStatement() {
         return buildPreparedStatement(true);
     }
 
