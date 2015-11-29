@@ -72,7 +72,6 @@ public class ConnectionTest extends TestCase {
         verify(dataSource,times(1)).getConnection();
         verify(jdbcConnection,atLeastOnce()).isClosed();
         verify(jdbcConnection,times(1)).prepareStatement("select ? name, ? age");
-        verify(ps,times(1)).setString(1,"Dmitry Alexandrov");
         verify(ps,times(1)).setInt(2,35);
         // check statement was closed
         verify(ps,times(1)).close();
