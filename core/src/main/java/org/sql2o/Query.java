@@ -348,24 +348,9 @@ public class Query implements AutoCloseable {
 
     /**
      * Set an array parameter.<br>
-     * For example:
-     * <pre>
-     *     createQuery("SELECT * FROM user WHERE id IN(:ids)")
-     *      .addParameter("ids", 4, 5, 6)
-     *      .executeAndFetch(...)
-     * </pre>
-     * will generate the query : <code>SELECT * FROM user WHERE id IN(4,5,6)</code><br>
-     * <br>
-     * It is not possible to use array parameters with a batch <code>PreparedStatement</code>:
-     * since the text query passed to the <code>PreparedStatement</code> depends on the number of parameters in the array,
-     * array parameters are incompatible with batch mode.<br>
-     * <br>
-     * If the values array is empty, <code>null</code> will be set to the array parameter:
-     * <code>SELECT * FROM user WHERE id IN(NULL)</code>
-     *
-     * @throws NullPointerException if values parameter is null
+     * See {@link #addParameter(String, Object...)} for details
      */
-    public Query addParameter(String name, final List<?> values) {
+    public Query addParameter(String name, final Collection<?> values) {
         if(values == null) {
             throw new NullPointerException("Array parameter cannot be null");
         }
