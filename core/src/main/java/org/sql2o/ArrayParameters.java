@@ -1,7 +1,11 @@
 package org.sql2o;
 
 
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.Iterator;
+import java.util.List;
+import java.util.Map;
 
 class ArrayParameters {
 
@@ -69,12 +73,8 @@ class ArrayParameters {
     static int computeNewIndex(int index, List<ArrayParameter> arrayParametersSortedAsc) {
         int newIndex = index;
         for(ArrayParameter arrayParameter : arrayParametersSortedAsc) {
-            if(index > arrayParameter.parameterIndex) {
-                newIndex = newIndex + (
-                        arrayParameter.parameterCount > 1 ?
-                                arrayParameter.parameterCount - 1
-                                : 0
-                );
+            if(index > arrayParameter.parameterIndex && arrayParameter.parameterCount > 1) {
+                newIndex = newIndex + arrayParameter.parameterCount - 1;
             } else {
                 return newIndex;
             }
