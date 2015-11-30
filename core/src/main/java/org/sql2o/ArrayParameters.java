@@ -49,18 +49,11 @@ class ArrayParameters {
     static Map<String, List<Integer>> updateParameterNamesToIndexes(Map<String, List<Integer>> parametersNameToIndex,
                                                                     List<ArrayParameter> arrayParametersSortedAsc) {
         for(Map.Entry<String, List<Integer>> parameterNameToIndexes : parametersNameToIndex.entrySet()) {
-            boolean indexNeedsToBeUpdated = false;
             List<Integer> newParameterIndex = new ArrayList<>(parameterNameToIndexes.getValue().size());
             for(Integer parameterIndex : parameterNameToIndexes.getValue()) {
-                int newIndex = computeNewIndex(parameterIndex, arrayParametersSortedAsc);
-                newParameterIndex.add(newIndex);
-                if(newIndex != parameterIndex) {
-                    indexNeedsToBeUpdated = true;
-                }
+                newParameterIndex.add(computeNewIndex(parameterIndex, arrayParametersSortedAsc));
             }
-            if(indexNeedsToBeUpdated) {
-                parameterNameToIndexes.setValue(newParameterIndex);
-            }
+            parameterNameToIndexes.setValue(newParameterIndex);
         }
 
         return parametersNameToIndex;
