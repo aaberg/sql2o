@@ -66,7 +66,7 @@ class ArrayParameters {
     static int computeNewIndex(int index, List<ArrayParameter> arrayParametersSortedAsc) {
         int newIndex = index;
         for(ArrayParameter arrayParameter : arrayParametersSortedAsc) {
-            if(index > arrayParameter.parameterIndex && arrayParameter.parameterCount > 1) {
+            if(index > arrayParameter.parameterIndex) {
                 newIndex = newIndex + arrayParameter.parameterCount - 1;
             } else {
                 return newIndex;
@@ -76,14 +76,15 @@ class ArrayParameters {
     }
 
     /**
-     * List all the array parameters
+     * List all the array parameters that contains more that 1 parameters.
+     * Indeed, array parameter below 1 parameter will not change the text query nor the parameter indexes.
      */
     private static List<ArrayParameter> arrayParametersSortedAsc(Map<String, List<Integer>> parameterNamesToIndexes,
                                                                  Map<String, Query.ParameterSetter> parameters,
                                                                  boolean allowArrayParameters) {
         List<ArrayParameters.ArrayParameter> arrayParameters = new ArrayList<>();
         for(Map.Entry<String, Query.ParameterSetter> parameter : parameters.entrySet()) {
-            if (parameter.getValue().parameterCount != 1) {
+            if (parameter.getValue().parameterCount > 1) {
                 if (!allowArrayParameters) {
                     throw new Sql2oException("Array parameters are not allowed in batch mode");
                 }

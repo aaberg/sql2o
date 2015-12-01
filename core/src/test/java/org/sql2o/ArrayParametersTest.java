@@ -68,26 +68,6 @@ public class ArrayParametersTest {
         );
 
         assertEquals(
-                4,
-                ArrayParameters.computeNewIndex(
-                        4,
-                        ImmutableList.of(
-                                new ArrayParameters.ArrayParameter(3, 0)
-                        )
-                )
-        );
-
-        assertEquals(
-                4,
-                ArrayParameters.computeNewIndex(
-                        4,
-                        ImmutableList.of(
-                                new ArrayParameters.ArrayParameter(3, 1)
-                        )
-                )
-        );
-
-        assertEquals(
                 9,
                 ArrayParameters.computeNewIndex(
                         4,
