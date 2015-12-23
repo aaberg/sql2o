@@ -12,7 +12,7 @@ import org.sql2o.quirks.Quirks;
 import org.sql2o.reflection.PojoIntrospector;
 
 import java.io.InputStream;
-import java.lang.reflect.InvocationTargetException;
+import java.lang.reflect.*;
 import java.sql.*;
 import java.util.*;
 
@@ -29,15 +29,16 @@ public class Query implements AutoCloseable {
     private Connection connection;
     private Map<String, String> caseSensitiveColumnMappings;
     private Map<String, String> columnMappings;
-    private final PreparedStatement statement;
+    private PreparedStatement preparedStatement = null;
     private boolean caseSensitive;
     private boolean autoDeriveColumnNames;
     private boolean throwOnMappingFailure = true;
     private String name;
     private boolean returnGeneratedKeys;
+    private final String[] columnNames;
     private final Map<String, List<Integer>> paramNameToIdxMap;
-    private final Set<String> addedParameters;
-    private final String parsedQuery;
+    private final Map<String, ParameterSetter> parameters;
+    private String parsedQuery;
     private int maxBatchRecords = 0;
     private int currentBatchRecords = 0;
 
@@ -59,26 +60,14 @@ public class Query implements AutoCloseable {
     private Query(Connection connection, String queryText, boolean returnGeneratedKeys, String[] columnNames) {
         this.connection = connection;
         this.returnGeneratedKeys = returnGeneratedKeys;
+        this.columnNames = columnNames;
         this.setColumnMappings(connection.getSql2o().getDefaultColumnMappings());
         this.caseSensitive = connection.getSql2o().isDefaultCaseSensitive();
 
         paramNameToIdxMap = new HashMap<>();
-        addedParameters = new HashSet<>();
+        parameters = new HashMap<>();
 
         parsedQuery = connection.getSql2o().getQuirks().getSqlParameterParsingStrategy().parseSql(queryText, paramNameToIdxMap);
-        try {
-            if (columnNames != null && columnNames.length > 0){
-                statement = connection.getJdbcConnection().prepareStatement(parsedQuery, columnNames);
-            } else if (returnGeneratedKeys) {
-                statement = connection.getJdbcConnection().prepareStatement(parsedQuery, Statement.RETURN_GENERATED_KEYS);
-            } else {
-                statement = connection.getJdbcConnection().prepareStatement(parsedQuery);
-            }
-        } catch(SQLException ex) {
-            throw new Sql2oException(String.format("Error preparing statement - %s", ex.getMessage()), ex);
-        }
-        connection.registerStatement(statement);
-
     }
 
     // ------------------------------------------------
@@ -145,17 +134,10 @@ public class Query implements AutoCloseable {
     // ------------------------------------------------
 
     private void addParameterInternal(String name, ParameterSetter parameterSetter) {
-        addedParameters.add(name);
         if (!this.getParamNameToIdxMap().containsKey(name)) {
             throw new Sql2oException("Failed to add parameter with name '" + name + "'. No parameter with that name is declared in the sql.");
         }
-        for (int paramIdx : this.getParamNameToIdxMap().get(name)) {
-            try {
-                parameterSetter.setParameter(paramIdx);
-            } catch (SQLException e) {
-                throw new RuntimeException(String.format("Error adding parameter '%s' - %s", name, e.getMessage()), e);
-            }
-        }
+        parameters.put(name, parameterSetter);
     }
 
     @SuppressWarnings("unchecked")
@@ -186,11 +168,19 @@ public class Query implements AutoCloseable {
         if(Time.class==parameterClass)
             return addParameter(name, (Time)value);
 
+        if(parameterClass.isArray()
+                // byte[] is used for blob already
+                && byte[].class != parameterClass) {
+            return addParameter(name, toObjectArray(value));
+        }
+        if(Collection.class.isAssignableFrom(parameterClass)) {
+            return addParameter(name, (Collection) value);
+        }
 
         final Object convertedValue = convertParameter(value);
 
         addParameterInternal(name, new ParameterSetter() {
-            public void setParameter(int paramIdx) throws SQLException {
+            public void setParameter(int paramIdx, PreparedStatement statement) throws SQLException {
                 getConnection().getSql2o().getQuirks().setParameter(statement, paramIdx, convertedValue);
             }
         });
@@ -217,7 +207,7 @@ public class Query implements AutoCloseable {
 
     public Query addParameter(String name, final InputStream value){
         addParameterInternal(name, new ParameterSetter() {
-            public void setParameter(int paramIdx) throws SQLException {
+            public void setParameter(int paramIdx, PreparedStatement statement) throws SQLException {
                 getConnection().getSql2o().getQuirks().setParameter(statement, paramIdx, value);
             }
         });
@@ -227,7 +217,7 @@ public class Query implements AutoCloseable {
 
     public Query addParameter(String name, final int value){
         addParameterInternal(name, new ParameterSetter() {
-            public void setParameter(int paramIdx) throws SQLException {
+            public void setParameter(int paramIdx, PreparedStatement statement) throws SQLException {
                 getConnection().getSql2o().getQuirks().setParameter(statement, paramIdx, value);
             }
         });
@@ -237,7 +227,7 @@ public class Query implements AutoCloseable {
 
     public Query addParameter(String name, final Integer value) {
         addParameterInternal(name, new ParameterSetter() {
-            public void setParameter(int paramIdx) throws SQLException {
+            public void setParameter(int paramIdx, PreparedStatement statement) throws SQLException {
                 getConnection().getSql2o().getQuirks().setParameter(statement, paramIdx, value);
             }
         });
@@ -247,7 +237,7 @@ public class Query implements AutoCloseable {
 
     public Query addParameter(String name, final long value){
         addParameterInternal(name, new ParameterSetter() {
-            public void setParameter(int paramIdx) throws SQLException {
+            public void setParameter(int paramIdx, PreparedStatement statement) throws SQLException {
                 getConnection().getSql2o().getQuirks().setParameter(statement, paramIdx, value);
             }
         });
@@ -257,7 +247,7 @@ public class Query implements AutoCloseable {
 
     public Query addParameter(String name, final Long value){
         addParameterInternal(name, new ParameterSetter() {
-            public void setParameter(int paramIdx) throws SQLException {
+            public void setParameter(int paramIdx, PreparedStatement statement) throws SQLException {
                 getConnection().getSql2o().getQuirks().setParameter(statement, paramIdx, value);
             }
         });
@@ -267,7 +257,7 @@ public class Query implements AutoCloseable {
 
     public Query addParameter(String name, final String value) {
         addParameterInternal(name, new ParameterSetter() {
-            public void setParameter(int paramIdx) throws SQLException {
+            public void setParameter(int paramIdx, PreparedStatement statement) throws SQLException {
                 getConnection().getSql2o().getQuirks().setParameter(statement, paramIdx, value);
             }
         });
@@ -277,7 +267,7 @@ public class Query implements AutoCloseable {
 
     public Query addParameter(String name, final Timestamp value){
         addParameterInternal(name, new ParameterSetter() {
-            public void setParameter(int paramIdx) throws SQLException {
+            public void setParameter(int paramIdx, PreparedStatement statement) throws SQLException {
                 getConnection().getSql2o().getQuirks().setParameter(statement, paramIdx, value);
             }
         });
@@ -287,7 +277,7 @@ public class Query implements AutoCloseable {
 
     public Query addParameter(String name, final Time value) {
         addParameterInternal(name, new ParameterSetter() {
-            public void setParameter(int paramIdx) throws SQLException {
+            public void setParameter(int paramIdx, PreparedStatement statement) throws SQLException {
                 getConnection().getSql2o().getQuirks().setParameter(statement, paramIdx, value);
             }
         });
@@ -298,7 +288,7 @@ public class Query implements AutoCloseable {
     public Query addParameter(String name, final boolean value) {
         addParameterInternal(name, new ParameterSetter() {
             @Override
-            public void setParameter(int paramIdx) throws SQLException {
+            public void setParameter(int paramIdx, PreparedStatement statement) throws SQLException {
                 getConnection().getSql2o().getQuirks().setParameter(statement, paramIdx, value);
             }
         });
@@ -308,7 +298,7 @@ public class Query implements AutoCloseable {
     public Query addParameter(String name, final Boolean value) {
         addParameterInternal(name, new ParameterSetter() {
             @Override
-            public void setParameter(int paramIdx) throws SQLException {
+            public void setParameter(int paramIdx, PreparedStatement statement) throws SQLException {
                 getConnection().getSql2o().getQuirks().setParameter(statement, paramIdx, value);
             }
         });
@@ -318,11 +308,62 @@ public class Query implements AutoCloseable {
     public Query addParameter(String name, final UUID value) {
         addParameterInternal(name, new ParameterSetter() {
             @Override
-            public void setParameter(int paramIdx) throws SQLException {
+            public void setParameter(int paramIdx, PreparedStatement statement) throws SQLException {
                 getConnection().getSql2o().getQuirks().setParameter(statement, paramIdx, value);
             }
         });
         return this;
+    }
+
+    /**
+     * Set an array parameter.<br>
+     * For example:
+     * <pre>
+     *     createQuery("SELECT * FROM user WHERE id IN(:ids)")
+     *      .addParameter("ids", 4, 5, 6)
+     *      .executeAndFetch(...)
+     * </pre>
+     * will generate the query : <code>SELECT * FROM user WHERE id IN(4,5,6)</code><br>
+     * <br>
+     * It is not possible to use array parameters with a batch <code>PreparedStatement</code>:
+     * since the text query passed to the <code>PreparedStatement</code> depends on the number of parameters in the array,
+     * array parameters are incompatible with batch mode.<br>
+     * <br>
+     * If the values array is empty, <code>null</code> will be set to the array parameter:
+     * <code>SELECT * FROM user WHERE id IN(NULL)</code>
+     *
+     * @throws NullPointerException if values parameter is null
+     */
+    public Query addParameter(String name, final Object ... values) {
+        if(values == null) {
+            throw new NullPointerException("Array parameter cannot be null");
+        }
+
+        addParameterInternal(name, new ParameterSetter(values.length) {
+            @Override
+            public void setParameter(int paramIdx, PreparedStatement statement) throws SQLException {
+                if(values.length == 0) {
+                    getConnection().getSql2o().getQuirks().setParameter(statement, paramIdx, (Object) null);
+                } else {
+                    for (Object value : values) {
+                        getConnection().getSql2o().getQuirks().setParameter(statement, paramIdx++, value);
+                    }
+                }
+            }
+        });
+        return this;
+    }
+
+    /**
+     * Set an array parameter.<br>
+     * See {@link #addParameter(String, Object...)} for details
+     */
+    public Query addParameter(String name, final Collection<?> values) {
+        if(values == null) {
+            throw new NullPointerException("Array parameter cannot be null");
+        }
+
+        return addParameter(name, values.toArray());
     }
 
     public Query bind(final Object pojo) {
@@ -348,17 +389,60 @@ public class Query implements AutoCloseable {
     }
 
     public void close() {
-        connection.removeStatement(statement);
-        try {
-            this.getQuirks().closeStatement(statement);
-        } catch (Throwable ex){
-            logger.warn("Could not close statement.", ex);
+        if(preparedStatement != null) {
+            connection.removeStatement(preparedStatement);
+            try {
+                this.getQuirks().closeStatement(preparedStatement);
+            } catch (Throwable ex) {
+                logger.warn("Could not close statement.", ex);
+            }
         }
     }
 
     // ------------------------------------------------
     // -------------------- Execute -------------------
     // ------------------------------------------------
+
+    // visible for testing
+    PreparedStatement buildPreparedStatement() {
+        return buildPreparedStatement(true);
+    }
+
+    private PreparedStatement buildPreparedStatement(boolean allowArrayParameters) {
+        // array parameter handling
+        parsedQuery = ArrayParameters.updateQueryAndParametersIndexes(parsedQuery, paramNameToIdxMap, parameters, allowArrayParameters);
+
+        // prepare statement creation
+        if(preparedStatement == null) {
+            try {
+                if (columnNames != null && columnNames.length > 0){
+                    preparedStatement = connection.getJdbcConnection().prepareStatement(parsedQuery, columnNames);
+                } else if (returnGeneratedKeys) {
+                    preparedStatement = connection.getJdbcConnection().prepareStatement(parsedQuery, Statement.RETURN_GENERATED_KEYS);
+                } else {
+                    preparedStatement = connection.getJdbcConnection().prepareStatement(parsedQuery);
+                }
+            } catch(SQLException ex) {
+                throw new Sql2oException(String.format("Error preparing statement - %s", ex.getMessage()), ex);
+            }
+            connection.registerStatement(preparedStatement);
+        }
+
+        // parameters assignation to query
+        for(Map.Entry<String, ParameterSetter> parameter : parameters.entrySet()) {
+            for (int paramIdx : paramNameToIdxMap.get(parameter.getKey())) {
+                try {
+                    parameter.getValue().setParameter(paramIdx, preparedStatement);
+                } catch (SQLException e) {
+                    throw new RuntimeException(String.format("Error adding parameter '%s' - %s", parameter.getKey(), e.getMessage()), e);
+                }
+            }
+        }
+        // the parameters need to be cleared, so in case of batch, only new parameters will be added
+        parameters.clear();
+
+        return preparedStatement;
+    }
 
     /**
      * Iterable {@link java.sql.ResultSet} that wraps {@link PojoResultSetIterator}.
@@ -374,7 +458,7 @@ public class Query implements AutoCloseable {
             try {
                 start = System.currentTimeMillis();
                 logExecution();
-                rs = statement.executeQuery();
+                rs = buildPreparedStatement().executeQuery();
                 afterExecQuery = System.currentTimeMillis();
             }
             catch (SQLException ex) {
@@ -568,6 +652,7 @@ public class Query implements AutoCloseable {
         long start = System.currentTimeMillis();
         try{
             logExecution();
+            PreparedStatement statement = buildPreparedStatement();
             this.connection.setResult(statement.executeUpdate());
             this.connection.setKeys(this.returnGeneratedKeys ? statement.getGeneratedKeys() : null);
             connection.setCanGetKeys(this.returnGeneratedKeys);
@@ -593,7 +678,7 @@ public class Query implements AutoCloseable {
         long start = System.currentTimeMillis();
         try {
             logExecution();
-            ResultSet rs = this.statement.executeQuery();
+            ResultSet rs = buildPreparedStatement().executeQuery();
             if (rs.next()){
                 Object o = getQuirks().getRSVal(rs, 1);
                 long end = System.currentTimeMillis();
@@ -720,12 +805,10 @@ public class Query implements AutoCloseable {
      *
      * The current number of batched commands is accessible via the <code>getCurrentBatchRecords()</code>
      * method.
-     *
-     * @return
      */
     public Query addToBatch(){
         try {
-            statement.addBatch();
+            buildPreparedStatement(false).addBatch();
             if (this.maxBatchRecords > 0){
                 if(++this.currentBatchRecords % this.maxBatchRecords == 0) {
                     this.executeBatch();
@@ -742,6 +825,7 @@ public class Query implements AutoCloseable {
         long start = System.currentTimeMillis();
         try {
             logExecution();
+            PreparedStatement statement = buildPreparedStatement();
             connection.setBatchResult(statement.executeBatch());
             this.currentBatchRecords = 0;
             try {
@@ -812,11 +896,35 @@ public class Query implements AutoCloseable {
         }
     }
 
-    private interface ParameterSetter{
-        void setParameter(int paramIdx) throws SQLException;
-    }
-
     private void logExecution() {
         logger.debug("Executing query:{}{}", new Object[]{ System.lineSeparator(), this.parsedQuery } );
     }
+
+    // from http://stackoverflow.com/questions/5606338/cast-primitive-type-array-into-object-array-in-java
+    private static Object[] toObjectArray(Object val){
+        if (val instanceof Object[])
+            return (Object[])val;
+        int arrayLength = java.lang.reflect.Array.getLength(val);
+        Object[] outputArray = new Object[arrayLength];
+        for(int i = 0; i < arrayLength; ++i){
+            outputArray[i] = java.lang.reflect.Array.get(val, i);
+        }
+        return outputArray;
+    }
+
+    static abstract class ParameterSetter {
+        // the number of parameter to set ; always equals to 1 except when working on an array parameter
+        int parameterCount;
+
+        public ParameterSetter() {
+            this(1);
+        }
+
+        ParameterSetter(int parameterCount) {
+            this.parameterCount = parameterCount;
+        }
+
+        abstract void setParameter(int paramIdx, PreparedStatement statement) throws SQLException;
+    }
+
 }
