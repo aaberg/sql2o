@@ -170,7 +170,7 @@ public class DefaultResultSetHandlerFactory<T> implements ResultSetHandlerFactor
         for (int i = 1; i <= meta.getColumnCount(); i++) {
             stringBuilder.append(quirks.getColumnName(meta,i)).append("\n");
         }
-        return c.get(new Key(stringBuilder.toString(), this),meta);
+        return c.get(new Key(stringBuilder.toString().intern(), this),meta);
 
     }
 
