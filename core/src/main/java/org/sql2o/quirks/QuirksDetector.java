@@ -29,8 +29,7 @@ public class QuirksDetector{
                 return quirksProvider.provide();
             }
         }
-
-        return new NoQuirks();
+        return noQuirks.q;
     }
 
     public static Quirks forObject(Object jdbcObject) {
@@ -44,7 +43,10 @@ public class QuirksDetector{
                 return quirksProvider.provide();
             }
         }
+        return noQuirks.q;
+    }
 
-        return new NoQuirks();
+    private static class noQuirks {
+        static final Quirks q = new NoQuirks();
     }
 }
