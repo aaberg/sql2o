@@ -8,7 +8,7 @@ public class PostgresQuirksProvider implements QuirksProvider {
 
     @Override
     public Quirks provide() {
-        return new PostgresQuirks();
+        return postgresQuirks.q;
     }
 
     @Override
@@ -19,5 +19,9 @@ public class PostgresQuirksProvider implements QuirksProvider {
     @Override
     public boolean isUsableForClass(String className) {
         return className.startsWith("org.postgresql.");
+    }
+
+    private static class postgresQuirks {
+        private static PostgresQuirks q = new PostgresQuirks();
     }
 }

@@ -16,7 +16,7 @@ package org.sql2o.quirks;
 public class Db2QuirksProvider implements QuirksProvider {
     @Override
     public Quirks provide() {
-        return new Db2Quirks();
+        return db2Quirks.q;
     }
 
     @Override
@@ -29,5 +29,9 @@ public class Db2QuirksProvider implements QuirksProvider {
     @Override
     public boolean isUsableForClass(String className) {
         return className.startsWith("com.ibm.db2.jcc.DB2");
+    }
+
+    private static class db2Quirks {
+        private static final Db2Quirks q = new Db2Quirks();
     }
 }

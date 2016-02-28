@@ -16,7 +16,7 @@ package org.sql2o.quirks;
 public class OracleQuirksProvider implements QuirksProvider {
     @Override
     public Quirks provide() {
-        return new OracleQuirks();
+        return oracleQuirks.q;
     }
 
     @Override
@@ -28,6 +28,10 @@ public class OracleQuirksProvider implements QuirksProvider {
     public boolean isUsableForClass(String className) {
         return className.startsWith("oracle.jdbc.")
                 || className.startsWith("oracle.jdbc.");
+    }
+
+    private static class oracleQuirks {
+        private static final OracleQuirks q = new OracleQuirks();
     }
 
 }
