@@ -43,6 +43,17 @@ public class Connection implements AutoCloseable, Closeable {
         return this;
     }
 
+    private boolean rollbackOnClose = true;
+
+    public boolean isRollbackOnClose() {
+        return rollbackOnClose;
+    }
+
+    public Connection setRollbackOnClose(boolean rollbackOnClose) {
+        this.rollbackOnClose = rollbackOnClose;
+        return this;
+    }
+
     final boolean autoClose;
 
     Connection(Sql2o sql2o, boolean autoClose) {
@@ -263,20 +274,21 @@ public class Connection implements AutoCloseable, Closeable {
             }
             statements.clear();
 
-            boolean autoCommit = false;
-            try {
-                autoCommit = jdbcConnection.getAutoCommit();
-            }
-            catch (SQLException e) {
-                logger.warn("Could not determine connection auto commit mode.", e);
+            boolean rollback = rollbackOnClose;
+            if (rollback) {
+                try {
+                    rollback = !jdbcConnection.getAutoCommit();
+                } catch (SQLException e) {
+                    logger.warn("Could not determine connection auto commit mode.", e);
+                }
             }
 
             // if in transaction, rollback, otherwise just close
-            if (autoCommit) {
-                this.closeJdbcConnection();
+            if (rollback) {
+                this.rollback(true);
             }
             else {
-                this.rollback(true);
+                this.closeJdbcConnection();
             }
         }
     }
