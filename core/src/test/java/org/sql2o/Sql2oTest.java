@@ -695,9 +695,9 @@ public class Sql2oTest extends BaseMemDbTest {
 
     }
 
-    private static class runnerWithResultTester implements StatementRunnableWithResult{
+    private static class runnerWithResultTester implements StatementRunnableWithResult<List<Integer>> {
 
-        public Object run(Connection connection, Object argument) throws Throwable {
+        public List<Integer> run(Connection connection, Object argument) throws Throwable {
             String[] vals = (String[])argument;
             List<Integer> keys = new ArrayList<Integer>();
             for (String val : vals){
@@ -1199,8 +1199,8 @@ public class Sql2oTest extends BaseMemDbTest {
             }
         });
 
-        List<User> users = sql2o.withConnection(new StatementRunnableWithResult() {
-            public Object run(Connection connection, Object argument) throws Throwable {
+        List<User> users = sql2o.withConnection(new StatementRunnableWithResult<List<User>>() {
+            public List<User> run(Connection connection, Object argument) throws Throwable {
                 return sql2o.createQuery("select * from User").executeAndFetch(User.class);
             }
         });

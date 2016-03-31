@@ -181,7 +181,7 @@ public class Sql2o {
      * @return
      */
     @SuppressWarnings("unchecked")
-    public <V> V withConnection(StatementRunnableWithResult runnable, Object argument) {
+    public <V> V withConnection(StatementRunnableWithResult<V> runnable, Object argument) {
         Connection connection = null;
         try{
             connection = open();
@@ -202,7 +202,7 @@ public class Sql2o {
      * @param <V>
      * @return
      */
-    public <V> V withConnection(StatementRunnableWithResult runnable) {
+    public <V> V withConnection(StatementRunnableWithResult<V> runnable) {
         return withConnection(runnable, null);
     }
 
@@ -326,16 +326,16 @@ public class Sql2o {
         connection.commit();
     }
 
-    public <V> V runInTransaction(StatementRunnableWithResult runnableWithResult){
+    public <V> V runInTransaction(StatementRunnableWithResult<V> runnableWithResult){
         return runInTransaction(runnableWithResult, null);
     }
     
-    public <V> V runInTransaction(StatementRunnableWithResult runnableWithResult, Object argument){
+    public <V> V runInTransaction(StatementRunnableWithResult<V> runnableWithResult, Object argument){
         return runInTransaction(runnableWithResult, argument, java.sql.Connection.TRANSACTION_READ_COMMITTED);
     }
 
     @SuppressWarnings("unchecked")
-    public <V> V runInTransaction(StatementRunnableWithResult runnableWithResult, Object argument, int isolationLevel){
+    public <V> V runInTransaction(StatementRunnableWithResult<V> runnableWithResult, Object argument, int isolationLevel){
         Connection connection = this.beginTransaction(isolationLevel);
         Object result;
         
