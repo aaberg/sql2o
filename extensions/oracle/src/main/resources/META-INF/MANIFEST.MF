@@ -1,2 +1,2 @@
 Library-Name: Sql2o.extensions.oracle
-Library-Description: Easy database query library
+Library-Description: Oracle plugin for sql2o
