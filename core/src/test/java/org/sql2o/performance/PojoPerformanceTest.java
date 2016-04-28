@@ -11,6 +11,8 @@ import org.apache.ibatis.session.SqlSessionFactory;
 import org.apache.ibatis.session.SqlSessionFactoryBuilder;
 import org.apache.ibatis.transaction.TransactionFactory;
 import org.apache.ibatis.transaction.jdbc.JdbcTransactionFactory;
+import org.dalesbred.Database;
+import org.dalesbred.annotation.SQL;
 import org.hibernate.Session;
 import org.hibernate.SessionFactory;
 import org.hibernate.boot.registry.StandardServiceRegistryBuilder;
@@ -144,6 +146,7 @@ public class PojoPerformanceTest
         tests.add(new ApacheDbUtilsTypicalSelect());
         tests.add(new MyBatisSelect());
         tests.add(new SpringJdbcTemplateSelect());
+        tests.add(new DalesbredSelect());
 
         System.out.println("Warming up...");
         tests.run(ITERATIONS);
@@ -549,5 +552,25 @@ public class PojoPerformanceTest
         @Override
         public void close()
         {}
+    }
+
+    private class DalesbredSelect extends PerformanceTestBase {
+        private Database database;
+        @SQL
+        private final String QUERY = SELECT_TYPICAL + " WHERE id = ?";
+
+        @Override
+        public void init() {
+            database = Database.forDataSource(sql2o.getDataSource());
+        }
+
+        @Override
+        public void run(int input) {
+            database.findUnique(Post.class, QUERY, input);
+        }
+
+        @Override
+        public void close() {
+        }
     }
 }
