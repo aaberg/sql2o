@@ -5,6 +5,7 @@ target/
 release.properties
 pom.xml.releaseBackup
 _site/
+*.versionsBackup
 
 # OSX
 .DS_Store
