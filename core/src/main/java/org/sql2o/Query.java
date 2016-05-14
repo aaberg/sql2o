@@ -526,7 +526,7 @@ public class Query implements AutoCloseable {
         if(builder==null) builder=new DefaultResultSetHandlerFactoryBuilder();
         builder.setAutoDeriveColumnNames(this.autoDeriveColumnNames);
         builder.setCaseSensitive(this.caseSensitive);
-        builder.setColumnMappings(this.columnMappings);
+        builder.setColumnMappings(this.getColumnMappings());
         builder.setQuirks(quirks);
         builder.throwOnMappingError(this.throwOnMappingFailure);
         return builder.newFactory(returnType);
