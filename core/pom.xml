@@ -85,6 +85,18 @@
             <artifactId>hsqldb</artifactId>
             <version>2.2.8</version>
         </dependency>
+        <dependency>
+            <scope>test</scope>
+            <groupId>org.xerial</groupId>
+            <artifactId>sqlite-jdbc</artifactId>
+            <version>3.8.11.2</version>
+        </dependency>
+        <dependency>
+            <scope>test</scope>
+            <groupId>com.zaxxer</groupId>
+            <artifactId>HikariCP</artifactId>
+            <version>2.4.5</version>
+        </dependency>
         <!-- Uncomment to run oracle tests.  -->
         <!--
         <dependency>

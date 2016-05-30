@@ -29,6 +29,7 @@ public class Sql2o {
     private final DataSource dataSource;
     private Map<String, String> defaultColumnMappings;
     private boolean defaultCaseSensitive;
+    private int defaultTransactionIsolationLevel;
 
     private final static Logger logger = LocalLoggerFactory.getLogger(Sql2o.class);
 
@@ -76,6 +77,7 @@ public class Sql2o {
         this.dataSource = dataSource;
         this.quirks=quirks;
         this.defaultColumnMappings = new HashMap<String, String>();
+        this.defaultTransactionIsolationLevel = java.sql.Connection.TRANSACTION_READ_COMMITTED;
     }
 
     public Quirks getQuirks() {
@@ -125,6 +127,24 @@ public class Sql2o {
      */
     public void setDefaultCaseSensitive(boolean defaultCaseSensitive) {
         this.defaultCaseSensitive = defaultCaseSensitive;
+    }
+    
+    /**
+     * Gets the default transaction isolation level.
+     * @return Constant value from {@link java.sql.Connection}
+     */
+    public int getDefaultTransactionIsolationLevel() {
+    
+        return defaultTransactionIsolationLevel;
+    }
+    
+    /**
+     * Sets the default transaction isolation level.
+     * @param defaultTransactionIsolationLevel Constant value from {@link java.sql.Connection}
+     */
+    public void setDefaultTransactionIsolationLevel(int defaultTransactionIsolationLevel) {
+    
+        this.defaultTransactionIsolationLevel = defaultTransactionIsolationLevel;
     }
 
     /**
@@ -262,15 +282,17 @@ public class Sql2o {
 
         return connection;
     }
-
+    
     /**
-     * Begins a transaction with isolation level {@link java.sql.Connection#TRANSACTION_READ_COMMITTED}. Every statement executed on the return {@link Connection}
+     * Begins a transaction with default isolation level (which is {@link java.sql.Connection#TRANSACTION_READ_COMMITTED}
+     * if not modified by {@link Sql2o#setDefaultTransactionIsolationLevel(int)}).
+     * Every statement executed on the return {@link Connection}
      * instance, will be executed in the transaction. It is very important to always call either the {@link org.sql2o.Connection#commit()}
      * method or the {@link org.sql2o.Connection#rollback()} method to close the transaction. Use proper try-catch logic.
      * @return the {@link Connection} instance to use to run statements in the transaction.
      */
     public Connection beginTransaction(){
-        return this.beginTransaction(java.sql.Connection.TRANSACTION_READ_COMMITTED);
+        return this.beginTransaction(defaultTransactionIsolationLevel);
     }
 
     /**
