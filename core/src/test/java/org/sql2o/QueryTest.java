@@ -29,7 +29,7 @@ public class QueryTest {
         Sql2o sql2o = new Sql2o(dataSource);
 
         Connection con = sql2o.open();
-        final Query query = con.createQuery("sql", "colname");
+        con.createQuery("sql", "colname").buildPreparedStatement();
 
         verify(jdbcCon, times(1)).prepareStatement(anyString(), new String[]{anyString()});
 

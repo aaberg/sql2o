@@ -1,2 +1,2 @@
 Library-Name: Sql2o.extensions.postgres
-Library-Description: Easy database query library
+Library-Description: Postgres plugin for sql2o

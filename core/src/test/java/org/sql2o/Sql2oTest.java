@@ -1,5 +1,6 @@
 package org.sql2o;
 
+import com.google.common.collect.ImmutableList;
 import org.hsqldb.jdbc.JDBCDataSource;
 import org.joda.time.DateTime;
 import org.joda.time.LocalTime;
@@ -694,9 +695,9 @@ public class Sql2oTest extends BaseMemDbTest {
 
     }
 
-    private static class runnerWithResultTester implements StatementRunnableWithResult{
+    private static class runnerWithResultTester implements StatementRunnableWithResult<List<Integer>> {
 
-        public Object run(Connection connection, Object argument) throws Throwable {
+        public List<Integer> run(Connection connection, Object argument) throws Throwable {
             String[] vals = (String[])argument;
             List<Integer> keys = new ArrayList<Integer>();
             for (String val : vals){
@@ -1198,8 +1199,8 @@ public class Sql2oTest extends BaseMemDbTest {
             }
         });
 
-        List<User> users = sql2o.withConnection(new StatementRunnableWithResult() {
-            public Object run(Connection connection, Object argument) throws Throwable {
+        List<User> users = sql2o.withConnection(new StatementRunnableWithResult<List<User>>() {
+            public List<User> run(Connection connection, Object argument) throws Throwable {
                 return sql2o.createQuery("select * from User").executeAndFetch(User.class);
             }
         });
@@ -1306,6 +1307,104 @@ public class Sql2oTest extends BaseMemDbTest {
             genericTestOnUserData(connection);
         }
 
+    }
+
+    @Test
+    public void testArrayParameter(){
+        createAndFillUserTable();
+
+        try(Connection connection = sql2o.open()) {
+            List<User> result = connection
+                    .createQuery("select * from user where id in(:ids)")
+                    .addParameter("ids", 1, 2, 3)
+                    .executeAndFetch(User.class);
+
+            assertTrue(result.size() == 3);
+        }
+
+        try(Connection connection = sql2o.open()) {
+            List<User> result = connection
+                    .createQuery("select * from user where" +
+                            " email like :email" +
+                            " and id in(:ids)" +
+                            " and text = :text")
+                    .addParameter("email", "%email.com")
+                    .addParameter("ids", 1, 2, 3)
+                    .addParameter("text", "some text")
+                    .executeAndFetch(User.class);
+
+            assertTrue(result.size() == 3);
+        }
+
+        try(Connection connection = sql2o.open()) {
+            List<User> result = connection
+                    .createQuery("select * from user where" +
+                            " email like :email" +
+                            " and id in(:ids)" +
+                            " and text = :text")
+                    .addParameter("email", "%email.com")
+                    .addParameter("ids", ImmutableList.of())
+                    .addParameter("text", "some text")
+                    .executeAndFetch(User.class);
+
+            assertTrue(result.size() == 0);
+        }
+
+        try(Connection connection = sql2o.open()) {
+            List<User> result = connection
+                    .createQuery("select * from user where" +
+                            " email like :email" +
+                            " and id in(:ids)" +
+                            " and text = :text")
+                    .addParameter("email", "%email.com")
+                    .addParameter("ids", ImmutableList.of(1))
+                    .addParameter("text", "some text")
+                    .executeAndFetch(User.class);
+
+            assertTrue(result.size() == 1);
+        }
+
+        try(Connection connection = sql2o.open()) {
+            List<User> result = connection
+                    .createQuery("select * from user where" +
+                            " email like :email" +
+                            " and text = :text" +
+                            " and id in(:ids)" +
+                            " and text = :text" +
+                            " and id in(:ids)")
+                    .addParameter("email", "%email.com")
+                    .addParameter("ids", 1, 2, 3)
+                    .addParameter("text", "some text")
+                    .executeAndFetch(User.class);
+
+            assertTrue(result.size() == 3);
+        }
+
+        try(Connection connection = sql2o.open()) {
+            connection.createQuery("insert into user (id, text_col) values(:id, :text)")
+                    .addParameter("id", 1, 2, 3).addParameter("text", "test1").addToBatch();
+            fail("Batch with array parameter is not supported");
+        } catch (Sql2oException e) {
+            // as expected
+        }
+
+        try(Connection connection = sql2o.open()) {
+            List<User> result = connection
+                    .createQuery("select * from user where id in(:ids)")
+                    .addParameter("ids", new int[]{1, 2, 3})
+                    .executeAndFetch(User.class);
+
+            assertTrue(result.size() == 3);
+        }
+
+        try(Connection connection = sql2o.open()) {
+            List<User> result = connection
+                    .createQuery("select * from user where id in(:ids)")
+                    .addParameter("ids", (Object) ImmutableList.of(1, 2, 3))
+                    .executeAndFetch(User.class);
+
+            assertTrue(result.size() == 3);
+        }
     }
 
     /************** Helper stuff ******************/

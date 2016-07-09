@@ -1,0 +1,2 @@
+Library-Name: Sql2o.extensions.db2
+Library-Description: DB2 plugin for sql2o
