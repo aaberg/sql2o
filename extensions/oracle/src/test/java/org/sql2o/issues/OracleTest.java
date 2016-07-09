@@ -10,24 +10,17 @@
 
 package org.sql2o.issues;
 
-import org.joda.time.DateTime;
-import org.joda.time.LocalDate;
 import org.junit.Test;
 import org.sql2o.Connection;
 import org.sql2o.Query;
 import org.sql2o.Sql2o;
-import org.sql2o.Sql2oException;
 import org.sql2o.quirks.OracleQuirks;
 
 import java.sql.Driver;
 import java.sql.DriverManager;
-import java.util.Date;
 import java.util.UUID;
 
-import static org.hamcrest.CoreMatchers.equalTo;
-import static org.hamcrest.CoreMatchers.is;
 import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertThat;
 import static org.junit.Assert.fail;
 
 /**
@@ -51,32 +44,6 @@ public class OracleTest {
 
         this.sql2o = new Sql2o("jdbc:oracle:thin:@//localhost:1521/orcl", "test", "test", new OracleQuirks());
     }
-
-    /**
-     * Issue #8
-     * Cannot convert type class oracle.sql.TIMESTAMP to java.util.Date
-     *
-     *
-     * Caused by: org.sql2o.converters.ConverterException: Cannot convert type class oracle.sql.TIMESTAMP to java.util.Date
-     * at org.sql2o.converters.DateConverter.convert(DateConverter.java:25)
-     * at org.sql2o.converters.DateConverter.convert(DateConverter.java:14)
-     * at org.sql2o.reflection.Pojo.setProperty(Pojo.java:84)
-     *
-     *
-     */
-    @Test
-    public void testForIssue8OracleTimestamps() {
-        String sql = "select CURRENT_TIMESTAMP from dual";
-
-        //new TIMESTAMPTZ().timestampValue()
-
-        Date dateVal = sql2o.createQuery(sql).executeScalar(Date.class);
-        DateTime dateTimeVal = sql2o.createQuery(sql).executeScalar(DateTime.class);
-
-        assertThat(new DateTime(dateVal).toLocalDate(), is(equalTo(new LocalDate())));
-        assertThat(dateTimeVal.toLocalDate(), is(equalTo(new LocalDate())));
-    }
-
 
     @Test
     public void testForIssue12ErrorReadingClobValue() {
