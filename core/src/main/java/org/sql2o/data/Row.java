@@ -163,6 +163,9 @@ public class Row {
             }
 
             public Object get(Object key) {
+                if(null == columnNameToIdxMap){
+                    return null;
+                }
                 return values[columnNameToIdxMap.get(key)];
             }
 
