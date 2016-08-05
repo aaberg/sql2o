@@ -25,6 +25,7 @@ Method                                                              | Duration  
 Hand coded <code>ResultSet</code>                                   | 60ms                   |
 Sql2o                                                               | 75ms (25% slower)      |
 [Apache DbUtils](http://commons.apache.org/proper/commons-dbutils/) | 98ms (63% slower)      |
+[Yank](https://github.com/timmolter/Yank)                           | 144ms (144% slower)    |
 [JDBI](http://jdbi.org/)                                            | 197ms (228% slower)    |
 [MyBatis](http://mybatis.github.io/mybatis-3/)                      | 293ms (388% slower)    |
 [jOOQ](http://www.jooq.org)                                         | 447ms (645% slower)    |

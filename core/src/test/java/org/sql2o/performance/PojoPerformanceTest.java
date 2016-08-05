@@ -25,6 +25,7 @@ import org.jooq.SQLDialect;
 import org.jooq.impl.DSL;
 import org.junit.Before;
 import org.junit.Test;
+import org.knowm.yank.Yank;
 import org.skife.jdbi.v2.DBI;
 import org.skife.jdbi.v2.Handle;
 import org.springframework.jdbc.core.BeanPropertyRowMapper;
@@ -32,12 +33,12 @@ import org.springframework.jdbc.core.namedparam.NamedParameterJdbcTemplate;
 import org.sql2o.Query;
 import org.sql2o.Sql2o;
 import org.sql2o.tools.FeatureDetector;
-
 import java.beans.PropertyDescriptor;
 import java.lang.reflect.Field;
 import java.sql.*;
 import java.util.Arrays;
 import java.util.Collections;
+import java.util.Properties;
 import java.util.Random;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -144,7 +145,8 @@ public class PojoPerformanceTest
         tests.add(new ApacheDbUtilsTypicalSelect());
         tests.add(new MyBatisSelect());
         tests.add(new SpringJdbcTemplateSelect());
-
+        tests.add(new YankTypicalSelect());
+        
         System.out.println("Warming up...");
         tests.run(ITERATIONS);
         System.out.println("Done warming up, let's rock and roll!\n");
@@ -550,4 +552,32 @@ public class PojoPerformanceTest
         public void close()
         {}
     }
+    
+    class YankTypicalSelect extends PerformanceTestBase
+    {
+      final String SQL = SELECT_TYPICAL + " WHERE id = ?";
+      final Object[] params= new Object[1];
+
+      @Override
+      public void init() {
+
+        // DB Properties
+        Properties dbProps = new Properties();
+        dbProps.setProperty("jdbcUrl", DB_URL);
+        dbProps.setProperty("username", DB_USER);
+        dbProps.setProperty("password", DB_PASSWORD);
+        Yank.setupDefaultConnectionPool(dbProps);
+      }
+
+      @Override
+      public void run(int input) {
+        
+        params[0]=input;
+        Yank.queryBean(SQL, Post.class, params);
+      }
+
+      @Override
+      public void close() {
+        Yank.releaseDefaultConnectionPool();        
+      }}
 }
