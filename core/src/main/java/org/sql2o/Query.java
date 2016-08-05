@@ -202,15 +202,7 @@ public class Query implements AutoCloseable {
      * Be careful of sql injection!
      */
     public Query addSubstitute(String name, String substitute) {
-        List<Integer> integers = paramNameToIdxMap.get(name);
-        for (int i = 0; i < parsedQuery.length(); i++) {
-            if (parsedQuery.charAt(i) == '?') {
-                if (i == integers.get(i)) {
-
-                    parsedQuery = parsedQuery.replace(parsedQuery.substring(i, i + 1), substitute);
-                }
-            }
-        }
+        parsedQuery = replaceParam(parsedQuery, name, substitute);
         return this;
     }
 
@@ -226,11 +218,11 @@ public class Query implements AutoCloseable {
         if (sb.length() > 0) {
             sb.setLength(sb.length() - 1);
         }
-        replaceParam(name, sb.toString());
+        parsedQuery = replaceParam(parsedQuery, name, sb.toString());
         return this;
     }
 
-    private String replaceParam(String sql, String replace) {
+    private String replaceParam(String sql, String name, String replace) {
         List<Integer> integers = paramNameToIdxMap.get(name);
         int count = 0;
         for (int i = 0; i < sql.length(); ++i) {
