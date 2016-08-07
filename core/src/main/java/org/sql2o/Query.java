@@ -196,6 +196,67 @@ public class Query implements AutoCloseable {
         return this;
     }
 
+    /**
+     * Replace the diamond parameter <param> with the string
+     * Be careful of sql injection!
+     */
+    public Query addSubstitution(String name, String substitution) {
+        parsedQuery = replaceParam(parsedQuery, name, substitution);
+        return this;
+    }
+
+    /**
+     * Replace the diamond parameter <param> with the string
+     * Be careful of sql injection!
+     */
+    public Query addSubstitution(String name, int substitution) {
+        parsedQuery = replaceParam(parsedQuery, name, String.valueOf(substitution));
+        return this;
+    }
+
+    /**
+     * Replace the diamond parameter <param> with the string
+     * Be careful of sql injection!
+     */
+    public Query addSubstitution(String name, long substitution) {
+        parsedQuery = replaceParam(parsedQuery, name, String.valueOf(substitution));
+        return this;
+    }
+
+    /**
+     * Replace the diamond parameter <param> with the string
+     * Be careful of sql injection!
+     */
+    public Query addSubstitution(String name, double substitution) {
+        parsedQuery = replaceParam(parsedQuery, name, String.valueOf(substitution));
+        return this;
+    }
+
+
+    /**
+     * Replace the diamond parameter <param> with a comma separated string
+     * Be careful of sql injection!
+     */
+    public Query addSubstitution(String name, Collection<?> substitution) {
+        StringBuilder sb = new StringBuilder();
+        for (Object o : substitution) {
+            sb.append(o.toString()).append(",");
+        }
+        if (sb.length() > 0) {
+            sb.setLength(sb.length() - 1);
+        }
+        parsedQuery = replaceParam(parsedQuery, name, sb.toString());
+        return this;
+    }
+
+    private String replaceParam(String sql, String name, String replace) {
+        String param = "<" + name + ">";
+        if (sql.contains(param)) {
+            sql = sql.replace(param, replace);
+        }
+        return sql;
+    }
+
     @SuppressWarnings("unchecked")
     public Query addParameter(String name, Object value) {
         return value == null
