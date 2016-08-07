@@ -1301,6 +1301,25 @@ public class Sql2oTest extends BaseMemDbTest {
     }
 
     @Test
+    public void testSubstitution() {
+        try (Connection connection = sql2o.open()) {
+            connection.createQuery("create table testSubstitution(id integer primary key, val clob)")
+                    .executeUpdate();
+
+            connection.createQuery("insert into testSubstitution (id, val) values (<id>, :val)")
+                    .addSubstitution("id", 1)
+                    .addParameter("val", "something")
+                    .executeUpdate();
+
+            String val = connection.createQuery("select val from testSubstitution where id = <id>")
+                    .addSubstitution("id", 1)
+                    .executeScalar(String.class);
+
+            assertThat(val, is(equalTo("something")));
+        }
+    }
+
+    @Test
     public void testBindInIteration() {
         try (Connection connection = sql2o.open()) {
             createAndFillUserTable(connection, true);
