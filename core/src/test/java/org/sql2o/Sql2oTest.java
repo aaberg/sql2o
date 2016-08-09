@@ -1322,15 +1322,15 @@ public class Sql2oTest extends BaseMemDbTest {
     @Test
     public void testSubstitutionList() {
         try (Connection connection = sql2o.open()) {
-            connection.createQuery("create table testSubstitution(id integer primary key, val clob)")
+            connection.createQuery("create table testSubstitutionList(id integer primary key, val clob)")
                     .executeUpdate();
 
-            connection.createQuery("insert into testSubstitution (id, val) values (<id>, :val)")
+            connection.createQuery("insert into testSubstitutionList (id, val) values (<id>, :val)")
                     .addSubstitution("id", 1)
                     .addParameter("val", "something")
                     .executeUpdate();
 
-            connection.createQuery("insert into testSubstitution (id, val) values (<id>, :val)")
+            connection.createQuery("insert into testSubstitutionList (id, val) values (<id>, :val)")
                     .addSubstitution("id", 2)
                     .addParameter("val", "something2")
                     .executeUpdate();
@@ -1338,7 +1338,7 @@ public class Sql2oTest extends BaseMemDbTest {
             List<Integer> id = new ArrayList<>();
             id.add(1);
             id.add(2);
-            List<String> val = connection.createQuery("select val from testSubstitution where id in (<id>)")
+            List<String> val = connection.createQuery("select val from testSubstitutionList where id in (<id>)")
                     .addSubstitution("id", id)
                     .executeScalarList(String.class);
 
