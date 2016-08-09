@@ -1,0 +1,2 @@
+Library-Name: Sql2o.extensions.oracle-joda-time
+Library-Description: Joda-time plugin plugin for Oracle for sql2o
