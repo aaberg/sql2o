@@ -6,8 +6,6 @@ import org.sql2o.quirks.Quirks;
 
 import java.math.BigDecimal;
 import java.util.*;
-
-import static java.util.Arrays.asList;
 import static org.sql2o.converters.Convert.throwIfNull;
 
 /**
