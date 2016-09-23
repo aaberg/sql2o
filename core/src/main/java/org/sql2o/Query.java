@@ -41,9 +41,6 @@ public class Query implements AutoCloseable {
     private String parsedQuery;
     private int maxBatchRecords = 0;
     private int currentBatchRecords = 0;
-    private StringBuilder paramBuilder = new StringBuilder();
-    private final AtomicInteger atomicInteger = new AtomicInteger(0);
-
     private ResultSetHandlerFactoryBuilder resultSetHandlerFactoryBuilder;
 
     @Override
@@ -70,8 +67,6 @@ public class Query implements AutoCloseable {
         parameters = new HashMap<>();
 
         parsedQuery = connection.getSql2o().getQuirks().getSqlParameterParsingStrategy().parseSql(queryText, paramNameToIdxMap);
-        
-        logger.debug("sql:{}", parsedQuery);
     }
 
     // ------------------------------------------------
@@ -159,14 +154,6 @@ public class Query implements AutoCloseable {
 
     public <T> Query addParameter(String name, Class<T> parameterClass, T value){
         //TODO: must cover most of types: BigDecimal,Boolean,SmallInt,Double,Float,byte[]
-        if ("".equals(paramBuilder.toString()) || null == paramBuilder.toString()) {
-            paramBuilder.append("param:[");
-        }
-        paramBuilder.append(value + ",");
-        if (atomicInteger.incrementAndGet() == paramNameToIdxMap.size()) {
-            paramBuilder.deleteCharAt(paramBuilder.lastIndexOf(",")).append("]");
-            logger.debug("{}", paramBuilder);
-        }
         if(InputStream.class.isAssignableFrom(parameterClass))
             return addParameter(name, (InputStream)value);
         if(Integer.class==parameterClass)
