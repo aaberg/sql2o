@@ -763,9 +763,10 @@ public class Query implements AutoCloseable {
      *
      * When set to 0, executeBatch is not called implicitly. This is the default behaviour. <br/>
      *
-     * When using this, please take care about calling <code>exexcuteBatch()</code> after finished
+     * When using this, please take care about calling <code>executeBatch()</code> after finished
      * adding all commands to the batch because commands may remain unexecuted after the
-     * last <code>addToBatch()</code> call.
+     * last <code>addToBatch()</code> call. Additionally, if fetchGeneratedKeys is set, then
+     * previously generated keys will be lost after a batch is executed.
      *
      * @throws IllegalArgumentException Thrown if the value is negative.
      */
