@@ -800,7 +800,7 @@ public class Query implements AutoCloseable {
      * Adds a set of parameters to this <code>Query</code>
      * object's batch of commands. <br/>
      *
-     * If maxBatchRecords is more than 0, executeBatch is called upon adding that manny
+     * If maxBatchRecords is more than 0, executeBatch is called upon adding that many
      * commands to the batch. <br/>
      *
      * The current number of batched commands is accessible via the <code>getCurrentBatchRecords()</code>
@@ -819,6 +819,26 @@ public class Query implements AutoCloseable {
         }
 
         return this;
+    }
+
+    /**
+     * Adds a set of parameters to this <code>Query</code>
+     * object's batch of commands and returns any generated keys. <br/>
+     *
+     * If maxBatchRecords is more than 0, executeBatch is called upon adding that many
+     * commands to the batch. This method will return any generated keys if <code>fetchGeneratedKeys</code> is set. <br/>
+     *
+     * The current number of batched commands is accessible via the <code>getCurrentBatchRecords()</code>
+     * method.
+     */
+    public <A> List<A> addToBatchGetKeys(Class<A> klass){
+        this.addToBatch();
+
+        if (this.currentBatchRecords == 0) {
+            return this.connection.getKeys(klass);
+        } else {
+            return Collections.emptyList();
+        }
     }
 
     public Connection executeBatch() throws Sql2oException {
