@@ -179,7 +179,9 @@ public class Connection implements AutoCloseable, Closeable {
         }
         this.keys = new ArrayList<Object>();
         while(rs.next()){
-            this.keys.add(rs.getObject(1));
+            for (int column=1; column <= rs.getMetaData().getColumnCount(); column++) {
+                this.keys.add(rs.getObject(column));
+            }
         }
     }
 

@@ -150,6 +150,32 @@ public class PostgresTest extends PostgresTestSupport {
     }
 
     @Test
+    public void testKeysKeyOnSerial() {
+        Connection connection = null;
+
+        try {
+            connection = sql2o.beginTransaction();
+
+            String createTableSql = "create table test_serial_table (val varchar(20), id serial primary key)";
+            connection.createQuery(createTableSql).executeUpdate();
+
+            String insertSql = "insert into test_serial_table(val) values ('something')";
+            Object[] key = connection.createQuery(insertSql, true).executeUpdate().getKeys();
+
+            assertThat((String) key[0], equalTo("something"));
+            assertThat((Integer) key[1], equalTo(1));
+
+            key = connection.createQuery(insertSql, true).executeUpdate().getKeys();
+            assertThat((String) key[0], equalTo("something"));
+            assertThat((Integer) key[1], equalTo(2));
+        } finally {
+            if (connection != null) {
+                connection.rollback();
+            }
+        }
+    }
+
+    @Test
     public void testUUID() {
 
         Connection connection = null;
