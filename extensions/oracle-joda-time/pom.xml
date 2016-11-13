@@ -36,6 +36,14 @@
             <optional>true</optional>
         </dependency>
 
+        <!-- test dependencies -->
+        <dependency>
+            <groupId>org.sql2o.extensions</groupId>
+            <artifactId>sql2o-oracle</artifactId>
+            <version>1.6.0-RC3-SNAPSHOT</version>
+            <scope>test</scope>
+        </dependency>
+
     </dependencies>
 
 </project>

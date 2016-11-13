@@ -12,6 +12,7 @@ package org.sql2o.issues;
 
 import org.joda.time.DateTime;
 import org.joda.time.LocalDate;
+import org.junit.Ignore;
 import org.junit.Test;
 import org.sql2o.Connection;
 import org.sql2o.Query;
@@ -64,7 +65,7 @@ public class OracleTest {
      *
      *
      */
-    @Test
+    @Test @Ignore
     public void testForIssue8OracleTimestamps() {
         String sql = "select CURRENT_TIMESTAMP from dual";
 

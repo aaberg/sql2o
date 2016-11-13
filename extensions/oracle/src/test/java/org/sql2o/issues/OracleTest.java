@@ -10,6 +10,7 @@
 
 package org.sql2o.issues;
 
+import org.junit.Ignore;
 import org.junit.Test;
 import org.sql2o.Connection;
 import org.sql2o.Query;
@@ -45,7 +46,7 @@ public class OracleTest {
         this.sql2o = new Sql2o("jdbc:oracle:thin:@//localhost:1521/orcl", "test", "test", new OracleQuirks());
     }
 
-    @Test
+    @Test @Ignore
     public void testForIssue12ErrorReadingClobValue() {
         final String sql = "select to_clob('test') val from dual";
 
@@ -53,7 +54,7 @@ public class OracleTest {
         assertEquals("test", val);
     }
 
-    @Test
+    @Test @Ignore
     public void testUUiID() {
 
         UUID uuid1 = UUID.randomUUID();
