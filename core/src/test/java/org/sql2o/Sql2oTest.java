@@ -564,9 +564,12 @@ public class Sql2oTest extends BaseMemDbTest {
     public void testTable_asList() {
         createAndFillUserTable();
 
-        Table table = sql2o.createQuery("select * from user").executeAndFetchTable();
+        List<Map<String, Object>> rows;
+        try (Connection con = sql2o.open()) {
+            Table table = con.createQuery("select * from user").executeAndFetchTable();
 
-        List<Map<String, Object>> rows = table.asList();
+            rows = table.asList();
+        }
 
         assertEquals(insertIntoUsers, rows.size());
 

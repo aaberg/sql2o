@@ -143,56 +143,15 @@ public class Row {
     /**
      * View row as a simple map.
      */
-    public Map<String, Object> asMap()
-    {   final List<Object> listOfValues = asList(values);
-        return new Map<String, Object>() {
-            public int size() {
-                return values.length;
-            }
-
-            public boolean isEmpty() {
-                return size()==0;
-            }
-
-            public boolean containsKey(Object key) {
-                return columnNameToIdxMap.containsKey(key);
-            }
-
-            public boolean containsValue(Object value) {
-                return listOfValues.contains(value);
-            }
-
-            public Object get(Object key) {
-                return values[columnNameToIdxMap.get(key)];
-            }
-
-            public Object put(String key, Object value) {
-                throw new UnsupportedOperationException("Row map is immutable.");
-            }
-
-            public Object remove(Object key) {
-                throw new UnsupportedOperationException("Row map is immutable.");
-            }
-
-            public void putAll(Map<? extends String, ?> m) {
-                throw new UnsupportedOperationException("Row map is immutable.");
-            }
-
-            public void clear() {
-                throw new UnsupportedOperationException("Row map is immutable.");
-            }
-
-            public Set<String> keySet() {
-                return columnNameToIdxMap.keySet();
-            }
-
-            public Collection<Object> values() {
-                return listOfValues;
-            }
-
-            public Set<Entry<String, Object>> entrySet() {
-                throw new UnsupportedOperationException("Row map does not support entrySet.");
-            }
-        };
+    public Map<String, Object> asMap() {
+        Map map = new HashMap();
+        Set<String> keys = columnNameToIdxMap.keySet();
+        Iterator iterator = keys.iterator();
+        while (iterator.hasNext()) {
+            String colum = iterator.next().toString();
+            int index = columnNameToIdxMap.get(colum);
+            map.put(colum, values[index]);
+        }
+        return map;
     }
 }
