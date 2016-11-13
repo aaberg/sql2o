@@ -112,7 +112,6 @@ public class PojoMetadata {
 
             // prepare methods. Methods will override fields, if both exists.
             for (Method m : theClass.getDeclaredMethods()) {
-                if (m.getParameterTypes().length!=1) continue;
 
                 if (m.getName().startsWith("get")) {
                     String propertyName = m.getName().substring(3);
@@ -125,7 +124,7 @@ public class PojoMetadata {
                     propertyGetters.put(propertyName, factoryFacade.newGetter(m));
                 }
 
-                if (m.getName().startsWith("set")) {
+                if (m.getName().startsWith("set") && m.getParameterTypes().length == 1) {
                     String propertyName = readAnnotatedColumnName(m, isJpaColumnInClasspath);
                     if(propertyName == null) {
                         propertyName = m.getName().substring(3);
