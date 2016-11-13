@@ -10,7 +10,7 @@ import org.sql2o.logging.LocalLoggerFactory;
 import org.sql2o.logging.Logger;
 import org.sql2o.quirks.Quirks;
 import org.sql2o.reflection.PojoIntrospector;
-
+import java.util.concurrent.atomic.AtomicInteger;
 import java.io.InputStream;
 import java.lang.reflect.*;
 import java.sql.*;
@@ -41,7 +41,6 @@ public class Query implements AutoCloseable {
     private String parsedQuery;
     private int maxBatchRecords = 0;
     private int currentBatchRecords = 0;
-
     private ResultSetHandlerFactoryBuilder resultSetHandlerFactoryBuilder;
 
     @Override
