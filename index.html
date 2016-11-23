@@ -95,6 +95,7 @@ try {
         task.setId(rs.getLong("id"));
         task.setCategory(rs.getString("category"));
         task.setDueDate(rs.getDate("duedate"));
+        tasks.add(task);
     }
     rs.close();
 } catch(SQLException se) {
