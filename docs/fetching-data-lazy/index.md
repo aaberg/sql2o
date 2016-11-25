@@ -3,6 +3,7 @@ title: Fetching data lazily
 layout: docs
 topmenu: docs
 leftmenu: fetchdatalazy
+base_url: ../../
 ---
 
 If you need to read a large amount of data, you may run into memory issues using executeAndFetch(). You can use executeAndFetchLazy() to iterate through a result set and ensure you do not run out of memory. 

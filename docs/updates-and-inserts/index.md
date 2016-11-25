@@ -3,6 +3,7 @@ title: Inserts and updates
 layout: docs
 topmenu: docs
 leftmenu: insertsAndUpdates
+base_url: ../../
 ---
 
 With sql2o updates and inserts are executed with the executeUpdate() method.

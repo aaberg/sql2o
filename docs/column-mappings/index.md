@@ -3,6 +3,7 @@ title: Column mappings
 layout: docs
 topmenu: docs
 leftmenu: columnmappings
+base_url: ../../
 ---
 
 In many many cases it is not desired to call our java properties exact the same name as the corresponding column in the

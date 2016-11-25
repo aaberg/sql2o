@@ -3,6 +3,7 @@ title: Running queries in a batch
 layout: docs
 topmenu: docs
 leftmenu: batch
+base_url: ../../
 ---
 
 If you need to run an UPDATE, INSERT or DELETE query multiple times with different parameters, you will get a huge

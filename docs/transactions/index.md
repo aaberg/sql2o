@@ -3,6 +3,7 @@ title: Transactions
 layout: docs
 topmenu: docs
 leftmenu: transactions
+base_url: ../../
 ---
 
 You can open a transaction by calling the beginTransaction() method on the Sql2o instance; this returns a Connection

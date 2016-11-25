@@ -3,6 +3,7 @@ title: Fetching data from database
 layout: docs
 topmenu: docs
 leftmenu: fetchdata
+base_url: ../../
 ---
 
 

@@ -3,6 +3,7 @@ title: Integration With Spring Framework
 layout: docs
 topmenu: docs
 leftmenu: spring
+base_url: ../../
 ---
 
 Sql2o instance is thread-safe. This means that Sql2o can be configured as a singleton component in Spring runtime. Here are few steps in order to use Sql2o with Spring.
