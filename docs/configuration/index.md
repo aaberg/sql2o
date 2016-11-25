@@ -3,6 +3,7 @@ title: Configuration
 layout: docs
 topmenu: docs
 leftmenu: configuration
+base_url: ../../
 ---
 
 The only configuration needed is the connection url, username and password for your database. This information is
