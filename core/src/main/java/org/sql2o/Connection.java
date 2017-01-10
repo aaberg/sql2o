@@ -1,5 +1,6 @@
 package org.sql2o;
 
+import org.sql2o.connectionsources.ConnectionSource;
 import org.sql2o.converters.Converter;
 import org.sql2o.converters.ConverterException;
 import org.sql2o.logging.LocalLoggerFactory;
@@ -24,6 +25,7 @@ public class Connection implements AutoCloseable, Closeable {
     
     private final static Logger logger = LocalLoggerFactory.getLogger(Connection.class);
 
+    private ConnectionSource connectionSource;
     private java.sql.Connection jdbcConnection;
     private Sql2o sql2o;
 
@@ -57,7 +59,11 @@ public class Connection implements AutoCloseable, Closeable {
     final boolean autoClose;
 
     Connection(Sql2o sql2o, boolean autoClose) {
+        this(sql2o, null, autoClose);
+    }
 
+    Connection(Sql2o sql2o, ConnectionSource connectionSource, boolean autoClose) {
+        this.connectionSource = connectionSource != null ? connectionSource : sql2o.getConnectionSource();
         this.autoClose = autoClose;
         this.sql2o = sql2o;
         createConnection();
@@ -295,7 +301,7 @@ public class Connection implements AutoCloseable, Closeable {
 
     private void createConnection(){
         try{
-            this.jdbcConnection = this.sql2o.getDataSource().getConnection();
+            this.jdbcConnection = connectionSource.getConnection();
         }
         catch(Exception ex){
             throw new Sql2oException("Could not acquire a connection from DataSource - " + ex.getMessage(), ex);

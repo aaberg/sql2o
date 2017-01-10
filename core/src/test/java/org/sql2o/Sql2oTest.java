@@ -27,6 +27,7 @@ import java.util.*;
 
 import static org.hamcrest.CoreMatchers.*;
 import static org.junit.Assert.*;
+import static org.sql2o.connectionsources.ConnectionSources.join;
 
 /**
  * Created by IntelliJ IDEA.
@@ -1148,6 +1149,98 @@ public class Sql2oTest extends BaseMemDbTest {
 
         count = sql2o.createQuery("select count(*) from testTransactionAutoClosable").executeAndFetchFirst(Integer.class);
         assertThat(count, is(equalTo(1)));
+
+    }
+
+    @Test
+    public void testExternalTransactionCommit() {
+
+        try (Connection connection1 = sql2o.open()) {
+            connection1.createQuery("create table testExternalTransactionCommit(id int primary key, val varchar(20) not null)")
+                    .executeUpdate();
+        }
+
+
+        try (Connection globalConnection = sql2o.beginTransaction()) {
+            java.sql.Connection globalTransaction = globalConnection.getJdbcConnection();
+
+
+            try(Connection connection = sql2o.beginTransaction(join(globalTransaction)) ) {
+                String sql = "insert into testExternalTransactionCommit(id, val) values (:id, :val);";
+                connection.createQuery(sql).addParameter("id", 1).addParameter("val", "foo").executeUpdate();
+                connection.commit();
+            }
+
+            try (Connection connection2 = sql2o.open(join(globalTransaction))) {
+                int count = connection2.createQuery("select count(*) from testExternalTransactionCommit").executeAndFetchFirst(Integer.class);
+                assertThat(count, is(equalTo(1)));
+            }
+
+            try(Connection connection = sql2o.beginTransaction(join(globalTransaction)) ) {
+                String sql = "insert into testExternalTransactionCommit(id, val) values (:id, :val);";
+                connection.createQuery(sql).addParameter("id", 2).addParameter("val", "bar").executeUpdate();
+                connection.commit();
+            }
+
+            try (Connection connection2 = sql2o.open(join(globalTransaction))) {
+                int count = connection2.createQuery("select count(*) from testExternalTransactionCommit").executeAndFetchFirst(Integer.class);
+                assertThat(count, is(equalTo(2)));
+            }
+
+            globalConnection.commit();
+        }
+
+        try (Connection connection2 = sql2o.open()) {
+            int count = connection2.createQuery("select count(*) from testExternalTransactionCommit").executeAndFetchFirst(Integer.class);
+
+            assertThat(count, is(equalTo(2)));
+        }
+
+    }
+
+    @Test
+    public void testExternalTransactionRollback() {
+
+        try (Connection connection1 = sql2o.open()) {
+            connection1.createQuery("create table testExternalTransactionRollback(id int primary key, val varchar(20) not null)")
+                    .executeUpdate();
+        }
+
+
+        try (Connection globalConnection = sql2o.beginTransaction()) {
+            java.sql.Connection globalTransaction = globalConnection.getJdbcConnection();
+
+
+            try(Connection connection = sql2o.beginTransaction(join(globalTransaction)) ) {
+                String sql = "insert into testExternalTransactionRollback(id, val) values (:id, :val);";
+                connection.createQuery(sql).addParameter("id", 1).addParameter("val", "foo").executeUpdate();
+                connection.commit();
+            }
+
+            try (Connection connection2 = sql2o.open(join(globalTransaction))) {
+                int count = connection2.createQuery("select count(*) from testExternalTransactionRollback").executeAndFetchFirst(Integer.class);
+                assertThat(count, is(equalTo(1)));
+            }
+
+            try(Connection connection = sql2o.beginTransaction(join(globalTransaction)) ) {
+                String sql = "insert into testExternalTransactionRollback(id, val) values (:id, :val);";
+                connection.createQuery(sql).addParameter("id", 2).addParameter("val", "bar").executeUpdate();
+                connection.commit();
+            }
+
+            try (Connection connection2 = sql2o.open(join(globalTransaction))) {
+                int count = connection2.createQuery("select count(*) from testExternalTransactionRollback").executeAndFetchFirst(Integer.class);
+                assertThat(count, is(equalTo(2)));
+            }
+
+            globalConnection.rollback();
+        }
+
+        try (Connection connection2 = sql2o.open()) {
+            int count = connection2.createQuery("select count(*) from testExternalTransactionRollback").executeAndFetchFirst(Integer.class);
+
+            assertThat(count, is(equalTo(0)));
+        }
 
     }
 
