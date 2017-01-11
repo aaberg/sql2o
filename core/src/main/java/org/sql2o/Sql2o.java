@@ -1,5 +1,7 @@
 package org.sql2o;
 
+import org.sql2o.connectionsources.DataSourceConnectionSource;
+import org.sql2o.connectionsources.ConnectionSource;
 import org.sql2o.logging.LocalLoggerFactory;
 import org.sql2o.logging.Logger;
 import org.sql2o.quirks.Quirks;
@@ -26,9 +28,10 @@ import java.util.Map;
  */
 public class Sql2o {
     final Quirks quirks;
-    private final DataSource dataSource;
     private Map<String, String> defaultColumnMappings;
     private boolean defaultCaseSensitive;
+
+    private ConnectionSource connectionSource;
 
     private final static Logger logger = LocalLoggerFactory.getLogger(Sql2o.class);
 
@@ -73,7 +76,7 @@ public class Sql2o {
      * @param quirks     {@link org.sql2o.quirks.Quirks} allows sql2o to work around known quirks and issues in different JDBC drivers.
      */
     public Sql2o(DataSource dataSource, Quirks quirks){
-        this.dataSource = dataSource;
+        this.connectionSource = new DataSourceConnectionSource(dataSource);
         this.quirks=quirks;
         this.defaultColumnMappings = new HashMap<String, String>();
     }
@@ -84,10 +87,31 @@ public class Sql2o {
 
      /**
      * Gets the DataSource that Sql2o uses internally to acquire database connections.
+     * @deprecated use {@link #getConnectionSource()} as more general connection provider
      * @return  The DataSource instance
      */
+     @Deprecated
     public DataSource getDataSource() {
-        return dataSource;
+        if (connectionSource instanceof DataSourceConnectionSource)
+            return ((DataSourceConnectionSource) connectionSource).getDataSource();
+        else
+            return null;
+    }
+
+    /**
+     * Gets the {@link ConnectionSource} that Sql2o uses internally to acquire database connections.
+     * @return The ConnectionSource instance
+     */
+    public ConnectionSource getConnectionSource() {
+        return connectionSource;
+    }
+
+    /**
+     * Sets the {@link ConnectionSource} that Sql2o uses internally to acquire database connections.
+     * @param connectionSource the ConnectionSource instance to use
+     */
+    public void setConnectionSource(ConnectionSource connectionSource) {
+        this.connectionSource = connectionSource;
     }
 
     /**
@@ -162,6 +186,16 @@ public class Sql2o {
 
         Connection connection = new Connection(this, true);
         return connection.createQuery(query);
+    }
+
+    /**
+     * Opens a connection to the database
+     * @param connectionSource the {@link ConnectionSource} implementation substitution,
+     *                         that will be used instead of one from {@link Sql2o} instance.
+     * @return instance of the {@link org.sql2o.Connection} class.
+     */
+    public Connection open(ConnectionSource connectionSource) {
+        return new Connection(this, connectionSource, false);
     }
 
     /**
@@ -244,8 +278,21 @@ public class Sql2o {
      * @return the {@link Connection} instance to use to run statements in the transaction.
      */
     public Connection beginTransaction(int isolationLevel){
+        return beginTransaction(getConnectionSource(), isolationLevel);
+    }
 
-        Connection connection = new Connection(this, false);
+    /**
+     * Begins a transaction with the given isolation level. Every statement executed on the return {@link Connection}
+     * instance, will be executed in the transaction. It is very important to always call either the {@link org.sql2o.Connection#commit()}
+     * method or the {@link org.sql2o.Connection#rollback()} method to close the transaction. Use proper try-catch logic.
+     * @param connectionSource the {@link ConnectionSource} implementation substitution,
+     *                         that will be used instead of one from {@link Sql2o} instance.
+     * @param isolationLevel the isolation level of the transaction
+     * @return the {@link Connection} instance to use to run statements in the transaction.
+     */
+    public Connection beginTransaction(ConnectionSource connectionSource, int isolationLevel) {
+
+        Connection connection = new Connection(this, connectionSource, false);
 
         boolean success = false;
         try {
@@ -271,6 +318,18 @@ public class Sql2o {
      */
     public Connection beginTransaction(){
         return this.beginTransaction(java.sql.Connection.TRANSACTION_READ_COMMITTED);
+    }
+
+    /**
+     * Begins a transaction with isolation level {@link java.sql.Connection#TRANSACTION_READ_COMMITTED}. Every statement executed on the return {@link Connection}
+     * instance, will be executed in the transaction. It is very important to always call either the {@link org.sql2o.Connection#commit()}
+     * method or the {@link org.sql2o.Connection#rollback()} method to close the transaction. Use proper try-catch logic.
+     * @param connectionSource the {@link ConnectionSource} implementation substitution,
+     *                         that will be used instead of one from {@link Sql2o} instance.
+     * @return the {@link Connection} instance to use to run statements in the transaction.
+     */
+    public Connection beginTransaction(ConnectionSource connectionSource) {
+        return this.beginTransaction(connectionSource, java.sql.Connection.TRANSACTION_READ_COMMITTED);
     }
 
     /**
