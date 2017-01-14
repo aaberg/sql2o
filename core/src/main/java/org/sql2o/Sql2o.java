@@ -326,6 +326,10 @@ public class Sql2o {
      * method or the {@link org.sql2o.Connection#rollback()} method to close the transaction. Use proper try-catch logic.
      * @param connectionSource the {@link ConnectionSource} implementation substitution,
      *                         that will be used instead of one from {@link Sql2o} instance.
+     *                         <b>Note:</b> if connectionSource is null then connectionSource
+     *                         from {@link Sql2o} instance will be used that by default
+     *                         means execution in dedicated transaction. Make sure in calling code that
+     *                         your are not passing the {@code null} value if you dont expect this behaviour.
      * @return the {@link Connection} instance to use to run statements in the transaction.
      */
     public Connection beginTransaction(ConnectionSource connectionSource) {
