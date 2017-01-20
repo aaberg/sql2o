@@ -8,6 +8,7 @@ import org.joda.time.Period;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.Parameterized;
+import org.sql2o.connectionsources.DataSourceConnectionSource;
 import org.sql2o.data.LazyTable;
 import org.sql2o.data.Row;
 import org.sql2o.data.Table;
@@ -211,7 +212,7 @@ public class Sql2oTest extends BaseMemDbTest {
 
 
         // test defaultCaseSensitive;
-        sql2o.setDefaultCaseSensitive(false);
+        sql2o.setSettings(sql2o.getSettings().withDefaultCaseSensitive(false));
         List<CIEntity> ciEntities2 = sql2o.createQuery("select * from testCI").executeAndFetch(CIEntity.class);
         assertTrue(ciEntities2.size() == 20);
     }
@@ -469,10 +470,10 @@ public class Sql2oTest extends BaseMemDbTest {
                 .createQuery("insert into test_rollback_table(value) values (:val)")
                 .addParameter("val", "something")
                 .executeUpdate()
-                .commit()
+                .commit();
 
                         // insert something else, and roll it back.
-                .beginTransaction()
+        sql2o.beginTransaction()
                 .createQuery("insert into test_rollback_table(value) values (:val)")
                 .addParameter("val", "something to rollback")
                 .executeUpdate()
@@ -514,7 +515,7 @@ public class Sql2oTest extends BaseMemDbTest {
         defaultColMaps.put("caption", "text");
         defaultColMaps.put("theTime", "time");
 
-        sql2o1.setDefaultColumnMappings(defaultColMaps);
+        sql2o1.setSettings(sql2o1.getSettings().withDefaultColumnMappings(defaultColMaps));
 
         Entity entity = sql2o1.createQuery("select 1 as id, 'something' as caption, cast('2011-01-01' as date) as theTime from (values(0))").executeAndFetchFirst(Entity.class);
 
@@ -1243,6 +1244,45 @@ public class Sql2oTest extends BaseMemDbTest {
         }
 
     }
+
+    @Test
+    public void testWrappingJDBC() throws SQLException {
+
+        Sql2o sql2oWrapper = new Sql2o(sql2o.getSettings());
+
+        java.sql.Connection jdbc = ((DataSourceConnectionSource) sql2o.getConnectionSource()).getDataSource().getConnection();
+
+        try (Connection connection = sql2oWrapper.wrap(jdbc)) {
+            connection.createQuery("create table testWrappingJDBC(id int primary key, val varchar(20) not null)")
+                    .executeUpdate();
+
+
+            String sql = "insert into testWrappingJDBC(id, val) values (:id, :val);";
+            connection.createQuery(sql).addParameter("id", 1).addParameter("val", "foo").executeUpdate();
+
+
+            int count1 = connection.createQuery("select count(*) from testWrappingJDBC").executeAndFetchFirst(Integer.class);
+            assertThat(count1, is(equalTo(1)));
+
+
+            String sql2 = "insert into testWrappingJDBC(id, val) values (:id, :val);";
+            connection.createQuery(sql2).addParameter("id", 2).addParameter("val", "bar").executeUpdate();
+
+
+            int count2 = connection.createQuery("select count(*) from testWrappingJDBC").executeAndFetchFirst(Integer.class);
+            assertThat(count2, is(equalTo(2)));
+
+        }
+        assertThat(jdbc.isClosed(), is(true));
+
+        try (Connection connection2 = sql2o.open()) {
+            int count = connection2.createQuery("select count(*) from testWrappingJDBC").executeAndFetchFirst(Integer.class);
+
+            assertThat(count, is(equalTo(2)));
+        }
+
+    }
+
 
     @Test
     public void testOpenConnection() throws SQLException {

@@ -55,7 +55,7 @@ public class H2Tests {
             put(DateTime.class, new DateTimeConverter(DateTimeZone.getDefault()));
         }}));
 
-        assertThat(sql2o.getQuirks(), is(instanceOf(NoQuirks.class)));
+        assertThat(sql2o.getSettings().getQuirks(), is(instanceOf(NoQuirks.class)));
 
         try (Connection connection = sql2o.open()) {
             int val = connection.createQuery("select 42").executeScalar(Integer.class);
@@ -75,7 +75,7 @@ public class H2Tests {
 
         Sql2o sql2o = new Sql2o(ds);
 
-        assertThat(sql2o.getQuirks(), is(instanceOf(H2Quirks.class)));
+        assertThat(sql2o.getSettings().getQuirks(), is(instanceOf(H2Quirks.class)));
     }
 
     /**

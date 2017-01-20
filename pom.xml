@@ -13,7 +13,7 @@
     <groupId>org.sql2o</groupId>
     <artifactId>sql2o-parent</artifactId>
     <name>Sql2o parent</name>
-    <version>1.6.0-RC4-SNAPSHOT</version>
+    <version>2.0.0-SNAPSHOT</version>
     <description>
         Easy database query library
     </description>

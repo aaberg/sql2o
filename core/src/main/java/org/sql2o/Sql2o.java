@@ -27,9 +27,8 @@ import java.util.Map;
  * @author Lars Aaberg
  */
 public class Sql2o {
-    final Quirks quirks;
-    private Map<String, String> defaultColumnMappings;
-    private boolean defaultCaseSensitive;
+
+    private Settings settings;
 
     private ConnectionSource connectionSource;
 
@@ -76,21 +75,47 @@ public class Sql2o {
      * @param quirks     {@link org.sql2o.quirks.Quirks} allows sql2o to work around known quirks and issues in different JDBC drivers.
      */
     public Sql2o(DataSource dataSource, Quirks quirks){
+        this(new Settings(quirks, new HashMap<String, String>(), false));
         this.connectionSource = new DataSourceConnectionSource(dataSource);
-        this.quirks=quirks;
-        this.defaultColumnMappings = new HashMap<String, String>();
     }
 
-    public Quirks getQuirks() {
-        return quirks;
+    /**
+     * Creates a new instance of the Sql2o class without any {@link ConnectionSource}. Instance will be able only to
+     * {@link Sql2o#wrap(java.sql.Connection) wrap} existing jdbc connections or work with explicitly passed {@link ConnectionSource}
+     * with {@link Sql2o#open(ConnectionSource)} or {@link Sql2o#beginTransaction(ConnectionSource)} methods.
+     *
+     * @param settings Sql2o settings to be used in wrapped connections
+     */
+    public Sql2o(Settings settings) {
+        this.settings = settings;
     }
 
-     /**
+    /**
+     * Creates a new instance of the Sql2o class without any {@link ConnectionSource}. Instance will be able only to
+     * {@link Sql2o#wrap(java.sql.Connection) wrap} existing jdbc connections or work with explicitly passed {@link ConnectionSource}
+     * with {@link Sql2o#open(ConnectionSource)} or {@link Sql2o#beginTransaction(ConnectionSource)} methods.
+     *
+     * @param quirks quirks to be used in wrapped connections
+     */
+    public Sql2o(Quirks quirks) {
+        this(Settings.defaults.withQuirks(quirks));
+    }
+
+    /**
+     * Creates a new instance of the Sql2o class with default settings and without any {@link ConnectionSource}. Instance will be able only to
+     * {@link Sql2o#wrap(java.sql.Connection) wrap} existing jdbc connections or work with explicitly passed {@link ConnectionSource}
+     * with {@link Sql2o#open(ConnectionSource)} or {@link Sql2o#beginTransaction(ConnectionSource)} methods.
+     */
+    public Sql2o() {
+        this(Settings.defaults);
+    }
+
+    /**
      * Gets the DataSource that Sql2o uses internally to acquire database connections.
      * @deprecated use {@link #getConnectionSource()} as more general connection provider
-     * @return  The DataSource instance
+     * @return The DataSource instance
      */
-     @Deprecated
+    @Deprecated
     public DataSource getDataSource() {
         if (connectionSource instanceof DataSourceConnectionSource)
             return ((DataSourceConnectionSource) connectionSource).getDataSource();
@@ -118,37 +143,66 @@ public class Sql2o {
      * Gets the default column mappings Map. column mappings added to this Map are always available when Sql2o attempts
      * to map between result sets and object instances.
      * @return  The {@link Map<String, String>} instance, which Sql2o internally uses to map column names with property
+     * @deprecated use {@link Sql2o#getSettings()} instead
      * names.
      */
+    @Deprecated
     public Map<String, String> getDefaultColumnMappings() {
-        return defaultColumnMappings;
+        return settings.getDefaultColumnMappings();
     }
 
     /**
      * Sets the default column mappings Map.
      * @param defaultColumnMappings     A {@link Map} instance Sql2o uses internally to map between column names and
      *                                  property names.
+     * @deprecated use {@link Sql2o#setSettings(Settings)} instead
      */
+    @Deprecated
     public void setDefaultColumnMappings(Map<String, String> defaultColumnMappings) {
-        this.defaultColumnMappings = defaultColumnMappings;
+        this.settings = this.settings.withDefaultColumnMappings(defaultColumnMappings);
     }
 
     /**
      * Gets value indicating if this instance of Sql2o is case sensitive when mapping between columns names and property
      * names.
+     * @deprecated use {@link Sql2o#getSettings()} instead
      * @return
      */
+    @Deprecated
     public boolean isDefaultCaseSensitive() {
-        return defaultCaseSensitive;
+        return settings.isDefaultCaseSensitive();
     }
 
     /**
      * Sets a value indicating if this instance of Sql2o is case sensitive when mapping between columns names and property
      * names. This should almost always be false, because most relational databases are not case sensitive.
+     * @deprecated use {@link Sql2o#setSettings(Settings)} instead
      * @param defaultCaseSensitive
      */
+    @Deprecated
     public void setDefaultCaseSensitive(boolean defaultCaseSensitive) {
-        this.defaultCaseSensitive = defaultCaseSensitive;
+        this.settings = this.settings.withDefaultCaseSensitive(defaultCaseSensitive);
+    }
+
+    /**
+     * Gets value of {@link Settings} which is used in {@link Connection} instances created by this {@link Sql2o} object
+     * @return
+     */
+    public Settings getSettings() {
+        return settings;
+    }
+
+    /**
+     * Sets value of {@link Settings} which will be used in {@link Connection} instances
+     * created by this {@link Sql2o} object.
+     * <b>Note:</b> as long as {@link Settings} are immutable to update separate settings
+     * {@code with*} methods should be used on instance got from {@link Sql2o#getSettings()} method.
+     * For example: {@code sql2o.setSettings(sql2o.getSettings().withDefaultColumnMappings(newValue))}
+     *
+     * @param settings
+     */
+    public void setSettings(Settings settings) {
+        this.settings = settings;
     }
 
     /**
@@ -166,7 +220,7 @@ public class Sql2o {
      */
     @Deprecated
     public Query createQuery(String query, boolean returnGeneratedKeys) {
-        return new Connection(this, true).createQuery(query, returnGeneratedKeys);
+        return new ReconnectableConnection(this.settings, this.getConnectionSource(), true).createQuery(query, returnGeneratedKeys);
     }
 
     /**
@@ -182,9 +236,9 @@ public class Sql2o {
      * </code>
      */
     @Deprecated
-    public Query createQuery(String query){
+    public Query createQuery(String query) {
 
-        Connection connection = new Connection(this, true);
+        Connection connection = new ReconnectableConnection(this.settings, this.getConnectionSource(), true);
         return connection.createQuery(query);
     }
 
@@ -195,7 +249,13 @@ public class Sql2o {
      * @return instance of the {@link org.sql2o.Connection} class.
      */
     public Connection open(ConnectionSource connectionSource) {
-        return new Connection(this, connectionSource, false);
+        if(connectionSource == null)
+        {
+            checkConnectionSource("open with null connectionSource");
+            connectionSource = getConnectionSource();
+        }
+
+        return new ReconnectableConnection(this.settings, connectionSource, false);
     }
 
     /**
@@ -203,7 +263,17 @@ public class Sql2o {
      * @return instance of the {@link org.sql2o.Connection} class.
      */
     public Connection open() {
-        return new Connection(this, false);
+        checkConnectionSource("open");
+        return new ReconnectableConnection(this.settings, this.getConnectionSource(), false);
+    }
+
+    /**
+     * Wraps existing {@link java.sql.Connection} with {@link Connection Sql2o Connection}
+     * @param jdbcConnection a connection to wrap
+     * @return new unmanaged {@link org.sql2o.Connection} instance
+     */
+    public Connection wrap(java.sql.Connection jdbcConnection) {
+        return new BaseConnection(jdbcConnection, settings, false);
     }
 
     /**
@@ -278,6 +348,7 @@ public class Sql2o {
      * @return the {@link Connection} instance to use to run statements in the transaction.
      */
     public Connection beginTransaction(int isolationLevel){
+        checkConnectionSource("beginTransaction");
         return beginTransaction(getConnectionSource(), isolationLevel);
     }
 
@@ -291,8 +362,13 @@ public class Sql2o {
      * @return the {@link Connection} instance to use to run statements in the transaction.
      */
     public Connection beginTransaction(ConnectionSource connectionSource, int isolationLevel) {
+        if(connectionSource == null)
+        {
+            checkConnectionSource("beginTransaction with null connectionSource");
+            connectionSource = getConnectionSource();
+        }
 
-        Connection connection = new Connection(this, connectionSource, false);
+        Connection connection = new ReconnectableConnection(this.settings, connectionSource, false);
 
         boolean success = false;
         try {
@@ -320,12 +396,22 @@ public class Sql2o {
         return this.beginTransaction(java.sql.Connection.TRANSACTION_READ_COMMITTED);
     }
 
+    private void checkConnectionSource(String method) {
+        if (connectionSource == null)
+            throw new UnsupportedOperationException("you can't use Sql2o." + method +
+                    " when no connectionSource is configured for Sql2o instance");
+    }
+
     /**
      * Begins a transaction with isolation level {@link java.sql.Connection#TRANSACTION_READ_COMMITTED}. Every statement executed on the return {@link Connection}
      * instance, will be executed in the transaction. It is very important to always call either the {@link org.sql2o.Connection#commit()}
      * method or the {@link org.sql2o.Connection#rollback()} method to close the transaction. Use proper try-catch logic.
      * @param connectionSource the {@link ConnectionSource} implementation substitution,
      *                         that will be used instead of one from {@link Sql2o} instance.
+     *                         <b>Note:</b> if connectionSource is null then connectionSource
+     *                         from {@link Sql2o} instance will be used that by default
+     *                         means execution in dedicated transaction. Make sure in calling code that
+     *                         your are not passing the {@code null} value if you dont expect this behaviour.
      * @return the {@link Connection} instance to use to run statements in the transaction.
      */
     public Connection beginTransaction(ConnectionSource connectionSource) {
