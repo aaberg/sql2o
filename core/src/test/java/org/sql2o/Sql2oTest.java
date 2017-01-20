@@ -211,7 +211,7 @@ public class Sql2oTest extends BaseMemDbTest {
 
 
         // test defaultCaseSensitive;
-        sql2o.setDefaultCaseSensitive(false);
+        sql2o.setSettings(sql2o.getSettings().withDefaultCaseSensitive(false));
         List<CIEntity> ciEntities2 = sql2o.createQuery("select * from testCI").executeAndFetch(CIEntity.class);
         assertTrue(ciEntities2.size() == 20);
     }
@@ -469,10 +469,10 @@ public class Sql2oTest extends BaseMemDbTest {
                 .createQuery("insert into test_rollback_table(value) values (:val)")
                 .addParameter("val", "something")
                 .executeUpdate()
-                .commit()
+                .commit();
 
                         // insert something else, and roll it back.
-                .beginTransaction()
+        sql2o.beginTransaction()
                 .createQuery("insert into test_rollback_table(value) values (:val)")
                 .addParameter("val", "something to rollback")
                 .executeUpdate()
@@ -514,7 +514,7 @@ public class Sql2oTest extends BaseMemDbTest {
         defaultColMaps.put("caption", "text");
         defaultColMaps.put("theTime", "time");
 
-        sql2o1.setDefaultColumnMappings(defaultColMaps);
+        sql2o1.setSettings(sql2o1.getSettings().withDefaultColumnMappings(defaultColMaps));
 
         Entity entity = sql2o1.createQuery("select 1 as id, 'something' as caption, cast('2011-01-01' as date) as theTime from (values(0))").executeAndFetchFirst(Entity.class);
 

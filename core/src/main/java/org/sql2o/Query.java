@@ -61,13 +61,13 @@ public class Query implements AutoCloseable {
         this.connection = connection;
         this.returnGeneratedKeys = returnGeneratedKeys;
         this.columnNames = columnNames;
-        this.setColumnMappings(connection.getSql2o().getDefaultColumnMappings());
-        this.caseSensitive = connection.getSql2o().isDefaultCaseSensitive();
+        this.setColumnMappings(connection.getSettings().getDefaultColumnMappings());
+        this.caseSensitive = connection.getSettings().isDefaultCaseSensitive();
 
         paramNameToIdxMap = new HashMap<>();
         parameters = new HashMap<>();
 
-        parsedQuery = connection.getSql2o().getQuirks().getSqlParameterParsingStrategy().parseSql(queryText, paramNameToIdxMap);
+        parsedQuery = connection.getSettings().getQuirks().getSqlParameterParsingStrategy().parseSql(queryText, paramNameToIdxMap);
     }
 
     // ------------------------------------------------
@@ -181,7 +181,7 @@ public class Query implements AutoCloseable {
 
         addParameterInternal(name, new ParameterSetter() {
             public void setParameter(int paramIdx, PreparedStatement statement) throws SQLException {
-                getConnection().getSql2o().getQuirks().setParameter(statement, paramIdx, convertedValue);
+                getConnection().getSettings().getQuirks().setParameter(statement, paramIdx, convertedValue);
             }
         });
 
@@ -208,7 +208,7 @@ public class Query implements AutoCloseable {
     public Query addParameter(String name, final InputStream value){
         addParameterInternal(name, new ParameterSetter() {
             public void setParameter(int paramIdx, PreparedStatement statement) throws SQLException {
-                getConnection().getSql2o().getQuirks().setParameter(statement, paramIdx, value);
+                getConnection().getSettings().getQuirks().setParameter(statement, paramIdx, value);
             }
         });
 
@@ -218,7 +218,7 @@ public class Query implements AutoCloseable {
     public Query addParameter(String name, final int value){
         addParameterInternal(name, new ParameterSetter() {
             public void setParameter(int paramIdx, PreparedStatement statement) throws SQLException {
-                getConnection().getSql2o().getQuirks().setParameter(statement, paramIdx, value);
+                getConnection().getSettings().getQuirks().setParameter(statement, paramIdx, value);
             }
         });
 
@@ -228,7 +228,7 @@ public class Query implements AutoCloseable {
     public Query addParameter(String name, final Integer value) {
         addParameterInternal(name, new ParameterSetter() {
             public void setParameter(int paramIdx, PreparedStatement statement) throws SQLException {
-                getConnection().getSql2o().getQuirks().setParameter(statement, paramIdx, value);
+                getConnection().getSettings().getQuirks().setParameter(statement, paramIdx, value);
             }
         });
 
@@ -238,7 +238,7 @@ public class Query implements AutoCloseable {
     public Query addParameter(String name, final long value){
         addParameterInternal(name, new ParameterSetter() {
             public void setParameter(int paramIdx, PreparedStatement statement) throws SQLException {
-                getConnection().getSql2o().getQuirks().setParameter(statement, paramIdx, value);
+                getConnection().getSettings().getQuirks().setParameter(statement, paramIdx, value);
             }
         });
 
@@ -248,7 +248,7 @@ public class Query implements AutoCloseable {
     public Query addParameter(String name, final Long value){
         addParameterInternal(name, new ParameterSetter() {
             public void setParameter(int paramIdx, PreparedStatement statement) throws SQLException {
-                getConnection().getSql2o().getQuirks().setParameter(statement, paramIdx, value);
+                getConnection().getSettings().getQuirks().setParameter(statement, paramIdx, value);
             }
         });
 
@@ -258,7 +258,7 @@ public class Query implements AutoCloseable {
     public Query addParameter(String name, final String value) {
         addParameterInternal(name, new ParameterSetter() {
             public void setParameter(int paramIdx, PreparedStatement statement) throws SQLException {
-                getConnection().getSql2o().getQuirks().setParameter(statement, paramIdx, value);
+                getConnection().getSettings().getQuirks().setParameter(statement, paramIdx, value);
             }
         });
 
@@ -268,7 +268,7 @@ public class Query implements AutoCloseable {
     public Query addParameter(String name, final Timestamp value){
         addParameterInternal(name, new ParameterSetter() {
             public void setParameter(int paramIdx, PreparedStatement statement) throws SQLException {
-                getConnection().getSql2o().getQuirks().setParameter(statement, paramIdx, value);
+                getConnection().getSettings().getQuirks().setParameter(statement, paramIdx, value);
             }
         });
 
@@ -278,7 +278,7 @@ public class Query implements AutoCloseable {
     public Query addParameter(String name, final Time value) {
         addParameterInternal(name, new ParameterSetter() {
             public void setParameter(int paramIdx, PreparedStatement statement) throws SQLException {
-                getConnection().getSql2o().getQuirks().setParameter(statement, paramIdx, value);
+                getConnection().getSettings().getQuirks().setParameter(statement, paramIdx, value);
             }
         });
 
@@ -289,7 +289,7 @@ public class Query implements AutoCloseable {
         addParameterInternal(name, new ParameterSetter() {
             @Override
             public void setParameter(int paramIdx, PreparedStatement statement) throws SQLException {
-                getConnection().getSql2o().getQuirks().setParameter(statement, paramIdx, value);
+                getConnection().getSettings().getQuirks().setParameter(statement, paramIdx, value);
             }
         });
         return this;
@@ -299,7 +299,7 @@ public class Query implements AutoCloseable {
         addParameterInternal(name, new ParameterSetter() {
             @Override
             public void setParameter(int paramIdx, PreparedStatement statement) throws SQLException {
-                getConnection().getSql2o().getQuirks().setParameter(statement, paramIdx, value);
+                getConnection().getSettings().getQuirks().setParameter(statement, paramIdx, value);
             }
         });
         return this;
@@ -309,7 +309,7 @@ public class Query implements AutoCloseable {
         addParameterInternal(name, new ParameterSetter() {
             @Override
             public void setParameter(int paramIdx, PreparedStatement statement) throws SQLException {
-                getConnection().getSql2o().getQuirks().setParameter(statement, paramIdx, value);
+                getConnection().getSettings().getQuirks().setParameter(statement, paramIdx, value);
             }
         });
         return this;
@@ -343,10 +343,10 @@ public class Query implements AutoCloseable {
             @Override
             public void setParameter(int paramIdx, PreparedStatement statement) throws SQLException {
                 if(values.length == 0) {
-                    getConnection().getSql2o().getQuirks().setParameter(statement, paramIdx, (Object) null);
+                    getConnection().getSettings().getQuirks().setParameter(statement, paramIdx, (Object) null);
                 } else {
                     for (Object value : values) {
-                        getConnection().getSql2o().getQuirks().setParameter(statement, paramIdx++, value);
+                        getConnection().getSettings().getQuirks().setParameter(statement, paramIdx++, value);
                     }
                 }
             }
@@ -521,7 +521,7 @@ public class Query implements AutoCloseable {
     }
 
     private <T> ResultSetHandlerFactory<T> newResultSetHandlerFactory(Class<T> returnType) {
-        final Quirks quirks = getConnection().getSql2o().getQuirks();
+        final Quirks quirks = getConnection().getSettings().getQuirks();
         ResultSetHandlerFactoryBuilder builder = getResultSetHandlerFactoryBuilder();
         if(builder==null) builder=new DefaultResultSetHandlerFactoryBuilder();
         builder.setAutoDeriveColumnNames(this.autoDeriveColumnNames);
@@ -541,7 +541,7 @@ public class Query implements AutoCloseable {
      * @return iterable results
      */
     public <T> ResultSetIterable<T> executeAndFetchLazy(final ResultSetHandlerFactory<T> resultSetHandlerFactory) {
-        final Quirks quirks = getConnection().getSql2o().getQuirks();
+        final Quirks quirks = getConnection().getSettings().getQuirks();
         return new ResultSetIterableBase<T>() {
             public Iterator<T> iterator() {
                 return new PojoResultSetIterator<>(rs, isCaseSensitive(), quirks, resultSetHandlerFactory);
@@ -626,7 +626,7 @@ public class Query implements AutoCloseable {
 
         lt.setRows(new ResultSetIterableBase<Row>() {
             public Iterator<Row> iterator() {
-                return new TableResultSetIterator(rs, isCaseSensitive(), getConnection().getSql2o().getQuirks(), lt);
+                return new TableResultSetIterator(rs, isCaseSensitive(), getConnection().getSettings().getQuirks(), lt);
             }
         });
 
@@ -704,7 +704,7 @@ public class Query implements AutoCloseable {
     }
 
     private Quirks getQuirks() {
-        return this.connection.getSql2o().getQuirks();
+        return this.connection.getSettings().getQuirks();
     }
 
     public <V> V executeScalar(Class<V> returnType){

@@ -11,11 +11,9 @@ import java.io.Closeable;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
-import java.util.ArrayList;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Set;
+import java.util.*;
 
+import static java.util.Objects.requireNonNull;
 import static org.sql2o.converters.Convert.throwIfNull;
 
 /**
@@ -25,9 +23,9 @@ public class Connection implements AutoCloseable, Closeable {
     
     private final static Logger logger = LocalLoggerFactory.getLogger(Connection.class);
 
-    private ConnectionSource connectionSource;
+    private final ConnectionSource connectionSource;
     private java.sql.Connection jdbcConnection;
-    private Sql2o sql2o;
+    private final Settings settings;
 
     private Integer result = null;
     private int[] batchResult = null;
@@ -58,14 +56,11 @@ public class Connection implements AutoCloseable, Closeable {
 
     final boolean autoClose;
 
-    Connection(Sql2o sql2o, boolean autoClose) {
-        this(sql2o, null, autoClose);
-    }
 
-    Connection(Sql2o sql2o, ConnectionSource connectionSource, boolean autoClose) {
-        this.connectionSource = connectionSource != null ? connectionSource : sql2o.getConnectionSource();
+    Connection(Settings settings, ConnectionSource connectionSource, boolean autoClose) {
+        this.connectionSource = requireNonNull(connectionSource, "connectionSource cant be null");
         this.autoClose = autoClose;
-        this.sql2o = sql2o;
+        this.settings = requireNonNull(settings, "settings cant be null");
         createConnection();
     }
 
@@ -79,12 +74,12 @@ public class Connection implements AutoCloseable, Closeable {
         return jdbcConnection;
     }
 
-    public Sql2o getSql2o() {
-        return sql2o;
+    public Settings getSettings() {
+        return settings;
     }
 
     public Query createQuery(String queryText){
-        boolean returnGeneratedKeys = this.sql2o.getQuirks().returnGeneratedKeysByDefault();
+        boolean returnGeneratedKeys = this.settings.getQuirks().returnGeneratedKeysByDefault();
         return createQuery(queryText, returnGeneratedKeys);
     }
 
@@ -121,8 +116,8 @@ public class Connection implements AutoCloseable, Closeable {
                 .withParams(paramValues);
     }
 
-    public Sql2o rollback(){
-        return this.rollback(true).sql2o;
+    public void rollback(){
+       this.rollback(true);
     }
 
     public Connection rollback(boolean closeConnection){
@@ -138,8 +133,8 @@ public class Connection implements AutoCloseable, Closeable {
         return this;
     }
 
-    public Sql2o commit(){
-        return this.commit(true).sql2o;
+    public void commit(){
+        this.commit(true);
     }
 
     public Connection commit(boolean closeConnection){
@@ -201,7 +196,7 @@ public class Connection implements AutoCloseable, Closeable {
 
     @SuppressWarnings("unchecked") // need to change Convert
     public <V> V getKey(Class returnType){
-        final Quirks quirks = this.sql2o.getQuirks();
+        final Quirks quirks = this.settings.getQuirks();
         Object key = getKey();
         try {
             Converter<V> converter = throwIfNull(returnType, quirks.converterOf(returnType));
@@ -223,7 +218,7 @@ public class Connection implements AutoCloseable, Closeable {
 
     @SuppressWarnings("unchecked") // need to change Convert
     public <V> List<V> getKeys(Class<V> returnType) {
-        final Quirks quirks = sql2o.getQuirks();
+        final Quirks quirks = settings.getQuirks();
         if (!this.canGetKeys) {
             throw new Sql2oException("Keys where not fetched from database. Please set the returnGeneratedKeys parameter in the createQuery() method to enable fetching of generated keys.");
         }
@@ -273,7 +268,7 @@ public class Connection implements AutoCloseable, Closeable {
 
             for (Statement statement : statements) {
                 try {
-                    getSql2o().getQuirks().closeStatement(statement);
+                    settings.getQuirks().closeStatement(statement);
                 } catch (Throwable e) {
                     logger.warn("Could not close statement.", e);
                 }

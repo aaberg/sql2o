@@ -27,9 +27,8 @@ import java.util.Map;
  * @author Lars Aaberg
  */
 public class Sql2o {
-    final Quirks quirks;
-    private Map<String, String> defaultColumnMappings;
-    private boolean defaultCaseSensitive;
+
+    private Settings settings;
 
     private ConnectionSource connectionSource;
 
@@ -77,13 +76,12 @@ public class Sql2o {
      */
     public Sql2o(DataSource dataSource, Quirks quirks){
         this.connectionSource = new DataSourceConnectionSource(dataSource);
-        this.quirks=quirks;
-        this.defaultColumnMappings = new HashMap<String, String>();
+        this.settings = new Settings(quirks, new HashMap<String, String>(), false);
     }
 
-    public Quirks getQuirks() {
-        return quirks;
-    }
+//    public Quirks getQuirks() {
+//        return quirks;
+//    }
 
      /**
      * Gets the DataSource that Sql2o uses internally to acquire database connections.
@@ -118,37 +116,66 @@ public class Sql2o {
      * Gets the default column mappings Map. column mappings added to this Map are always available when Sql2o attempts
      * to map between result sets and object instances.
      * @return  The {@link Map<String, String>} instance, which Sql2o internally uses to map column names with property
+     * @deprecated use {@link Sql2o#getSettings()} instead
      * names.
      */
+    @Deprecated
     public Map<String, String> getDefaultColumnMappings() {
-        return defaultColumnMappings;
+        return settings.getDefaultColumnMappings();
     }
 
     /**
      * Sets the default column mappings Map.
      * @param defaultColumnMappings     A {@link Map} instance Sql2o uses internally to map between column names and
      *                                  property names.
+     * @deprecated use {@link Sql2o#setSettings(Settings)} instead
      */
+    @Deprecated
     public void setDefaultColumnMappings(Map<String, String> defaultColumnMappings) {
-        this.defaultColumnMappings = defaultColumnMappings;
+        this.settings = this.settings.withDefaultColumnMappings(defaultColumnMappings);
     }
 
     /**
      * Gets value indicating if this instance of Sql2o is case sensitive when mapping between columns names and property
      * names.
+     * @deprecated use {@link Sql2o#getSettings()} instead
      * @return
      */
+    @Deprecated
     public boolean isDefaultCaseSensitive() {
-        return defaultCaseSensitive;
+        return settings.isDefaultCaseSensitive();
     }
 
     /**
      * Sets a value indicating if this instance of Sql2o is case sensitive when mapping between columns names and property
      * names. This should almost always be false, because most relational databases are not case sensitive.
+     * @deprecated use {@link Sql2o#setSettings(Settings)} instead
      * @param defaultCaseSensitive
      */
+    @Deprecated
     public void setDefaultCaseSensitive(boolean defaultCaseSensitive) {
-        this.defaultCaseSensitive = defaultCaseSensitive;
+        this.settings = this.settings.withDefaultCaseSensitive(defaultCaseSensitive);
+    }
+
+    /**
+     * Gets value of {@link Settings} which is used in {@link Connection} instances created by this {@link Sql2o} object
+     * @return
+     */
+    public Settings getSettings() {
+        return settings;
+    }
+
+    /**
+     * Sets value of {@link Settings} which will be used in {@link Connection} instances
+     * created by this {@link Sql2o} object.
+     * <b>Note:</b> as long as {@link Settings} are immutable to update separate settings
+     * {@code with*} methods should be used on instance got from {@link Sql2o#getSettings()} method.
+     * For example: {@code sql2o.setSettings(sql2o.getSettings().withDefaultColumnMappings(newValue))}
+     *
+     * @param settings
+     */
+    public void setSettings(Settings settings) {
+        this.settings = settings;
     }
 
     /**
@@ -166,7 +193,7 @@ public class Sql2o {
      */
     @Deprecated
     public Query createQuery(String query, boolean returnGeneratedKeys) {
-        return new Connection(this, true).createQuery(query, returnGeneratedKeys);
+        return new Connection(this.settings, this.getConnectionSource(), true).createQuery(query, returnGeneratedKeys);
     }
 
     /**
@@ -184,7 +211,7 @@ public class Sql2o {
     @Deprecated
     public Query createQuery(String query){
 
-        Connection connection = new Connection(this, true);
+        Connection connection = new Connection(this.settings, this.getConnectionSource(), true);
         return connection.createQuery(query);
     }
 
@@ -195,7 +222,7 @@ public class Sql2o {
      * @return instance of the {@link org.sql2o.Connection} class.
      */
     public Connection open(ConnectionSource connectionSource) {
-        return new Connection(this, connectionSource, false);
+        return new Connection(this.settings, connectionSource, false);
     }
 
     /**
@@ -203,7 +230,7 @@ public class Sql2o {
      * @return instance of the {@link org.sql2o.Connection} class.
      */
     public Connection open() {
-        return new Connection(this, false);
+        return new Connection(this.settings, this.getConnectionSource(), false);
     }
 
     /**
@@ -292,7 +319,7 @@ public class Sql2o {
      */
     public Connection beginTransaction(ConnectionSource connectionSource, int isolationLevel) {
 
-        Connection connection = new Connection(this, connectionSource, false);
+        Connection connection = new Connection(this.settings, connectionSource, false);
 
         boolean success = false;
         try {
