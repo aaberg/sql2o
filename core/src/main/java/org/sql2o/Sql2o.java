@@ -249,6 +249,12 @@ public class Sql2o {
      * @return instance of the {@link org.sql2o.Connection} class.
      */
     public Connection open(ConnectionSource connectionSource) {
+        if(connectionSource == null)
+        {
+            checkConnectionSource("open with null connectionSource");
+            connectionSource = getConnectionSource();
+        }
+
         return new ReconnectableConnection(this.settings, connectionSource, false);
     }
 
@@ -356,6 +362,11 @@ public class Sql2o {
      * @return the {@link Connection} instance to use to run statements in the transaction.
      */
     public Connection beginTransaction(ConnectionSource connectionSource, int isolationLevel) {
+        if(connectionSource == null)
+        {
+            checkConnectionSource("beginTransaction with null connectionSource");
+            connectionSource = getConnectionSource();
+        }
 
         Connection connection = new ReconnectableConnection(this.settings, connectionSource, false);
 
