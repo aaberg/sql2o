@@ -33,7 +33,7 @@ public class ConnectionTest extends TestCase {
                 return false;
             }
         });
-        org.sql2o.Connection cn = new org.sql2o.Connection(sql2o.getSettings(), sql2o.getConnectionSource(),false);
+        org.sql2o.Connection cn = new ReconnectableConnection(sql2o.getSettings(), sql2o.getConnectionSource(),false);
         cn.createQueryWithParams("select :p1 name, :p2 age", "Dmitry Alexandrov", 35).buildPreparedStatement();
 
         verify(dataSource,times(1)).getConnection();

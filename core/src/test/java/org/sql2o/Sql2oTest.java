@@ -8,6 +8,7 @@ import org.joda.time.Period;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.Parameterized;
+import org.sql2o.connectionsources.DataSourceConnectionSource;
 import org.sql2o.data.LazyTable;
 import org.sql2o.data.Row;
 import org.sql2o.data.Table;
@@ -1243,6 +1244,45 @@ public class Sql2oTest extends BaseMemDbTest {
         }
 
     }
+
+    @Test
+    public void testWrappingJDBC() throws SQLException {
+
+        Sql2o sql2oWrapper = new Sql2o(sql2o.getSettings());
+
+        java.sql.Connection jdbc = ((DataSourceConnectionSource) sql2o.getConnectionSource()).getDataSource().getConnection();
+
+        try (Connection connection = sql2oWrapper.wrap(jdbc)) {
+            connection.createQuery("create table testWrappingJDBC(id int primary key, val varchar(20) not null)")
+                    .executeUpdate();
+
+
+            String sql = "insert into testWrappingJDBC(id, val) values (:id, :val);";
+            connection.createQuery(sql).addParameter("id", 1).addParameter("val", "foo").executeUpdate();
+
+
+            int count1 = connection.createQuery("select count(*) from testWrappingJDBC").executeAndFetchFirst(Integer.class);
+            assertThat(count1, is(equalTo(1)));
+
+
+            String sql2 = "insert into testWrappingJDBC(id, val) values (:id, :val);";
+            connection.createQuery(sql2).addParameter("id", 2).addParameter("val", "bar").executeUpdate();
+
+
+            int count2 = connection.createQuery("select count(*) from testWrappingJDBC").executeAndFetchFirst(Integer.class);
+            assertThat(count2, is(equalTo(2)));
+
+        }
+        assertThat(jdbc.isClosed(), is(true));
+
+        try (Connection connection2 = sql2o.open()) {
+            int count = connection2.createQuery("select count(*) from testWrappingJDBC").executeAndFetchFirst(Integer.class);
+
+            assertThat(count, is(equalTo(2)));
+        }
+
+    }
+
 
     @Test
     public void testOpenConnection() throws SQLException {

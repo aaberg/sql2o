@@ -75,20 +75,47 @@ public class Sql2o {
      * @param quirks     {@link org.sql2o.quirks.Quirks} allows sql2o to work around known quirks and issues in different JDBC drivers.
      */
     public Sql2o(DataSource dataSource, Quirks quirks){
+        this(new Settings(quirks, new HashMap<String, String>(), false));
         this.connectionSource = new DataSourceConnectionSource(dataSource);
-        this.settings = new Settings(quirks, new HashMap<String, String>(), false);
     }
 
-//    public Quirks getQuirks() {
-//        return quirks;
-//    }
+    /**
+     * Creates a new instance of the Sql2o class without any {@link ConnectionSource}. Instance will be able only to
+     * {@link Sql2o#wrap(java.sql.Connection) wrap} existing jdbc connections or work with explicitly passed {@link ConnectionSource}
+     * with {@link Sql2o#open(ConnectionSource)} or {@link Sql2o#beginTransaction(ConnectionSource)} methods.
+     *
+     * @param settings Sql2o settings to be used in wrapped connections
+     */
+    public Sql2o(Settings settings) {
+        this.settings = settings;
+    }
 
-     /**
+    /**
+     * Creates a new instance of the Sql2o class without any {@link ConnectionSource}. Instance will be able only to
+     * {@link Sql2o#wrap(java.sql.Connection) wrap} existing jdbc connections or work with explicitly passed {@link ConnectionSource}
+     * with {@link Sql2o#open(ConnectionSource)} or {@link Sql2o#beginTransaction(ConnectionSource)} methods.
+     *
+     * @param quirks quirks to be used in wrapped connections
+     */
+    public Sql2o(Quirks quirks) {
+        this(Settings.defaults.withQuirks(quirks));
+    }
+
+    /**
+     * Creates a new instance of the Sql2o class with default settings and without any {@link ConnectionSource}. Instance will be able only to
+     * {@link Sql2o#wrap(java.sql.Connection) wrap} existing jdbc connections or work with explicitly passed {@link ConnectionSource}
+     * with {@link Sql2o#open(ConnectionSource)} or {@link Sql2o#beginTransaction(ConnectionSource)} methods.
+     */
+    public Sql2o() {
+        this(Settings.defaults);
+    }
+
+    /**
      * Gets the DataSource that Sql2o uses internally to acquire database connections.
      * @deprecated use {@link #getConnectionSource()} as more general connection provider
-     * @return  The DataSource instance
+     * @return The DataSource instance
      */
-     @Deprecated
+    @Deprecated
     public DataSource getDataSource() {
         if (connectionSource instanceof DataSourceConnectionSource)
             return ((DataSourceConnectionSource) connectionSource).getDataSource();
@@ -193,7 +220,7 @@ public class Sql2o {
      */
     @Deprecated
     public Query createQuery(String query, boolean returnGeneratedKeys) {
-        return new Connection(this.settings, this.getConnectionSource(), true).createQuery(query, returnGeneratedKeys);
+        return new ReconnectableConnection(this.settings, this.getConnectionSource(), true).createQuery(query, returnGeneratedKeys);
     }
 
     /**
@@ -209,9 +236,9 @@ public class Sql2o {
      * </code>
      */
     @Deprecated
-    public Query createQuery(String query){
+    public Query createQuery(String query) {
 
-        Connection connection = new Connection(this.settings, this.getConnectionSource(), true);
+        Connection connection = new ReconnectableConnection(this.settings, this.getConnectionSource(), true);
         return connection.createQuery(query);
     }
 
@@ -222,7 +249,7 @@ public class Sql2o {
      * @return instance of the {@link org.sql2o.Connection} class.
      */
     public Connection open(ConnectionSource connectionSource) {
-        return new Connection(this.settings, connectionSource, false);
+        return new ReconnectableConnection(this.settings, connectionSource, false);
     }
 
     /**
@@ -230,7 +257,17 @@ public class Sql2o {
      * @return instance of the {@link org.sql2o.Connection} class.
      */
     public Connection open() {
-        return new Connection(this.settings, this.getConnectionSource(), false);
+        checkConnectionSource("open");
+        return new ReconnectableConnection(this.settings, this.getConnectionSource(), false);
+    }
+
+    /**
+     * Wraps existing {@link java.sql.Connection} with {@link Connection Sql2o Connection}
+     * @param jdbcConnection a connection to wrap
+     * @return new unmanaged {@link org.sql2o.Connection} instance
+     */
+    public Connection wrap(java.sql.Connection jdbcConnection) {
+        return new BaseConnection(jdbcConnection, settings, false);
     }
 
     /**
@@ -305,6 +342,7 @@ public class Sql2o {
      * @return the {@link Connection} instance to use to run statements in the transaction.
      */
     public Connection beginTransaction(int isolationLevel){
+        checkConnectionSource("beginTransaction");
         return beginTransaction(getConnectionSource(), isolationLevel);
     }
 
@@ -319,7 +357,7 @@ public class Sql2o {
      */
     public Connection beginTransaction(ConnectionSource connectionSource, int isolationLevel) {
 
-        Connection connection = new Connection(this.settings, connectionSource, false);
+        Connection connection = new ReconnectableConnection(this.settings, connectionSource, false);
 
         boolean success = false;
         try {
@@ -345,6 +383,12 @@ public class Sql2o {
      */
     public Connection beginTransaction(){
         return this.beginTransaction(java.sql.Connection.TRANSACTION_READ_COMMITTED);
+    }
+
+    private void checkConnectionSource(String method) {
+        if (connectionSource == null)
+            throw new UnsupportedOperationException("you can't use Sql2o." + method +
+                    " when no connectionSource is configured for Sql2o instance");
     }
 
     /**

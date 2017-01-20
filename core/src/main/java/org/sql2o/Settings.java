@@ -30,9 +30,7 @@ public class Settings {
         this.defaultCaseSensitive = defaultCaseSensitive;
     }
 
-    public Settings() {
-        this(new NoQuirks(), new HashMap<String, String>(), false);
-    }
+    public static Settings defaults = new Settings(new NoQuirks(), new HashMap<String, String>(), false);
 
     public Quirks getQuirks() {
         return quirks;

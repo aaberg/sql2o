@@ -26,7 +26,7 @@ public class Query implements AutoCloseable {
 
     private final static Logger logger = LocalLoggerFactory.getLogger(Query.class);
 
-    private Connection connection;
+    private BaseConnection connection;
     private Map<String, String> caseSensitiveColumnMappings;
     private Map<String, String> columnMappings;
     private PreparedStatement preparedStatement = null;
@@ -49,15 +49,15 @@ public class Query implements AutoCloseable {
         return parsedQuery;
     }
 
-    public Query(Connection connection, String queryText, boolean returnGeneratedKeys) {
+    Query(BaseConnection connection, String queryText, boolean returnGeneratedKeys) {
         this(connection, queryText, returnGeneratedKeys, null);
     }
 
-    public Query(Connection connection, String queryText, String[] columnNames) {
+    Query(BaseConnection connection, String queryText, String[] columnNames) {
         this(connection, queryText, false, columnNames);
     }
 
-    private Query(Connection connection, String queryText, boolean returnGeneratedKeys, String[] columnNames) {
+    private Query(BaseConnection connection, String queryText, boolean returnGeneratedKeys, String[] columnNames) {
         this.connection = connection;
         this.returnGeneratedKeys = returnGeneratedKeys;
         this.columnNames = columnNames;
@@ -491,7 +491,7 @@ public class Query implements AutoCloseable {
                 if (this.isAutoCloseConnection()){
                     connection.close();
                 } else {
-                    closeConnectionIfNecessary();
+                    connection.closeIfNecessary();
                 }
             }
         }
@@ -662,7 +662,7 @@ public class Query implements AutoCloseable {
             throw new Sql2oException("Error in executeUpdate, " + ex.getMessage(), ex);
         }
         finally {
-            closeConnectionIfNecessary();
+            connection.closeIfNecessary();
         }
 
         long end = System.currentTimeMillis();
@@ -698,7 +698,7 @@ public class Query implements AutoCloseable {
             throw new Sql2oException("Database error occurred while running executeScalar: " + e.getMessage(), e);
         }
         finally{
-            closeConnectionIfNecessary();
+            connection.closeIfNecessary();
         }
 
     }
@@ -861,7 +861,7 @@ public class Query implements AutoCloseable {
             throw new Sql2oException("Error while executing batch operation: " + e.getMessage(), e);
         }
         finally {
-            closeConnectionIfNecessary();
+            connection.closeIfNecessary();
         }
 
         long end = System.currentTimeMillis();
@@ -902,19 +902,6 @@ public class Query implements AutoCloseable {
         this.columnMappings.put(columnName.toLowerCase(), propertyName.toLowerCase());
 
         return this;
-    }
-
-    /************** private stuff ***************/
-
-    private void closeConnectionIfNecessary(){
-        try{
-            if (connection.autoClose){
-                connection.close();
-            }
-        }
-        catch (Exception ex){
-            throw new Sql2oException("Error while attempting to close connection", ex);
-        }
     }
 
     private void logExecution() {
