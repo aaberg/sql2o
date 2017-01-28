@@ -58,6 +58,13 @@ public class Connection implements AutoCloseable, Closeable {
 
     final boolean autoClose;
 
+    /**
+     * Adds CDI's dependency injection support
+     */
+    Connection() {
+        this.autoClose = false;
+    }
+    
     Connection(Sql2o sql2o, boolean autoClose) {
         this(sql2o, null, autoClose);
     }
