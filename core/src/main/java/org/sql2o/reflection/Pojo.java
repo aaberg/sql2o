@@ -58,7 +58,7 @@ public class Pojo {
                 return getter.getProperty(this.object);
             }
 
-            PojoMetadata subMetadata = new PojoMetadata(getter.getType(), this.caseSensitive, this.metadata.isAutoDeriveColumnNames(), this.metadata.getColumnMappings(), this.metadata.throwOnMappingFailure);
+            PojoMetadata subMetadata = new PojoMetadata(getter.getType(), this.caseSensitive, this.metadata.isAutoDeriveColumnNames(), this.metadata.getColumnMappings(), this.metadata.throwOnMappingFailure, this.metadata.getIgnoredColumns());
             Pojo subPojo = new Pojo(subMetadata, this.caseSensitive, subValue);
 
             return subPojo.getProperty(newPath, quirks);
@@ -105,7 +105,7 @@ public class Pojo {
                 setter.setProperty(this.object, subValue);
             }
             
-            PojoMetadata subMetadata = new PojoMetadata(setter.getType(), this.caseSensitive, this.metadata.isAutoDeriveColumnNames(), this.metadata.getColumnMappings(), this.metadata.throwOnMappingFailure);
+            PojoMetadata subMetadata = new PojoMetadata(setter.getType(), this.caseSensitive, this.metadata.isAutoDeriveColumnNames(), this.metadata.getColumnMappings(), this.metadata.throwOnMappingFailure, this.metadata.getIgnoredColumns());
             Pojo subPojo = new Pojo(subMetadata, this.caseSensitive, subValue);
             subPojo.setProperty(newPath, value, quirks);
         }

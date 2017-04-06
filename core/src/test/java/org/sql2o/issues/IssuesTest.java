@@ -361,12 +361,30 @@ public class IssuesTest {
 
             try {
                 Pojo pojo = connection.createQuery(sql).executeAndFetchFirst(Pojo.class);
-                fail("Expeced an exception to be thrown");
+                fail("Expected an exception to be thrown");
             } catch(Sql2oException e) {
                 assertEquals("Could not map VAL2 to any property.", e.getMessage());
             }
 
             Pojo pojo = connection.createQuery(sql).throwOnMappingFailure(false).executeAndFetchFirst(Pojo.class);
+
+            assertEquals(1, pojo.id);
+            assertEquals("foo", pojo.val1);
+        }
+    }
+
+    @Test
+    public void testIgnoreSpecificColumnMapping() {
+        String sql = "select 1 id, 'foo' val1, 'bar' val2 from (values(0))";
+
+        class Pojo{
+            public int id;
+            public String val1;
+        }
+
+        try (Connection connection = sql2o.open()) {
+
+            Pojo pojo = connection.createQuery(sql).ignoreColumn("val2").executeAndFetchFirst(Pojo.class);
 
             assertEquals(1, pojo.id);
             assertEquals("foo", pojo.val1);

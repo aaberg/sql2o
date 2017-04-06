@@ -1,17 +1,17 @@
 package org.sql2o.reflection;
 
+import org.sql2o.Sql2oException;
+import org.sql2o.tools.AbstractCache;
+import org.sql2o.tools.UnderscoreToCamelCase;
+
+import javax.persistence.Column;
 import java.lang.reflect.AnnotatedElement;
 import java.lang.reflect.Field;
 import java.lang.reflect.Method;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
-
-import javax.persistence.Column;
-
-import org.sql2o.Sql2oException;
-import org.sql2o.tools.AbstractCache;
-import org.sql2o.tools.UnderscoreToCamelCase;
+import java.util.Set;
 
 /**
  * Stores metadata for a POJO.
@@ -28,6 +28,8 @@ public class PojoMetadata {
     private boolean autoDeriveColumnNames;
     public final boolean throwOnMappingFailure;
     private Class clazz;
+
+    private final Set<String> ignoredColumns;
 
     public boolean isCaseSensitive() {
         return caseSensitive;
@@ -59,11 +61,12 @@ public class PojoMetadata {
         return result;
     }
 
-    public PojoMetadata(Class clazz, boolean caseSensitive, boolean autoDeriveColumnNames, Map<String, String> columnMappings, boolean throwOnMappingError) {
+    public PojoMetadata(Class clazz, boolean caseSensitive, boolean autoDeriveColumnNames, Map<String, String> columnMappings, boolean throwOnMappingError, Set<String> ignoredColumns ) {
         this.caseSensitive = caseSensitive;
         this.autoDeriveColumnNames = autoDeriveColumnNames;
         this.clazz = clazz;
         this.columnMappings = columnMappings == null ? Collections.<String,String>emptyMap() : columnMappings;
+        this.ignoredColumns = ignoredColumns == null ? Collections.<String>emptySet() : ignoredColumns;
 
         this.propertyInfo = getPropertyInfoThroughCache();
         this.throwOnMappingFailure = throwOnMappingError;
@@ -72,6 +75,10 @@ public class PojoMetadata {
 
     public ObjectConstructor getObjectConstructor() {
         return propertyInfo.objectConstructor;
+    }
+
+    public Set<String> getIgnoredColumns() {
+        return ignoredColumns;
     }
 
     private PropertyAndFieldInfo getPropertyInfoThroughCache() {
