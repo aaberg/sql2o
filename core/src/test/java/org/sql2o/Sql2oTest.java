@@ -102,6 +102,33 @@ public class Sql2oTest extends BaseMemDbTest {
     }
 
     @Test
+    public void testExecuteAndFetchUniqueWhenUnique(){
+        createAndFillUserTable();
+
+        try (Connection con = sql2o.open()) {
+
+            User user = con.createQuery("select * from User u where u.id = 1").executeAndFetchUnique(User.class);
+
+            assertNotNull(user);
+        }
+
+        deleteUserTable();
+    }
+
+    @Test(expected = Sql2oException.class)
+    public void testExecuteAndFetchUniqueWhenNotUnique(){
+        createAndFillUserTable();
+
+        try (Connection con = sql2o.open()) {
+
+            User user = con.createQuery("select * from User u where u.id > 0").executeAndFetchUnique(User.class);
+        }
+        finally {
+            deleteUserTable();
+        }
+    }
+
+    @Test
     public void testExecuteAndFetchWithNulls(){
         String sql =
                 "create table testExecWithNullsTbl (" +
