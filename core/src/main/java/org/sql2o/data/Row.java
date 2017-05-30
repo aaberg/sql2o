@@ -19,6 +19,7 @@ public class Row {
     private final boolean isCaseSensitive;
     private final Quirks quirks;
     private final Map<String, Integer> columnNameToIdxMap;
+    private Map<String, Object> asMap;
 
     public Row(Map<String, Integer> columnNameToIdxMap, int columnCnt, boolean isCaseSensitive, Quirks quirks) {
         this.columnNameToIdxMap = columnNameToIdxMap;
@@ -144,14 +145,17 @@ public class Row {
      * View row as a simple map.
      */
     public Map<String, Object> asMap() {
-        Map map = new HashMap();
-        Set<String> keys = columnNameToIdxMap.keySet();
-        Iterator iterator = keys.iterator();
-        while (iterator.hasNext()) {
-            String colum = iterator.next().toString();
-            int index = columnNameToIdxMap.get(colum);
-            map.put(colum, values[index]);
+
+        if(null == this.asMap){
+            this.asMap = new HashMap<>();
+            Set<String> keys = columnNameToIdxMap.keySet();
+            Iterator iterator = keys.iterator();
+            while (iterator.hasNext()) {
+                String colum = iterator.next().toString();
+                int index = columnNameToIdxMap.get(colum);
+                this.asMap.put(colum, values[index]);
+            }
         }
-        return map;
+        return this.asMap;
     }
 }
