@@ -36,6 +36,8 @@ public class Connection implements AutoCloseable, Closeable {
     
     private boolean rollbackOnException = true;
 
+    private Boolean originalAutoCommit;
+
     public boolean isRollbackOnException() {
         return rollbackOnException;
     }
@@ -302,6 +304,7 @@ public class Connection implements AutoCloseable, Closeable {
     private void createConnection(){
         try{
             this.jdbcConnection = connectionSource.getConnection();
+            this.originalAutoCommit = jdbcConnection.getAutoCommit();
         }
         catch(Exception ex){
             throw new Sql2oException("Could not acquire a connection from DataSource - " + ex.getMessage(), ex);
@@ -309,11 +312,23 @@ public class Connection implements AutoCloseable, Closeable {
     }
 
     private void closeJdbcConnection() {
+        resetAutoCommitState();
         try {
             jdbcConnection.close();
         }
         catch (SQLException e) {
             logger.warn("Could not close connection. message: {}", e);
+        }
+    }
+
+    private void resetAutoCommitState() {
+        // resets the AutoCommit state to make sure that the connection has been reset before reuse (if a connection pool is used)
+        if(originalAutoCommit != null) {
+            try {
+                this.jdbcConnection.setAutoCommit(originalAutoCommit);
+            } catch (SQLException e) {
+                logger.warn(String.format("Could not reset autocommit state for connection to %s.", originalAutoCommit), e);
+            }
         }
     }
 }
