@@ -196,6 +196,47 @@ public class Query implements AutoCloseable {
         return this;
     }
 
+
+    /**
+     * Substitute parameter with a string
+     * Be careful of sql injection!
+     */
+    public Query addSubstitute(String name, String substitute) {
+        parsedQuery = replaceParam(parsedQuery, name, substitute);
+        return this;
+    }
+
+    /**
+     * Substitute parameter with a comma separated string
+     * Be careful of sql injection!
+     */
+    public Query addSubstitute(String name, Collection<?> substitute) {
+        StringBuilder sb = new StringBuilder();
+        for (Object o : substitute) {
+            sb.append(o.toString()).append(",");
+        }
+        if (sb.length() > 0) {
+            sb.setLength(sb.length() - 1);
+        }
+        parsedQuery = replaceParam(parsedQuery, name, sb.toString());
+        return this;
+    }
+
+    private String replaceParam(String sql, String name, String replace) {
+        List<Integer> integers = paramNameToIdxMap.get(name);
+        int count = 0;
+        for (int i = 0; i < sql.length(); ++i) {
+            if (sql.charAt(i) == '?') {
+                count++;
+                if (integers.contains(count)) {
+                    sql = sql.replace(sql.substring(i, i + 1), replace);
+                }
+            }
+        }
+        return sql;
+    }
+
+
     @SuppressWarnings("unchecked")
     public Query addParameter(String name, Object value) {
         return value == null
