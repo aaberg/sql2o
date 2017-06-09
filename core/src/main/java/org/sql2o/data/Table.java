@@ -40,6 +40,11 @@ public class Table {
             public int size() {
                 return rows.size();
             }
+
+            @Override
+            public Map<String, Object> remove(int index) {
+                return rows.remove(index).asMap();
+            }
         };
     }
 }
