@@ -3,6 +3,7 @@ package org.sql2o;
 import org.sql2o.quirks.Quirks;
 
 import java.util.Map;
+import java.util.Set;
 
 /**
  * Created with IntelliJ IDEA.
@@ -33,4 +34,6 @@ public interface ResultSetHandlerFactoryBuilder {
     void setQuirks(Quirks quirksMode);
 
     <E> ResultSetHandlerFactory<E> newFactory(Class<E> clazz);
+
+    void setIgnoredColumns( Set<String> ignoredColumns );
 }

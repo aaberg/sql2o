@@ -27,6 +27,7 @@ public class Query implements AutoCloseable {
     private final static Logger logger = LocalLoggerFactory.getLogger(Query.class);
 
     private Connection connection;
+    private Set<String> ignoredColumns = new HashSet<>();
     private Map<String, String> caseSensitiveColumnMappings;
     private Map<String, String> columnMappings;
     private PreparedStatement preparedStatement = null;
@@ -315,6 +316,11 @@ public class Query implements AutoCloseable {
         return this;
     }
 
+    public Query ignoreColumn( String colName ) {
+        ignoredColumns.add( colName.toLowerCase() );
+        return this;
+    }
+
     /**
      * Set an array parameter.<br>
      * For example:
@@ -529,6 +535,7 @@ public class Query implements AutoCloseable {
         builder.setColumnMappings(this.getColumnMappings());
         builder.setQuirks(quirks);
         builder.throwOnMappingError(this.throwOnMappingFailure);
+        builder.setIgnoredColumns( ignoredColumns );
         return builder.newFactory(returnType);
     }
 

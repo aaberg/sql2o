@@ -190,6 +190,10 @@ public class DefaultResultSetHandlerFactory<T> implements ResultSetHandlerFactor
         getters = new Getter[columnCount + 1];   // getters[0] is always null
         for (int i = 1; i <= columnCount; i++) {
             String colName = quirks.getColumnName(meta, i);
+            if( metadata.getIgnoredColumns().contains( colName.toLowerCase() ) ) {
+                continue;
+            }
+
             // behavior change: do not throw if POJO contains less properties
             getters[i] = getGetter(quirks, colName, metadata);
 
@@ -203,7 +207,9 @@ public class DefaultResultSetHandlerFactory<T> implements ResultSetHandlerFactor
         setters = new Setter[columnCount + 1];   // setters[0] is always null
         for (int i = 1; i <= columnCount; i++) {
             String colName = quirks.getColumnName(meta, i);
-
+            if( metadata.getIgnoredColumns().contains( colName.toLowerCase() ) ) {
+                continue;
+            }
             setters[i] = getSetter(quirks, colName, metadata);
 
             // If more than 1 column is fetched (we cannot fall back to executeScalar),
