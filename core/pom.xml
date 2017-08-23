@@ -85,6 +85,13 @@
             <artifactId>hsqldb</artifactId>
             <version>2.2.8</version>
         </dependency>
+        <!-- Makes it a lot easier to run embedded H2 for tests -->
+        <dependency>
+            <groupId>org.zapodot</groupId>
+            <artifactId>embedded-db-junit</artifactId>
+            <version>1.0-RC1</version>
+            <scope>test</scope>
+        </dependency>
         <!-- Uncomment to run oracle tests.  -->
         <!--
         <dependency>

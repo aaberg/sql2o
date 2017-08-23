@@ -1,17 +1,17 @@
 package org.sql2o.reflection;
 
-import java.lang.reflect.AnnotatedElement;
-import java.lang.reflect.Field;
-import java.lang.reflect.Method;
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.Map;
-
-import javax.persistence.Column;
-
 import org.sql2o.Sql2oException;
 import org.sql2o.tools.AbstractCache;
 import org.sql2o.tools.UnderscoreToCamelCase;
+
+import javax.persistence.Column;
+import java.lang.reflect.AnnotatedElement;
+import java.lang.reflect.Field;
+import java.lang.reflect.Method;
+import java.lang.reflect.Modifier;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.Map;
 
 /**
  * Stores metadata for a POJO.
@@ -99,6 +99,9 @@ public class PojoMetadata {
         ObjectConstructor objectConstructor = factoryFacade.newConstructor(theClass);
         do {
             for (Field f : theClass.getDeclaredFields()) {
+                if(Modifier.isStatic(f.getModifiers())) {
+                    continue;
+                }
                 String propertyName = readAnnotatedColumnName(f, isJpaColumnInClasspath);
                 if(propertyName == null) {
                     propertyName = f.getName();
