@@ -581,17 +581,9 @@ public class Query implements AutoCloseable {
     public <T> List<T> executeAndFetch(ResultSetHandlerFactory<T> factory){
         List<T> list = new ArrayList<>();
 
-        // if sql2o moves to java 7 at some point, this could be much cleaner using try-with-resources
-        ResultSetIterable<T> iterable = null;
-        try {
-            iterable = executeAndFetchLazy(factory);
+        try (ResultSetIterable<T> iterable = executeAndFetchLazy(factory)) {
             for (T item : iterable) {
                 list.add(item);
-            }
-        }
-        finally {
-            if (iterable != null) {
-                iterable.close();
             }
         }
 
@@ -607,17 +599,10 @@ public class Query implements AutoCloseable {
     }
 
     public <T> T executeAndFetchFirst(ResultSetHandlerFactory<T> resultSetHandlerFactory){
-        // if sql2o moves to java 7 at some point, this could be much cleaner using try-with-resources
-        ResultSetIterable<T> iterable = null;
-        try {
-            iterable = executeAndFetchLazy(resultSetHandlerFactory);
+
+        try (ResultSetIterable<T> iterable = executeAndFetchLazy(resultSetHandlerFactory))  {
             Iterator<T> iterator = iterable.iterator();
             return iterator.hasNext() ? iterator.next() : null;
-        }
-        finally {
-            if (iterable != null) {
-                iterable.close();
-            }
         }
     }
 
@@ -634,18 +619,17 @@ public class Query implements AutoCloseable {
     }
 
     public Table executeAndFetchTable() {
-        LazyTable lt =  executeAndFetchTableLazy();
         List<Row> rows = new ArrayList<>();
-        try {
+
+        try  (LazyTable lt =  executeAndFetchTableLazy()){
             for (Row item : lt.rows()) {
                 rows.add(item);
             }
+             // lt==null is always false
+            return new Table(lt.getName(), rows, lt.columns());
+
         }
-        finally {
-           lt.close();
-        }
-        // lt==null is always false
-        return new Table(lt.getName(), rows, lt.columns());
+
     }
 
     public Connection executeUpdate(){
