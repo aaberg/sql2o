@@ -1,4 +1,4 @@
-# sql2o [![Build Status](https://travis-ci.org/aaberg/sql2o.svg?branch=master)](https://travis-ci.org/aaberg/sql2o)
+# sql2o [![Build Status](https://travis-ci.org/aaberg/sql2o.svg?branch=master)](https://travis-ci.org/aaberg/sql2o) [![Open Source Helpers](https://www.codetriage.com/aaberg/sql2o/badges/users.svg)](https://www.codetriage.com/aaberg/sql2o)
 
 Sql2o is a small java library, with the purpose of making database interaction easy.
 When fetching data from the database, the ResultSet will automatically be filled into your POJO objects.
