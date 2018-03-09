@@ -1,5 +1,8 @@
 package org.sql2o.performance;
 
+import jodd.db.DbSession;
+import jodd.db.connection.DataSourceConnectionProvider;
+import jodd.db.oom.DbOomQuery;
 import org.apache.commons.dbutils.*;
 import org.apache.commons.dbutils.handlers.BeanHandler;
 import org.apache.ibatis.annotations.Result;
@@ -144,6 +147,8 @@ public class PojoPerformanceTest
         tests.add(new ApacheDbUtilsTypicalSelect());
         tests.add(new MyBatisSelect());
         tests.add(new SpringJdbcTemplateSelect());
+        tests.add(new DbOomOptimalSelect());
+        tests.add(new DbOomTypicalSelect());
 
         System.out.println("Warming up...");
         tests.run(ITERATIONS);
@@ -550,4 +555,78 @@ public class PojoPerformanceTest
         public void close()
         {}
     }
+
+    abstract class DbOomSelect extends PerformanceTestBase
+    {
+        private DbSession session;
+        private DbOomQuery query;
+
+        abstract String getSQL();
+
+        @Override
+        public void init()
+        {
+//            session = new DbSession(new ConnectionProvider() {
+//                @Override
+//                public void init() {
+//
+//                }
+//
+//                @Override
+//                public Connection getConnection() {
+//                    try {
+//                        return sql2o.getConnectionSource().getConnection();
+//                    } catch (SQLException e) {
+//                        throw new RuntimeException(e);
+//                    }
+//                }
+//
+//                @Override
+//                public void closeConnection(Connection connection) {
+//                    try {
+//                        connection.close();
+//                    } catch (SQLException e) {
+//                        throw new RuntimeException(e);
+//                    }
+//                }
+//
+//                @Override
+//                public void close() {
+//                    // no-op
+//                }
+//            });
+            session = new DbSession(new DataSourceConnectionProvider(sql2o.getDataSource()));
+            query = new DbOomQuery(session, getSQL() + " WHERE id = ?");
+        }
+
+        @Override
+        public void run(int input)
+        {
+            query.setInteger(1, input);
+            query.find(Post.class);
+        }
+
+        @Override
+        public void close()
+        {
+            session.closeSession();
+        }
+    }
+
+    class DbOomTypicalSelect extends DbOomSelect
+    {
+        @Override
+        String getSQL() {
+            return SELECT_TYPICAL;
+        }
+    }
+
+    class DbOomOptimalSelect extends DbOomSelect
+    {
+        @Override
+        String getSQL() {
+            return SELECT_OPTIMAL;
+        }
+    }
+
 }
