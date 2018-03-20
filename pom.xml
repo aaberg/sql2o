@@ -25,6 +25,24 @@
         <module>extensions</module>
     </modules>
 
+    <properties>
+        <commons-dbutils.version>1.5</commons-dbutils.version>
+        <embedded-db-junit.version>1.0.0</embedded-db-junit.version>
+        <guava.version>15.0</guava.version>
+        <h2.version>1.3.160</h2.version>
+        <hibernate-core.version>4.3.1.Final</hibernate-core.version>
+        <hsqldb.version>2.2.8</hsqldb.version>
+        <jdbi.version>2.53</jdbi.version>
+        <joda-time.version>2.0</joda-time.version>
+        <jooq.version>3.3.0</jooq.version>
+        <junit.version>4.12</junit.version>
+        <mockito.version>1.9.5</mockito.version>
+        <mybatis.version>3.2.4</mybatis.version>
+        <persistence-api.version>1.0.2</persistence-api.version>
+        <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+        <slf4j.version>1.7.25</slf4j.version>
+        <spring-jdbc.version>4.0.2.RELEASE</spring-jdbc.version>
+    </properties>
     <developers>
         <developer>
             <email>lars@aaberg.cc</email>
@@ -84,7 +102,7 @@
         <dependency>
             <groupId>junit</groupId>
             <artifactId>junit</artifactId>
-            <version>4.12</version>
+            <version>${junit.version}</version>
             <scope>test</scope>
         </dependency>
 
@@ -92,7 +110,7 @@
         <dependency>
             <groupId>org.slf4j</groupId>
             <artifactId>slf4j-simple</artifactId>
-            <version>1.6.4</version>
+            <version>${slf4j.version}</version>
             <scope>test</scope>
         </dependency>
 
@@ -101,7 +119,7 @@
             <scope>test</scope>
             <groupId>com.google.guava</groupId>
             <artifactId>guava</artifactId>
-            <version>15.0</version>
+            <version>${guava.version}</version>
         </dependency>
     </dependencies>
 
