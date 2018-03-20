@@ -4,7 +4,7 @@ services:
  - docker
 
 before_install:
-- docker pull ibmcom/db2express-c
+- docker pull sath89/oracle-xe-11g
 - docker build -t sql2o-oracle ./extensions/oracle
 - docker run -d --rm -p 1521:1521 --name=oracle-xe-11g sql2o-oracle
 
