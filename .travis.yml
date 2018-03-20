@@ -1,4 +1,13 @@
 language: java
+sudo: required
+services:
+ - docker
+
+before_install:
+- docker pull ibmcom/db2express-c
+- docker build -t sql2o-oracle ./extensions/oracle
+- docker run -d --rm -p 1521:1521 --name=oracle-xe-11g sql2o-oracle
+
 before_script:
  - psql -c "CREATE USER test WITH PASSWORD 'testtest';" -U postgres
  - psql -c "CREATE DATABASE testdb WITH OWNER test;" -U postgres
@@ -6,3 +15,4 @@ install:
  - mvn compile -DskipTests=true -Dmaven.javadoc.skip=true -B -V -pl core,extensions,extensions/db2,extensions/postgres
 script:
  - mvn test -Dmaven.javadoc.skip=true -B -V -pl core,extensions,extensions/postgres
+
