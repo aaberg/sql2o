@@ -1,0 +1,7 @@
+# Should be held up to date with https://github.com/aaberg/sql2o/wiki/Coding-guidelines
+[*.{java,xml}]
+charset = utf-8
+
+[*.java]
+indent_style = space
+indent_size = 4
