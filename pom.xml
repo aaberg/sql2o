@@ -44,6 +44,12 @@
             <name>Dmitry Alexandrov</name>
             <url>https://github.com/dimzon</url>
         </developer>
+        <developer>
+            <email>zapodot@gmail.com</email>
+            <id>zapodot</id>
+            <name>Sondre Eikanger Kvalø</name>
+            <url>https://github.com/zapodot</url>
+        </developer>
     </developers>
 
 
