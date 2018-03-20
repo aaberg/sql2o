@@ -12,9 +12,22 @@ import org.sql2o.quirks.Quirks;
 import org.sql2o.reflection.PojoIntrospector;
 
 import java.io.InputStream;
-import java.lang.reflect.*;
-import java.sql.*;
-import java.util.*;
+import java.lang.reflect.InvocationTargetException;
+import java.sql.PreparedStatement;
+import java.sql.ResultSet;
+import java.sql.ResultSetMetaData;
+import java.sql.SQLException;
+import java.sql.Statement;
+import java.sql.Time;
+import java.sql.Timestamp;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.Iterator;
+import java.util.List;
+import java.util.Map;
+import java.util.UUID;
 
 import static org.sql2o.converters.Convert.throwIfNull;
 
@@ -658,30 +671,28 @@ public class Query implements AutoCloseable {
         return this.connection;
     }
 
-    public Object executeScalar(){
+    public Object executeScalar() {
         long start = System.currentTimeMillis();
-        try {
-            logExecution();
-            ResultSet rs = buildPreparedStatement().executeQuery();
-            if (rs.next()){
+
+        logExecution();
+        try (final PreparedStatement ps = buildPreparedStatement();
+             final ResultSet rs = ps.executeQuery()) {
+            if (rs.next()) {
                 Object o = getQuirks().getRSVal(rs, 1);
                 long end = System.currentTimeMillis();
                 logger.debug("total: {} ms; executed scalar [{}]", new Object[]{
-                        end - start,
-                        this.getName() == null ? "No name" : this.getName()
+                    end - start,
+                    this.getName() == null ? "No name" : this.getName()
                 });
                 return o;
-            }
-            else{
+            } else {
                 return null;
             }
 
-        }
-        catch (SQLException e) {
+        } catch (SQLException e) {
             this.connection.onException();
             throw new Sql2oException("Database error occurred while running executeScalar: " + e.getMessage(), e);
-        }
-        finally{
+        } finally {
             closeConnectionIfNecessary();
         }
 
