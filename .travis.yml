@@ -12,7 +12,7 @@ before_script:
 - psql -c "CREATE USER test WITH PASSWORD 'testtest';" -U postgres
 - psql -c "CREATE DATABASE testdb WITH OWNER test;" -U postgres
 install:
-- mvn compile -B -V --settings ~/settings.xml
+- mvn compile -B -V -X --settings ~/settings.xml
 script:
 - mvn test -B -V --settings ~/settings.xml
 after_script:
