@@ -43,7 +43,7 @@ public class OracleTest {
             throw new RuntimeException(t);
         }
 
-        this.sql2o = new Sql2o("jdbc:oracle:thin:@//localhost:1521/orcl", "test", "test", new OracleQuirks());
+        this.sql2o = new Sql2o("jdbc:oracle:thin:@localhost:1521:XE", "test", "test", new OracleQuirks());
     }
 
     @Test @Ignore
