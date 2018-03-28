@@ -13,6 +13,6 @@ before_script:
 install:
 - mvn compile -DskipTests=true -Dmaven.javadoc.skip=true -B -V -pl core,extensions,extensions/db2,extensions/postgres
 script:
-- mvn test -B -V -pl core,extensions,extensions/postgres,extensions/db2 mvn test 
+- mvn test -B -V -pl core,extensions,extensions/postgres,extensions/db2 
 after_script:
 - docker kill sql2o-oracle-xe-11g
