@@ -6,6 +6,7 @@ import org.junit.runners.Parameterized;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.sql2o.Connection;
+import org.sql2o.Query;
 import org.sql2o.Sql2o;
 import org.sql2o.converters.UUIDConverter;
 import org.sql2o.data.Row;
@@ -40,25 +41,31 @@ public class PostgresTest extends PostgresTestSupport {
     public void testIssue10StatementsOnPostgres_noTransaction(){
 
         try {
-            String createTableSql = "create table test_table(id SERIAL, val varchar(20))";
-            sql2o.createQuery(createTableSql).executeUpdate();
+            try (Connection connection = sql2o.open()) {
+                connection.createQuery("create table test_table(id SERIAL, val varchar(20))").executeUpdate();
+            }
 
-            String insertSql = "insert into test_table (val) values(:val)";
-            Long key = (Long)sql2o.createQuery(insertSql, true).addParameter("val", "something").executeUpdate().getKey(Long.class);
-            assertNotNull(key);
-            assertTrue(key > 0);
+            try (Connection connection = sql2o.open()) {
+                Long key = connection.createQuery("insert into test_table (val) values(:val)", true)
+                                     .addParameter("val", "something").executeUpdate().getKey(Long.class);
+                assertNotNull(key);
+                assertTrue(key > 0);
 
-            String selectSql = "select id, val from test_table";
-            Table resultTable = sql2o.createQuery(selectSql).executeAndFetchTable();
+                String selectSql = "select id, val from test_table";
+                Table resultTable = connection.createQuery(selectSql).executeAndFetchTable();
 
-            assertThat(resultTable.rows().size(), is(1));
-            Row resultRow = resultTable.rows().get(0);
-            assertThat(resultRow.getLong("id"), equalTo(key));
-            assertThat(resultRow.getString("val"), is("something"));
+                assertThat(resultTable.rows().size(), is(1));
+                Row resultRow = resultTable.rows().get(0);
+                assertThat(resultRow.getLong("id"), equalTo(key));
+                assertThat(resultRow.getString("val"), is("something"));
+
+            }
 
         } finally {
-            String dropTableSql = "drop table if exists test_table";
-            sql2o.createQuery(dropTableSql).executeUpdate();
+            try (final Connection connection = sql2o.open();
+                 final Query query = connection.createQuery("drop table if exists test_table")) {
+                query.executeUpdate();
+            }
         }
     }
 
@@ -66,16 +73,13 @@ public class PostgresTest extends PostgresTestSupport {
     public void testIssue10_StatementsOnPostgres_withTransaction() {
 
 
-        Connection connection = null;
-
-        try{
-            connection = sql2o.beginTransaction();
+        try(final Connection connection = sql2o.beginTransaction()){
 
             String createTableSql = "create table test_table(id SERIAL, val varchar(20))";
             connection.createQuery(createTableSql).executeUpdate();
 
             String insertSql = "insert into test_table (val) values(:val)";
-            Long key = (Long)connection.createQuery(insertSql, true).addParameter("val", "something").executeUpdate().getKey(Long.class);
+            Long key = connection.createQuery(insertSql, true).addParameter("val", "something").executeUpdate().getKey(Long.class);
             assertNotNull(key);
             assertTrue(key > 0);
 
@@ -86,15 +90,10 @@ public class PostgresTest extends PostgresTestSupport {
             Row resultRow = resultTable.rows().get(0);
             assertThat(resultRow.getLong("id"), equalTo(key));
             assertThat(resultRow.getString("val"), is("something"));
-
-        } finally {
-
             // always rollback, as this is only for tesing purposes.
-            if (connection != null) {
-                connection.rollback();
-            }
-        }
+            connection.rollback();
 
+        }
 
     }
 
