@@ -7,7 +7,7 @@ before_install:
 - docker pull sath89/oracle-xe-11g
 - docker build -t sql2o-oracle ./extensions/oracle
 - docker run -d --rm -p 1521:1521 --name=sql2o-oracle-xe-11g sql2o-oracle
-- echo "<settings><servers><server><id>sonatype-nexus-snapshots</id><username>\${env.ORACLE_USER}</username><password>\${env.ORACLE_PASS}</password></server></servers><profile><id>oracle</id><repositories><repository><id>maven.oracle.com</id> 					<releases> 					  <enabled>true</enabled> 					</releases> 					<snapshots> 					  <enabled>false</enabled></snapshots><url>https://maven.oracle.com</url><layout>default</layout></repository></repositories></profile><activeProfiles><activeProfile>oracle</activeProfile></activeProfiles></settings>" > ~/settings.xml
+- echo "<settings><servers><server><id>sonatype-nexus-snapshots</id><username>\${env.ORACLE_USER}</username><password>\${env.ORACLE_PASS}</password></server></servers><profiles><profile><id>oracle</id><repositories><repository><id>maven.oracle.com</id><releases><enabled>true</enabled></releases><snapshots><enabled>false</enabled></snapshots><url>https://maven.oracle.com</url><layout>default</layout></repository></repositories></profile></profiles><activeProfiles><activeProfile>oracle</activeProfile></activeProfiles></settings>" > ~/settings.xml
 before_script:
 - psql -c "CREATE USER test WITH PASSWORD 'testtest';" -U postgres
 - psql -c "CREATE DATABASE testdb WITH OWNER test;" -U postgres
