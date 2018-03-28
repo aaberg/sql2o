@@ -5,7 +5,7 @@ services:
 - postgresql
 before_install:
 - openssl aes-256-cbc -K $encrypted_e3e46bd44864_key -iv $encrypted_e3e46bd44864_iv
-  -in .build\\settings-orig.xml.enc -out .build\\settings.xml -d
+  -in .build/settings-orig.xml.enc -out .build/settings.xml -d
 - docker pull sath89/oracle-xe-11g
 - docker build -t sql2o-oracle ./extensions/oracle
 - docker run -d --rm -p 1521:1521 --name=sql2o-oracle-xe-11g sql2o-oracle
