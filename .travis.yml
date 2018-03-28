@@ -1,18 +1,24 @@
 language: java
 sudo: required
 services:
- - docker
-
+- docker
+- postgresql
 before_install:
 - docker pull sath89/oracle-xe-11g
 - docker build -t sql2o-oracle ./extensions/oracle
-- docker run -d --rm -p 1521:1521 --name=oracle-xe-11g sql2o-oracle
-
+- docker run -d --rm -p 1521:1521 --name=sql2o-oracle-xe-11g sql2o-oracle
+- echo "<settings><servers><server><id>sonatype-nexus-snapshots</id><username>\${env.ORACLE_USER}</username><password>\${env.ORACLE_PASS}</password></server></servers></settings>" > ~/settings.xml
 before_script:
- - psql -c "CREATE USER test WITH PASSWORD 'testtest';" -U postgres
- - psql -c "CREATE DATABASE testdb WITH OWNER test;" -U postgres
+- psql -c "CREATE USER test WITH PASSWORD 'testtest';" -U postgres
+- psql -c "CREATE DATABASE testdb WITH OWNER test;" -U postgres
 install:
- - mvn compile -DskipTests=true -Dmaven.javadoc.skip=true -B -V -pl core,extensions,extensions/db2,extensions/postgres
+- mvn compile -B -V --settings ~/settings.xml
 script:
- - mvn test -Dmaven.javadoc.skip=true -B -V -pl core,extensions,extensions/postgres
+- mvn test -B -V --settings ~/settings.xml
+after_script:
+- docker kill sql2o-oracle-xe-11g
 
+env:
+  global:
+  - secure: FzC7HsjGh4ChsG/z+kzOfHY7R7x5+yULZAoCP58VNH2luvZkvypPia2XnLkrCe8WhqXq0BS5XOVnv/8xHOgdXhmk1RlhUKsz8i9CZ9pV8FQiShCdtbwRKPpizYR4mo5XXIBg/58UrAWcZPOQqR/Xf6cb4X18uAlVK1s4DCd18cw=
+  - secure: d5JFReXqMkLcx3T65nJfcY9GbsqC+O1628CgOFNdG0tL9+FUnS0tAaddXck4LxrsMuySRsR654bW8edM2RxMym0smZ2meZMa2jTq9M6KOq0E4BOgwowndkJniZ8ROBJQKoSGAbGvYjJSmYmWOdPBYSOR3Xr1UsD6plDOaXMSXrg=
