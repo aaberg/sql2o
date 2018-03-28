@@ -7,5 +7,7 @@ pom.xml.releaseBackup
 _site/
 *.versionsBackup
 
+settings-orig.xml
+
 # OSX
 .DS_Store

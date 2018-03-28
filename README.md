@@ -40,14 +40,7 @@ Want to contribute? Awesome! Here's how to set up.
 
 When hacking sql2o, please follow [these coding guidelines](https://github.com/aaberg/sql2o/wiki/Coding-guidelines).
 
-#### Download oracle driver
+#### Note on running Oracle specific tests 
 
-To run the oracle database tests it is necessary to download the oracle jdbc driver manually, and register it with maven.
-Oracle does not have a public repository where maven can download the driver automatically.
-Note that public repositories do exist, but they are all technically illegal.
+In order to run the Oracle database tests you will have to add the Oracle Maven repo to your settings.xml as instructed in the [Oracle Fusion Middleware Maven Setup guide](https://maven.oracle.com/doc.html)
 
-* Download the ojdbc6.jar version 11.2.0.3 from [here](http://www.oracle.com/technetwork/database/enterprise-edition/jdbc-112010-090769.html)
-* Install it into your local maven repo by running this command:
-```
-mvn install:install-file -DgroupId=com.oracle -DartifactId=ojdbc6 -Dversion=11.2.0.3 -Dpackaging=jar -Dfile=ojdbc6.jar -DgeneratePom=true
-```
