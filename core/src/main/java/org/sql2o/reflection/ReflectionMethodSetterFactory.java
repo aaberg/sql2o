@@ -10,6 +10,7 @@ import java.lang.reflect.Method;
  * To change this template use File | Settings | File Templates.
  */
 public class ReflectionMethodSetterFactory implements MethodSetterFactory {
+    @Override
     public Setter newSetter(Method method) {
         return new MethodSetter(method);
     }

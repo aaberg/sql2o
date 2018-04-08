@@ -14,6 +14,7 @@ public abstract class AbstractDateConverter<E extends Date> implements Converter
 
     protected abstract E fromMilliseconds(long millisecond);
 
+    @Override
     @SuppressWarnings("unchecked")
     public E convert(Object val) throws ConverterException {
         if (val == null){
@@ -35,6 +36,7 @@ public abstract class AbstractDateConverter<E extends Date> implements Converter
         throw new ConverterException("Cannot convert type " + val.getClass().toString() + " to java.util.Date");
     }
 
+    @Override
     public Object toDatabaseParam(Date val) {
         if(val==null) return null;
         return (val instanceof Timestamp)

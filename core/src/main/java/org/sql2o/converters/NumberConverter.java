@@ -11,6 +11,7 @@ public abstract class NumberConverter<V extends Number> extends ConverterBase<V>
         isPrimitive = primitive;
     }
 
+    @Override
     public V convert(Object val) {
         if (val == null) {
             return isPrimitive ? convertNumberValue(0) : null;

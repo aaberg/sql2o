@@ -1,16 +1,16 @@
 package org.sql2o.converters.joda;
 
+import java.sql.Timestamp;
 import org.joda.time.LocalTime;
 import org.sql2o.converters.Converter;
 import org.sql2o.converters.ConverterException;
-
-import java.sql.Timestamp;
 
 /**
  * Created by lars on 12/18/13.
  */
 public class LocalTimeConverter implements Converter<LocalTime> {
 
+    @Override
     public LocalTime convert(Object val) throws ConverterException {
         if (val == null) {
             return null;
@@ -25,6 +25,7 @@ public class LocalTimeConverter implements Converter<LocalTime> {
         }
     }
 
+    @Override
     public Object toDatabaseParam(LocalTime val) {
         return new Timestamp(val.toDateTimeToday().getMillis());
     }

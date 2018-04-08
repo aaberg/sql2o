@@ -1,12 +1,11 @@
 package org.sql2o.converters.joda;
 
+import java.sql.Timestamp;
 import org.joda.time.DateTime;
 import org.joda.time.DateTimeZone;
 import org.joda.time.LocalDateTime;
 import org.sql2o.converters.Converter;
 import org.sql2o.converters.ConverterException;
-
-import java.sql.Timestamp;
 
 /**
  * Used by sql2o to convert a value from the database into a {@link DateTime} instance.
@@ -25,6 +24,7 @@ public class DateTimeConverter implements Converter<DateTime> {
         this(DateTimeZone.getDefault());
     }
 
+    @Override
     public DateTime convert(Object val) throws ConverterException {
         if (val == null){
             return null;
@@ -39,6 +39,7 @@ public class DateTimeConverter implements Converter<DateTime> {
         }
     }
 
+    @Override
     public Object toDatabaseParam(DateTime val) {
         return new Timestamp(val.getMillis());
     }

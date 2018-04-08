@@ -17,18 +17,22 @@ public class SysOutLogger implements Logger {
     //    this.clazz = clazz;
     }
 
+    @Override
     public void debug(String format, Object[] argArray) {
         // Don't log debug messages with the SysOutLogger
     }
 
+    @Override
     public void debug(String format, Object arg) {
         // Don't log debug messages with the SysOutLogger
     }
 
+    @Override
     public void warn(String format) {
         this.log(format, WARN_LVL, null);
     }
 
+    @Override
     public void warn(String format, Throwable exception) {
         this.log(format, WARN_LVL, exception);
     }

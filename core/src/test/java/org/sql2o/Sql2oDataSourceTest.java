@@ -1,10 +1,9 @@
 package org.sql2o;
 
+import java.util.List;
+import javax.sql.DataSource;
 import junit.framework.TestCase;
 import org.h2.jdbcx.JdbcConnectionPool;
-
-import javax.sql.DataSource;
-import java.util.List;
 
 /**
  * Created with IntelliJ IDEA.
@@ -38,6 +37,7 @@ public class Sql2oDataSourceTest extends TestCase {
         sql2o.createQuery(sql).setName("testExecuteAndFetchWithNulls").executeUpdate();
 
         sql2o.runInTransaction(new StatementRunnable() {
+            @Override
             public void run(Connection connection, Object argument) throws Throwable {
                 Query insQuery = connection.createQuery("insert into testExecWithNullsTbl (text, aNumber, aLongNumber) values(:text, :number, :lnum)");
                 insQuery.addParameter("text", "some text").addParameter("number", 2).addParameter("lnum", 10L).executeUpdate();

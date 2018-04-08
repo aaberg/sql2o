@@ -1,16 +1,5 @@
 package org.sql2o;
 
-import org.sql2o.converters.Converter;
-import org.sql2o.converters.ConverterException;
-import org.sql2o.data.LazyTable;
-import org.sql2o.data.Row;
-import org.sql2o.data.Table;
-import org.sql2o.data.TableResultSetIterator;
-import org.sql2o.logging.LocalLoggerFactory;
-import org.sql2o.logging.Logger;
-import org.sql2o.quirks.Quirks;
-import org.sql2o.reflection.PojoIntrospector;
-
 import java.io.InputStream;
 import java.lang.reflect.InvocationTargetException;
 import java.sql.PreparedStatement;
@@ -28,6 +17,16 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
+import org.sql2o.converters.Converter;
+import org.sql2o.converters.ConverterException;
+import org.sql2o.data.LazyTable;
+import org.sql2o.data.Row;
+import org.sql2o.data.Table;
+import org.sql2o.data.TableResultSetIterator;
+import org.sql2o.logging.LocalLoggerFactory;
+import org.sql2o.logging.Logger;
+import org.sql2o.quirks.Quirks;
+import org.sql2o.reflection.PojoIntrospector;
 
 import static org.sql2o.converters.Convert.throwIfNull;
 
@@ -193,6 +192,7 @@ public class Query implements AutoCloseable {
         final Object convertedValue = convertParameter(value);
 
         addParameterInternal(name, new ParameterSetter() {
+            @Override
             public void setParameter(int paramIdx, PreparedStatement statement) throws SQLException {
                 getConnection().getSql2o().getQuirks().setParameter(statement, paramIdx, convertedValue);
             }
@@ -220,6 +220,7 @@ public class Query implements AutoCloseable {
 
     public Query addParameter(String name, final InputStream value){
         addParameterInternal(name, new ParameterSetter() {
+            @Override
             public void setParameter(int paramIdx, PreparedStatement statement) throws SQLException {
                 getConnection().getSql2o().getQuirks().setParameter(statement, paramIdx, value);
             }
@@ -230,6 +231,7 @@ public class Query implements AutoCloseable {
 
     public Query addParameter(String name, final int value){
         addParameterInternal(name, new ParameterSetter() {
+            @Override
             public void setParameter(int paramIdx, PreparedStatement statement) throws SQLException {
                 getConnection().getSql2o().getQuirks().setParameter(statement, paramIdx, value);
             }
@@ -240,6 +242,7 @@ public class Query implements AutoCloseable {
 
     public Query addParameter(String name, final Integer value) {
         addParameterInternal(name, new ParameterSetter() {
+            @Override
             public void setParameter(int paramIdx, PreparedStatement statement) throws SQLException {
                 getConnection().getSql2o().getQuirks().setParameter(statement, paramIdx, value);
             }
@@ -250,6 +253,7 @@ public class Query implements AutoCloseable {
 
     public Query addParameter(String name, final long value){
         addParameterInternal(name, new ParameterSetter() {
+            @Override
             public void setParameter(int paramIdx, PreparedStatement statement) throws SQLException {
                 getConnection().getSql2o().getQuirks().setParameter(statement, paramIdx, value);
             }
@@ -260,6 +264,7 @@ public class Query implements AutoCloseable {
 
     public Query addParameter(String name, final Long value){
         addParameterInternal(name, new ParameterSetter() {
+            @Override
             public void setParameter(int paramIdx, PreparedStatement statement) throws SQLException {
                 getConnection().getSql2o().getQuirks().setParameter(statement, paramIdx, value);
             }
@@ -270,6 +275,7 @@ public class Query implements AutoCloseable {
 
     public Query addParameter(String name, final String value) {
         addParameterInternal(name, new ParameterSetter() {
+            @Override
             public void setParameter(int paramIdx, PreparedStatement statement) throws SQLException {
                 getConnection().getSql2o().getQuirks().setParameter(statement, paramIdx, value);
             }
@@ -280,6 +286,7 @@ public class Query implements AutoCloseable {
 
     public Query addParameter(String name, final Timestamp value){
         addParameterInternal(name, new ParameterSetter() {
+            @Override
             public void setParameter(int paramIdx, PreparedStatement statement) throws SQLException {
                 getConnection().getSql2o().getQuirks().setParameter(statement, paramIdx, value);
             }
@@ -290,6 +297,7 @@ public class Query implements AutoCloseable {
 
     public Query addParameter(String name, final Time value) {
         addParameterInternal(name, new ParameterSetter() {
+            @Override
             public void setParameter(int paramIdx, PreparedStatement statement) throws SQLException {
                 getConnection().getSql2o().getQuirks().setParameter(statement, paramIdx, value);
             }
@@ -401,6 +409,7 @@ public class Query implements AutoCloseable {
         return this;
     }
 
+    @Override
     public void close() {
         if(preparedStatement != null) {
             connection.removeStatement(preparedStatement);
@@ -556,6 +565,7 @@ public class Query implements AutoCloseable {
     public <T> ResultSetIterable<T> executeAndFetchLazy(final ResultSetHandlerFactory<T> resultSetHandlerFactory) {
         final Quirks quirks = getConnection().getSql2o().getQuirks();
         return new ResultSetIterableBase<T>() {
+            @Override
             public Iterator<T> iterator() {
                 return new PojoResultSetIterator<>(rs, isCaseSensitive(), quirks, resultSetHandlerFactory);
             }
@@ -577,6 +587,7 @@ public class Query implements AutoCloseable {
 
     private static  <T> ResultSetHandlerFactory<T> newResultSetHandlerFactory(final ResultSetHandler<T> resultSetHandler) {
         return new ResultSetHandlerFactory<T>() {
+            @Override
             public ResultSetHandler<T> newResultSetHandler(ResultSetMetaData resultSetMetaData) throws SQLException {
                 return resultSetHandler;
             }
@@ -623,6 +634,7 @@ public class Query implements AutoCloseable {
         final LazyTable lt = new LazyTable();
 
         lt.setRows(new ResultSetIterableBase<Row>() {
+            @Override
             public Iterator<Row> iterator() {
                 return new TableResultSetIterator(rs, isCaseSensitive(), getConnection().getSql2o().getQuirks(), lt);
             }
@@ -736,6 +748,7 @@ public class Query implements AutoCloseable {
         try {
             final Converter<T> converter = throwIfNull(returnType, quirks.converterOf(returnType));
             return new ResultSetHandler<T>() {
+                @Override
                 public T handle(ResultSet resultSet) throws SQLException {
                     Object value = quirks.getRSVal(resultSet, 1);
                     try {

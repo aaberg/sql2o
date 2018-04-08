@@ -9,6 +9,7 @@ import java.util.UUID;
  * @since 4/6/14
  */
 public class CustomUUIDConverter implements Converter<UUID> {
+    @Override
     public UUID convert(Object val) throws ConverterException {
         if (val == null){
             return null;
@@ -21,6 +22,7 @@ public class CustomUUIDConverter implements Converter<UUID> {
         throw new ConverterException("Cannot convert type " + val.getClass() + " " + UUID.class);
     }
 
+    @Override
     public Object toDatabaseParam(UUID val) {
         return val.toString().replace('-', '!');
     }

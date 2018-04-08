@@ -16,6 +16,7 @@ public class DelegatingResultSetHandler<E> implements ResultSetHandler<E> {
         this.factory = factory;
     }
 
+    @Override
     public E handle(ResultSet resultSet) throws SQLException {
         if(inner==null) inner = factory.newResultSetHandler(resultSet.getMetaData());
         return inner.handle(resultSet);

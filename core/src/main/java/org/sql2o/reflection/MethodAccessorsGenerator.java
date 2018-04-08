@@ -1,14 +1,13 @@
 package org.sql2o.reflection;
 
-import org.sql2o.Sql2oException;
-import sun.reflect.ConstructorAccessor;
-import sun.reflect.FieldAccessor;
-import sun.reflect.MethodAccessor;
-
 import java.lang.reflect.Constructor;
 import java.lang.reflect.Field;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
+import org.sql2o.Sql2oException;
+import sun.reflect.ConstructorAccessor;
+import sun.reflect.FieldAccessor;
+import sun.reflect.MethodAccessor;
 
 @SuppressWarnings("UnusedDeclaration")
 public class MethodAccessorsGenerator implements MethodGetterFactory, MethodSetterFactory, ObjectConstructorFactory {
@@ -116,11 +115,13 @@ public class MethodAccessorsGenerator implements MethodGetterFactory, MethodSett
         }
     }
 
+    @Override
     public Getter newGetter(final Method method) {
         final Class type = method.getReturnType();
         final MethodAccessor methodAccessor = newMethodAccessor(method);
 
         return new Getter() {
+            @Override
             public Object getProperty(Object obj) {
                 try {
                     return methodAccessor.invoke(obj, null);
@@ -129,16 +130,19 @@ public class MethodAccessorsGenerator implements MethodGetterFactory, MethodSett
                 }
             }
 
+            @Override
             public Class getType() {
                 return type;
             }
         };
     }
 
+    @Override
     public Setter newSetter(final Method method) {
         final Class type = method.getParameterTypes()[0];
         final MethodAccessor methodAccessor = newMethodAccessor(method);
         return new Setter() {
+            @Override
             public void setProperty(Object obj, Object value) {
                 if (value == null && type.isPrimitive()) return;
                 try {
@@ -148,6 +152,7 @@ public class MethodAccessorsGenerator implements MethodGetterFactory, MethodSett
                 }
             }
 
+            @Override
             public Class getType() {
                 return type;
             }

@@ -1,17 +1,17 @@
 package org.sql2o.converters;
 
-import org.sql2o.tools.IOUtils;
-
 import java.io.IOException;
 import java.io.Reader;
 import java.sql.Clob;
 import java.sql.SQLException;
+import org.sql2o.tools.IOUtils;
 
 /**
  * Used by sql2o to convert a value from the database into a {@link String}.
  */
 public class StringConverter extends ConverterBase<String> {
 
+    @Override
     public String convert(Object val) throws ConverterException {
         if (val == null){
             return null;

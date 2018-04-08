@@ -1,6 +1,23 @@
 package org.sql2o.performance;
 
-import org.apache.commons.dbutils.*;
+import java.beans.PropertyDescriptor;
+import java.lang.reflect.Field;
+import java.sql.Connection;
+import java.sql.DriverManager;
+import java.sql.PreparedStatement;
+import java.sql.ResultSet;
+import java.sql.ResultSetMetaData;
+import java.sql.SQLException;
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.Random;
+import java.util.logging.Level;
+import java.util.logging.Logger;
+import org.apache.commons.dbutils.BasicRowProcessor;
+import org.apache.commons.dbutils.BeanProcessor;
+import org.apache.commons.dbutils.DbUtils;
+import org.apache.commons.dbutils.QueryRunner;
+import org.apache.commons.dbutils.ResultSetHandler;
 import org.apache.commons.dbutils.handlers.BeanHandler;
 import org.apache.ibatis.annotations.Result;
 import org.apache.ibatis.annotations.Results;
@@ -32,15 +49,6 @@ import org.springframework.jdbc.core.namedparam.NamedParameterJdbcTemplate;
 import org.sql2o.Query;
 import org.sql2o.Sql2o;
 import org.sql2o.tools.FeatureDetector;
-
-import java.beans.PropertyDescriptor;
-import java.lang.reflect.Field;
-import java.sql.*;
-import java.util.Arrays;
-import java.util.Collections;
-import java.util.Random;
-import java.util.logging.Level;
-import java.util.logging.Logger;
 
 /**
  * @author aldenquimby@gmail.com
@@ -257,6 +265,7 @@ public class PojoPerformanceTest
     {
         ResultQuery q;
 
+        @Override
         public void init()
         {
             DSLContext create;
@@ -349,6 +358,7 @@ public class PojoPerformanceTest
             }
         }
 
+        @Override
         public void close()
         {
             if(stmt != null) {

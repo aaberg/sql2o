@@ -1,12 +1,5 @@
 package org.sql2o;
 
-import org.sql2o.connectionsources.ConnectionSource;
-import org.sql2o.converters.Converter;
-import org.sql2o.converters.ConverterException;
-import org.sql2o.logging.LocalLoggerFactory;
-import org.sql2o.logging.Logger;
-import org.sql2o.quirks.Quirks;
-
 import java.io.Closeable;
 import java.sql.ResultSet;
 import java.sql.SQLException;
@@ -15,6 +8,12 @@ import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
+import org.sql2o.connectionsources.ConnectionSource;
+import org.sql2o.converters.Converter;
+import org.sql2o.converters.ConverterException;
+import org.sql2o.logging.LocalLoggerFactory;
+import org.sql2o.logging.Logger;
+import org.sql2o.quirks.Quirks;
 
 import static org.sql2o.converters.Convert.throwIfNull;
 
@@ -263,6 +262,7 @@ public class Connection implements AutoCloseable, Closeable {
         statements.remove(statement);
     }
 
+    @Override
     public void close() {
         boolean connectionIsClosed;
         try {

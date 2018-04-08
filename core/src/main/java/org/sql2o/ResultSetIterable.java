@@ -10,6 +10,7 @@ import java.io.Closeable;
  */
 public interface ResultSetIterable<T> extends Iterable<T>, Closeable, AutoCloseable {
     // override close to not throw
+    @Override
     void close();
 
     boolean isAutoCloseConnection();
