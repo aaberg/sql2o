@@ -5,8 +5,8 @@ import java.math.BigInteger;
 public class BigIntegerConverter extends NumberConverter<BigInteger> {
 
 
-    public BigIntegerConverter(boolean primitive) {
-        super(primitive);
+    public BigIntegerConverter() {
+        super(false);
     }
 
     @Override
