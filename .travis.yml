@@ -16,3 +16,4 @@ script:
 - mvn test -B -V -pl core,extensions,extensions/postgres,extensions/db2 
 after_script:
 - docker kill sql2o-oracle-xe-11g
+- mvn jacoco:report coveralls:report
