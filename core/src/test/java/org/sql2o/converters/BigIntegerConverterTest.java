@@ -1,12 +1,15 @@
 package org.sql2o.converters;
 
-import org.assertj.core.api.Assertions;
-import org.junit.Assert;
+
 import org.junit.Test;
 
-import static org.assertj.core.api.Assertions.assertThat;
 
 import java.math.BigInteger;
+
+import static org.hamcrest.core.Is.is;
+import static org.hamcrest.core.IsEqual.equalTo;
+import static org.hamcrest.core.IsNull.nullValue;
+import static org.junit.Assert.assertThat;
 
 public class BigIntegerConverterTest {
     
@@ -15,23 +18,35 @@ public class BigIntegerConverterTest {
     @Test
     public void convertNumberValue(){
         BigInteger bigInteger = bigIntegerConverter.convertNumberValue(1);
-        assertThat(bigInteger).isEqualTo(1);
+        assertThat(bigInteger,equalTo(BigInteger.ONE));
     }
     
     @Test
     public void convertBigIntegerValue(){
-        BigInteger bigInteger = bigIntegerConverter.convertNumberValue(BigInteger.valueOf(1L));
-        assertThat(bigInteger).isEqualTo(1);
+        BigInteger bigInteger = bigIntegerConverter.convertNumberValue(BigInteger.ONE);
+        assertThat(bigInteger,equalTo(BigInteger.ONE));
     }
     
     @Test
     public void convertStringValue(){
         BigInteger bigInteger = bigIntegerConverter.convertStringValue("1");
-        assertThat(bigInteger).isEqualTo(1);
+        assertThat(bigInteger,equalTo(BigInteger.ONE));
+    }
+
+    @Test
+    public void convertNullValue(){
+        BigInteger bigInteger;
+        
+        bigInteger = bigIntegerConverter.convertNumberValue(null);
+        assertThat(bigInteger,is(nullValue()));
+        
+        bigInteger = bigIntegerConverter.convertStringValue(null);
+        assertThat(bigInteger,is(nullValue()));
+
     }
     
     @Test
     public void getTypeDescription(){
-        assertThat(bigIntegerConverter.getTypeDescription()).isEqualTo("class java.math.BigInteger");
+        assertThat(bigIntegerConverter.getTypeDescription(),equalTo("class java.math.BigInteger"));
     }
 }

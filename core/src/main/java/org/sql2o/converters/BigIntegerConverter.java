@@ -11,7 +11,10 @@ public class BigIntegerConverter extends NumberConverter<BigInteger> {
 
     @Override
     protected BigInteger convertNumberValue(Number number) {
-        if (number instanceof BigInteger){
+        if(null == number){
+            return null;
+        }
+        else if (number instanceof BigInteger){
             return (BigInteger)number;
         }
         else{
@@ -22,7 +25,11 @@ public class BigIntegerConverter extends NumberConverter<BigInteger> {
 
     @Override
     protected BigInteger convertStringValue(String string) {
-        return BigInteger.valueOf(Integer.parseInt(string));
+        if(null != string) {
+            return BigInteger.valueOf(Integer.parseInt(string));
+        }else{
+            return null;
+        }
     }
 
     @Override
