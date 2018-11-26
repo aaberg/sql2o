@@ -10,8 +10,8 @@ import org.sql2o.reflection.UnsafeFieldSetterFactory;
  * Time: 9:48 PM
  * To change this template use File | Settings | File Templates.
  */
-public class UnsafeFieldSetterFactoryTest extends AbstractFieldSetterFactoryTest {
-    public UnsafeFieldSetterFactoryTest() {
-        super(new UnsafeFieldSetterFactory());
-    }
-}
+//public class UnsafeFieldSetterFactoryTest extends AbstractFieldSetterFactoryTest {
+//    public UnsafeFieldSetterFactoryTest() {
+//        super(new UnsafeFieldSetterFactory());
+//    }
+//}

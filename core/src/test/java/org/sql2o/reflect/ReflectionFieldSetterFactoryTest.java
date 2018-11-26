@@ -9,8 +9,8 @@ import org.sql2o.reflection.ReflectionFieldSetterFactory;
  * Date: 4/9/14
  * Time: 9:44 PM
  */
-public class ReflectionFieldSetterFactoryTest extends AbstractFieldSetterFactoryTest {
-    public ReflectionFieldSetterFactoryTest() {
-        super(new ReflectionFieldSetterFactory());
-    }
-}
+//public class ReflectionFieldSetterFactoryTest extends AbstractFieldSetterFactoryTest {
+//    public ReflectionFieldSetterFactoryTest() {
+//        super(new ReflectionFieldSetterFactory());
+//    }
+//}
