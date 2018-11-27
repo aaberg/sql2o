@@ -63,14 +63,17 @@ public abstract class AbstractFieldSetterFactoryTest extends TestCase {
 
         Field[] fields = pojo1.getClass().getDeclaredFields();
         for (Field field : fields) {
-            Setter setter = fsf.newSetter(field);
-            assertSame(field.getType(),setter.getType());
-            Object val1 = field.get(pojo1);
-            Object val2 = field.get(pojo2);
-            assertFalse(val1.equals(val2));
-            setter.setProperty(pojo2,val1);
-            Object val3 = field.get(pojo2);
-            assertEquals(val1,val3);
+            if (!field.isSynthetic()) {
+                field.setAccessible(true);
+                Setter setter = fsf.newSetter(field);
+                assertSame(field.getType(),setter.getType());
+                Object val1 = field.get(pojo1);
+                Object val2 = field.get(pojo2);
+                assertFalse(val1.equals(val2));
+                setter.setProperty(pojo2,val1);
+                Object val3 = field.get(pojo2);
+                assertEquals(val1,val3);
+            }
         }
 
         assertEquals(pojo1,pojo2);
@@ -78,20 +81,23 @@ public abstract class AbstractFieldSetterFactoryTest extends TestCase {
         // let's reset all values to NULL
         // primitive fields will not be affected
         for (Field field : fields) {
-            Setter setter = fsf.newSetter(field);
-            Object val1 = field.get(pojo1);
-            assertNotNull(val1);
+            if (!field.isSynthetic()) {
+                field.setAccessible(true);
+                Setter setter = fsf.newSetter(field);
+                Object val1 = field.get(pojo1);
+                assertNotNull(val1);
 
-            setter.setProperty(pojo1,null);
+                setter.setProperty(pojo1,null);
 
-            Object val2 = field.get(pojo1);
-            if(!setter.getType().isPrimitive()){
-                assertNull(val2);
-                continue;
+                Object val2 = field.get(pojo1);
+                if(!setter.getType().isPrimitive()){
+                    assertNull(val2);
+                    continue;
+                }
+                assertNotNull(val2);
+                // not affected
+                assertEquals(val1,val2);
             }
-            assertNotNull(val2);
-            // not affected
-            assertEquals(val1,val2);
         }
         pojo2._obj = null;
         assertEquals(pojo2,pojo1);
