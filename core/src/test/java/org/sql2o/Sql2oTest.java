@@ -1005,7 +1005,7 @@ public class Sql2oTest extends BaseMemDbTest {
     public void testExecuteAndFetchLazy(){
         createAndFillUserTable();
 
-        ResultSetIterable<User> allUsers = sql2o.createQuery("select * from User").setFetchSize(1).executeAndFetchLazy(User.class);
+        ResultSetIterable<User> allUsers = sql2o.createQuery("select * from User").executeAndFetchLazy(User.class);
 
         // read in batches, because maybe we are bulk exporting and can't fit them all into a list
         int totalSize = 0;
@@ -1031,14 +1031,13 @@ public class Sql2oTest extends BaseMemDbTest {
         createAndFillUserTable();
 
         try {
-            sql2o.getConnectionSource().getConnection().setAutoCommit(false);
+            sql2o.open().getJdbcConnection().setAutoCommit(true);
         } catch (SQLException e) {
             // ignore
         }
 
-        ResultSetIterable<User> allUsers = sql2o.createQuery("select * from User")
-            .setFetchSize(10)
-            .executeAndFetchLazy(User.class);
+        Query query = sql2o.createQuery("select * from User").setFetchSize(10);
+        ResultSetIterable<User> allUsers = query.executeAndFetchLazy(User.class);
 
         // read in batches, because maybe we are bulk exporting and can't fit them all into a list
         int totalSize = 0;
@@ -1055,6 +1054,7 @@ public class Sql2oTest extends BaseMemDbTest {
 
         allUsers.close();
 
+        assertEquals(10, query.getFetchSize().intValue());
         assertTrue(totalSize == insertIntoUsers);
         deleteUserTable();
     }
