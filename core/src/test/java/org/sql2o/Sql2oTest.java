@@ -1005,12 +1005,6 @@ public class Sql2oTest extends BaseMemDbTest {
     public void testExecuteAndFetchLazy(){
         createAndFillUserTable();
 
-        try {
-            sql2o.open().getJdbcConnection().setAutoCommit(true);
-        } catch (SQLException e) {
-            // ignore
-        }
-
         ResultSetIterable<User> allUsers = sql2o.createQuery("select * from User")
             .setFetchSize(10)
             .executeAndFetchLazy(User.class);

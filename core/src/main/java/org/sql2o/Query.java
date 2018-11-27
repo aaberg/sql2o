@@ -128,7 +128,6 @@ public class Query implements AutoCloseable {
     }
 
     public Query setFetchSize(int fetchSize) {
-        //this.fetchSize = fetchSize;
         return this;
     }
 
@@ -439,9 +438,6 @@ public class Query implements AutoCloseable {
                     preparedStatement = connection.getJdbcConnection().prepareStatement(parsedQuery, Statement.RETURN_GENERATED_KEYS);
                 } else {
                     preparedStatement = connection.getJdbcConnection().prepareStatement(parsedQuery);
-                }
-                if (preparedStatement != null) {
-                    preparedStatement.setFetchSize(10);
                 }
             } catch(SQLException ex) {
                 throw new Sql2oException(String.format("Error preparing statement - %s", ex.getMessage()), ex);
