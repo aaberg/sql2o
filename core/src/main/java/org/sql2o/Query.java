@@ -128,10 +128,6 @@ public class Query implements AutoCloseable {
         return this;
     }
 
-    public Integer getFetchSize() {
-        return fetchSize;
-    }
-
     public Query setFetchSize(int fetchSize) {
         this.fetchSize = fetchSize;
         return this;
