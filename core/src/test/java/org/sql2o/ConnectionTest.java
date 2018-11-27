@@ -65,7 +65,7 @@ public class ConnectionTest extends TestCase {
             }
         });
         try(org.sql2o.Connection cn = sql2o.open()){
-            cn.createQueryWithParams("select :p1 name, :p2 age", "Dmitry Alexandrov", 35).buildPreparedStatement();
+            cn.createQueryWithParams("select :p1 name, :p2 age", "Dmitry Alexandrov", 35).setFetchSize(10).buildPreparedStatement();
             fail("exception not thrown");
         } catch (MyException ex){
             // as designed
@@ -73,6 +73,7 @@ public class ConnectionTest extends TestCase {
         verify(dataSource,times(1)).getConnection();
         verify(jdbcConnection,atLeastOnce()).isClosed();
         verify(jdbcConnection,times(1)).prepareStatement("select ? name, ? age");
+        verify(ps, times(1)).setFetchSize(10);
         verify(ps,times(1)).setInt(2,35);
         // check statement was closed
         verify(ps,times(1)).close();
