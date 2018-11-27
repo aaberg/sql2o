@@ -440,7 +440,9 @@ public class Query implements AutoCloseable {
                 } else {
                     preparedStatement = connection.getJdbcConnection().prepareStatement(parsedQuery);
                 }
-                preparedStatement.setFetchSize(10);
+                if (preparedStatement != null) {
+                    preparedStatement.setFetchSize(10);
+                }
             } catch(SQLException ex) {
                 throw new Sql2oException(String.format("Error preparing statement - %s", ex.getMessage()), ex);
             }
