@@ -38,6 +38,8 @@ public class Connection implements AutoCloseable, Closeable {
 
     private Boolean originalAutoCommit;
 
+    private Boolean autoCommit;
+
     public boolean isRollbackOnException() {
         return rollbackOnException;
     }
@@ -56,6 +58,14 @@ public class Connection implements AutoCloseable, Closeable {
     public Connection setRollbackOnClose(boolean rollbackOnClose) {
         this.rollbackOnClose = rollbackOnClose;
         return this;
+    }
+
+    public Boolean isAutoCommit() {
+        return autoCommit;
+    }
+
+    public void setAutoCommit(boolean autoCommit) {
+        this.autoCommit = autoCommit;
     }
 
     final boolean autoClose;
@@ -305,6 +315,9 @@ public class Connection implements AutoCloseable, Closeable {
         try{
             this.jdbcConnection = connectionSource.getConnection();
             this.originalAutoCommit = jdbcConnection.getAutoCommit();
+            if (autoCommit != null) {
+                jdbcConnection.setAutoCommit(autoCommit);
+            }
         }
         catch(Exception ex){
             throw new Sql2oException("Could not acquire a connection from DataSource - " + ex.getMessage(), ex);
