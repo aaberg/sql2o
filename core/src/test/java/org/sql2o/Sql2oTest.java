@@ -1005,7 +1005,40 @@ public class Sql2oTest extends BaseMemDbTest {
     public void testExecuteAndFetchLazy(){
         createAndFillUserTable();
 
-        ResultSetIterable<User> allUsers = sql2o.createQuery("select * from User").executeAndFetchLazy(User.class);
+        ResultSetIterable<User> allUsers = sql2o.createQuery("select * from User").setFetchSize(1).executeAndFetchLazy(User.class);
+
+        // read in batches, because maybe we are bulk exporting and can't fit them all into a list
+        int totalSize = 0;
+        int batchSize = 500;
+        List<User> batch = new ArrayList<User>(batchSize);
+        for (User u : allUsers) {
+            totalSize++;
+            if (batch.size() == batchSize) {
+                System.out.println(String.format("Read batch of %d users, great!", batchSize));
+                batch.clear();
+            }
+            batch.add(u);
+        }
+
+        allUsers.close();
+
+        assertTrue(totalSize == insertIntoUsers);
+        deleteUserTable();
+    }
+
+    @Test
+    public void testExecuteAndFetchLazyWithFetchSize(){
+        createAndFillUserTable();
+
+        try {
+            sql2o.getConnectionSource().getConnection().setAutoCommit(false);
+        } catch (SQLException e) {
+            // ignore
+        }
+
+        ResultSetIterable<User> allUsers = sql2o.createQuery("select * from User")
+            .setFetchSize(10)
+            .executeAndFetchLazy(User.class);
 
         // read in batches, because maybe we are bulk exporting and can't fit them all into a list
         int totalSize = 0;
