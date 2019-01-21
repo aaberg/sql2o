@@ -124,7 +124,13 @@ public class PojoMetadata {
                         propertyName = propertyName.toLowerCase();
                     }
 
-                    propertyGetters.put(propertyName, factoryFacade.newGetter(m));
+                    final Getter existingGetter = propertyGetters.get(propertyName);
+                    if (existingGetter != null && existingGetter.getType() != Object.class && m.getReturnType() == Object.class) {
+                        // don't overwrite existing getter if it has more concrete type. See https://github.com/aaberg/sql2o/issues/314
+                        // for more details.
+                    } else {
+                        propertyGetters.put(propertyName, factoryFacade.newGetter(m));
+                    }
                 }
 
                 if (m.getName().startsWith("set") && m.getParameterTypes().length == 1) {
@@ -138,7 +144,13 @@ public class PojoMetadata {
                         propertyName = propertyName.toLowerCase();
                     }
 
-                    propertySetters.put(propertyName, factoryFacade.newSetter(m));
+                    final Setter existingSetter = propertySetters.get(propertyName);
+                    if (existingSetter != null && existingSetter.getType() != Object.class && m.getParameterTypes()[0] == Object.class) {
+                        // don't overwrite existing getter if it has more concrete type. See https://github.com/aaberg/sql2o/issues/314
+                        // for more details.
+                    } else {
+                        propertySetters.put(propertyName, factoryFacade.newSetter(m));
+                    }
                 }
             }
             theClass = theClass.getSuperclass();
