@@ -146,7 +146,7 @@ public class PojoMetadata {
 
                     final Setter existingSetter = propertySetters.get(propertyName);
                     if (existingSetter != null && existingSetter.getType() != Object.class && m.getParameterTypes()[0] == Object.class) {
-                        // don't overwrite existing getter if it has more concrete type. See https://github.com/aaberg/sql2o/issues/314
+                        // don't overwrite existing setter if it has more concrete type. See https://github.com/aaberg/sql2o/issues/314
                         // for more details.
                     } else {
                         propertySetters.put(propertyName, factoryFacade.newSetter(m));
