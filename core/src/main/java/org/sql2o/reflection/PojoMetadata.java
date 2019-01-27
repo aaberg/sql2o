@@ -115,7 +115,9 @@ public class PojoMetadata {
 
             // prepare methods. Methods will override fields, if both exists.
             for (Method m : theClass.getDeclaredMethods()) {
-
+                if(m.isBridge()) {
+                    continue;
+                }
                 if (m.getName().startsWith("get")) {
                     String propertyName = m.getName().substring(3);
                     if (caseSensitive) {
