@@ -115,6 +115,10 @@ public class PojoMetadata {
 
             // prepare methods. Methods will override fields, if both exists.
             for (Method m : theClass.getDeclaredMethods()) {
+                if (m.isBridge()) {
+                    // skip bridge methods: https://github.com/aaberg/sql2o/issues/314
+                    continue;
+                }
 
                 if (m.getName().startsWith("get")) {
                     String propertyName = m.getName().substring(3);
@@ -123,14 +127,7 @@ public class PojoMetadata {
                     } else {
                         propertyName = propertyName.toLowerCase();
                     }
-
-                    final Getter existingGetter = propertyGetters.get(propertyName);
-                    if (existingGetter != null && existingGetter.getType() != Object.class && m.getReturnType() == Object.class) {
-                        // don't overwrite existing getter if it has more concrete type. See https://github.com/aaberg/sql2o/issues/314
-                        // for more details.
-                    } else {
-                        propertyGetters.put(propertyName, factoryFacade.newGetter(m));
-                    }
+                    propertyGetters.put(propertyName, factoryFacade.newGetter(m));
                 }
 
                 if (m.getName().startsWith("set") && m.getParameterTypes().length == 1) {
@@ -143,14 +140,7 @@ public class PojoMetadata {
                     } else {
                         propertyName = propertyName.toLowerCase();
                     }
-
-                    final Setter existingSetter = propertySetters.get(propertyName);
-                    if (existingSetter != null && existingSetter.getType() != Object.class && m.getParameterTypes()[0] == Object.class) {
-                        // don't overwrite existing setter if it has more concrete type. See https://github.com/aaberg/sql2o/issues/314
-                        // for more details.
-                    } else {
-                        propertySetters.put(propertyName, factoryFacade.newSetter(m));
-                    }
+                    propertySetters.put(propertyName, factoryFacade.newSetter(m));
                 }
             }
             theClass = theClass.getSuperclass();
