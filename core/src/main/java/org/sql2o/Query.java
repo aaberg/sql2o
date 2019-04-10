@@ -61,7 +61,11 @@ public class Query implements AutoCloseable {
     public String toString() {
         return parsedQuery;
     }
-
+    
+    private String getParsedquery(Connection  connection, String queryText, Map<String, List<Integer>> paramNameToIdxMap) {
+        connection.getSql2o().getQuirks().getSqlParameterParsingStrategy().parseSql(queryText, paramNameToIdxMap);
+    }
+    
     public Query(Connection connection, String queryText, boolean returnGeneratedKeys) {
         this(connection, queryText, returnGeneratedKeys, null);
     }
@@ -71,17 +75,22 @@ public class Query implements AutoCloseable {
     }
 
     private Query(Connection connection, String queryText, boolean returnGeneratedKeys, String[] columnNames) {
+        this(connection, returnGeneratedKeys, columnNames);
+        
+        paramNameToIdxMap = new HashMap<>();
+        parsedQuery = getParsedquery(connection, queryText, paramNameToIdxMap);
+    }
+
+    private Query(Connection connection, boolean returnGeneratedKeys, String[] columnNames) {
         this.connection = connection;
         this.returnGeneratedKeys = returnGeneratedKeys;
         this.columnNames = columnNames;
         this.setColumnMappings(connection.getSql2o().getDefaultColumnMappings());
         this.caseSensitive = connection.getSql2o().isDefaultCaseSensitive();
 
-        paramNameToIdxMap = new HashMap<>();
         parameters = new HashMap<>();
-
-        parsedQuery = connection.getSql2o().getQuirks().getSqlParameterParsingStrategy().parseSql(queryText, paramNameToIdxMap);
     }
+
 
     // ------------------------------------------------
     // ------------- Getter/Setters -------------------
@@ -423,6 +432,11 @@ public class Query implements AutoCloseable {
 
     private PreparedStatement buildPreparedStatement(boolean allowArrayParameters) {
         // array parameter handling
+        
+        if (parsedQuery == null) {
+            throw new Sql2oException("Query object must set parsedQuery");
+        }
+        
         parsedQuery = ArrayParameters.updateQueryAndParametersIndexes(parsedQuery, paramNameToIdxMap, parameters, allowArrayParameters);
 
         // prepare statement creation
@@ -897,6 +911,10 @@ public class Query implements AutoCloseable {
         this.columnMappings.put(columnName.toLowerCase(), propertyName.toLowerCase());
 
         return this;
+    }
+    
+    public void setParsedQuery(queryText) {
+        parsedQuery = getParsedquery(this.connection, queryText, this.paramNameToIdxMap);
     }
 
     /************** private stuff ***************/
