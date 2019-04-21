@@ -14,16 +14,19 @@ public class BigDecimalConverter extends NumberConverter<BigDecimal>{
     @Override
     protected BigDecimal convertNumberValue(Number val) {
         if (val instanceof BigDecimal){
-            return (BigDecimal)val;
+            return (BigDecimal) val;
+        }
+        if (val instanceof BigInteger){
+            return new BigDecimal(val);
         }
         else{
-            return BigDecimal.valueOf(val.doubleValue());
+            return new BigDecimal(val.doubleValue());
         }
     }
 
     @Override
     protected BigDecimal convertStringValue(String val) {
-        return BigDecimal.valueOf(Double.parseDouble(val));
+        return new BigDecimal(val);
     }
 
     @Override
