@@ -14,7 +14,7 @@ public class BigIntegerConverter extends NumberConverter<BigInteger>{
     @Override
     protected BigInteger convertNumberValue(Number val) {
         if (val instanceof BigInteger){
-            return (BigInteger)val;
+            return (BigInteger) val;
         }
         else if (val instanceof BigDecimal){
             return val.toBigInteger();
