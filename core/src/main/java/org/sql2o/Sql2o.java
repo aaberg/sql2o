@@ -205,7 +205,7 @@ public class Sql2o {
      * @return instance of the {@link org.sql2o.Connection} class.
      */
     public Connection open(ConnectionSource connectionSource) {
-        return new Connection(this, connectionSource, false);
+        return new Connection(this, connectionSource, false, defaultResultSetHandlerFactoryBuilder);
     }
 
     /**
@@ -213,7 +213,7 @@ public class Sql2o {
      * @return instance of the {@link org.sql2o.Connection} class.
      */
     public Connection open() {
-        return new Connection(this, false);
+        return new Connection(this, false, defaultResultSetHandlerFactoryBuilder);
     }
 
     /**
@@ -302,7 +302,7 @@ public class Sql2o {
      */
     public Connection beginTransaction(ConnectionSource connectionSource, int isolationLevel) {
 
-        Connection connection = new Connection(this, connectionSource, false);
+        Connection connection = new Connection(this, connectionSource, false, defaultResultSetHandlerFactoryBuilder);
 
         boolean success = false;
         try {
