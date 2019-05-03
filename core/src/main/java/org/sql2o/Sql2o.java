@@ -32,7 +32,9 @@ public class Sql2o {
     private boolean defaultCaseSensitive;
 
     private ConnectionSource connectionSource;
-
+    
+    private ResultSetHandlerFactoryBuilder defaultResultSetHandlerFactoryBuilder;
+    
     private final static Logger logger = LocalLoggerFactory.getLogger(Sql2o.class);
 
     public Sql2o(String jndiLookup) {
@@ -132,7 +134,15 @@ public class Sql2o {
     public void setDefaultColumnMappings(Map<String, String> defaultColumnMappings) {
         this.defaultColumnMappings = defaultColumnMappings;
     }
-
+    
+    public ResultSetHandlerFactoryBuilder getDefaultResultSetHandlerFactoryBuilder() {
+        return defaultResultSetHandlerFactoryBuilder;
+    }
+    
+    public void setDefaultResultSetHandlerFactoryBuilder(ResultSetHandlerFactoryBuilder defaultResultSetHandlerFactoryBuilder) {
+        this.defaultResultSetHandlerFactoryBuilder = defaultResultSetHandlerFactoryBuilder;
+    }
+    
     /**
      * Gets value indicating if this instance of Sql2o is case sensitive when mapping between columns names and property
      * names.
