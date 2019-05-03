@@ -37,6 +37,8 @@ public class Connection implements AutoCloseable, Closeable {
     private boolean rollbackOnException = true;
 
     private Boolean originalAutoCommit;
+    
+    private ResultSetHandlerFactoryBuilder defaultResultSetHandlerFactoryBuilder;
 
     public boolean isRollbackOnException() {
         return rollbackOnException;
@@ -60,15 +62,29 @@ public class Connection implements AutoCloseable, Closeable {
 
     final boolean autoClose;
 
-    Connection(Sql2o sql2o, boolean autoClose) {
-        this(sql2o, null, autoClose);
+    Connection(Sql2o sql2o, boolean autoClose, ResultSetHandlerFactoryBuilder defaultResultSetHandlerFactoryBuilder) {
+        this(sql2o, null, autoClose, defaultResultSetHandlerFactoryBuilder);
     }
 
-    Connection(Sql2o sql2o, ConnectionSource connectionSource, boolean autoClose) {
+    Connection(Sql2o sql2o, boolean autoClose) {
+        this(sql2o, null, autoClose, null);
+    }
+
+    Connection(
+        Sql2o sql2o, 
+        ConnectionSource connectionSource, 
+        boolean autoClose, 
+        ResultSetHandlerFactoryBuilder defaultResultSetHandlerFactoryBuilder
+    ) {
         this.connectionSource = connectionSource != null ? connectionSource : sql2o.getConnectionSource();
         this.autoClose = autoClose;
         this.sql2o = sql2o;
+        this.defaultResultSetHandlerFactoryBuilder = defaultResultSetHandlerFactoryBuilder;
         createConnection();
+    }
+
+    Connection(Sql2o sql2o, ConnectionSource connectionSource, boolean autoClose) {
+        this(sql2o, connectionSource, autoClose, null);
     }
 
     void onException() {
@@ -100,7 +116,7 @@ public class Connection implements AutoCloseable, Closeable {
             throw new Sql2oException("Error creating connection", e);
         }
 
-        return new Query(this, queryText, returnGeneratedKeys);
+        return new Query(this, queryText, returnGeneratedKeys, defaultResultSetHandlerFactoryBuilder);
     }
 
     public Query createQuery(String queryText, String ... columnNames) {
@@ -112,7 +128,7 @@ public class Connection implements AutoCloseable, Closeable {
             throw new Sql2oException("Error creating connection", e);
         }
 
-        return new Query(this, queryText, columnNames);
+        return new Query(this, queryText, columnNames, defaultResultSetHandlerFactoryBuilder);
     }
 
     public Query createQueryWithParams(String queryText, Object... paramValues){
