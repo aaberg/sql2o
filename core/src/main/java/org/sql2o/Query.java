@@ -61,26 +61,53 @@ public class Query implements AutoCloseable {
     public String toString() {
         return parsedQuery;
     }
-
+    
+    public Query(
+        Connection connection, 
+        String queryText, 
+        boolean returnGeneratedKeys, 
+        ResultSetHandlerFactoryBuilder resultSetHandlerFactoryBuilder
+    ) {
+        this(connection, queryText, returnGeneratedKeys, null, resultSetHandlerFactoryBuilder);
+    }
+    
     public Query(Connection connection, String queryText, boolean returnGeneratedKeys) {
-        this(connection, queryText, returnGeneratedKeys, null);
+        this(connection, queryText, returnGeneratedKeys, null, null);
     }
-
+    
+    public Query(Connection connection, String queryText, String[] columnNames, ResultSetHandlerFactoryBuilder resultSetHandlerFactoryBuilder) {
+        this(connection, queryText, false, columnNames, resultSetHandlerFactoryBuilder);
+    }
+    
     public Query(Connection connection, String queryText, String[] columnNames) {
-        this(connection, queryText, false, columnNames);
+        this(connection, queryText, false, columnNames, null);
     }
-
-    private Query(Connection connection, String queryText, boolean returnGeneratedKeys, String[] columnNames) {
+    
+    private Query(
+        Connection connection, 
+        String queryText, 
+        boolean returnGeneratedKeys, 
+        String[] columnNames, 
+        ResultSetHandlerFactoryBuilder resultSetHandlerFactoryBuilder
+    ) {
+        final Quirks quirks = connection.getSql2o().getQuirks();
+        
         this.connection = connection;
         this.returnGeneratedKeys = returnGeneratedKeys;
         this.columnNames = columnNames;
         this.setColumnMappings(connection.getSql2o().getDefaultColumnMappings());
         this.caseSensitive = connection.getSql2o().isDefaultCaseSensitive();
+        
+        this.resultSetHandlerFactoryBuilder = resultSetHandlerFactoryBuilder;
 
         paramNameToIdxMap = new HashMap<>();
         parameters = new HashMap<>();
 
-        parsedQuery = connection.getSql2o().getQuirks().getSqlParameterParsingStrategy().parseSql(queryText, paramNameToIdxMap);
+        parsedQuery = quirks.getSqlParameterParsingStrategy().parseSql(queryText, paramNameToIdxMap);
+    }
+    
+    private Query(Connection connection, String queryText, boolean returnGeneratedKeys, String[] columnNames) {
+        this(connection, queryText, returnGeneratedKeys, columnNames, null);
     }
 
     // ------------------------------------------------
@@ -128,9 +155,6 @@ public class Query implements AutoCloseable {
     }
 
     public ResultSetHandlerFactoryBuilder getResultSetHandlerFactoryBuilder() {
-        if (resultSetHandlerFactoryBuilder == null) {
-            resultSetHandlerFactoryBuilder = new DefaultResultSetHandlerFactoryBuilder();
-        }
         return resultSetHandlerFactoryBuilder;
     }
 
@@ -536,12 +560,16 @@ public class Query implements AutoCloseable {
     private <T> ResultSetHandlerFactory<T> newResultSetHandlerFactory(Class<T> returnType) {
         final Quirks quirks = getConnection().getSql2o().getQuirks();
         ResultSetHandlerFactoryBuilder builder = getResultSetHandlerFactoryBuilder();
-        if(builder==null) builder=new DefaultResultSetHandlerFactoryBuilder();
-        builder.setAutoDeriveColumnNames(this.autoDeriveColumnNames);
-        builder.setCaseSensitive(this.caseSensitive);
-        builder.setColumnMappings(this.getColumnMappings());
-        builder.setQuirks(quirks);
-        builder.throwOnMappingError(this.throwOnMappingFailure);
+        
+        if (builder == null) {
+            builder = resultSetHandlerFactoryBuilder = new DefaultResultSetHandlerFactoryBuilder();
+            builder.setCaseSensitive(this.caseSensitive);
+            builder.setColumnMappings(this.getColumnMappings());
+            builder.setQuirks(quirks);
+            builder.throwOnMappingError(this.throwOnMappingFailure);
+            setResultSetHandlerFactoryBuilder(builder);
+        }
+        
         return builder.newFactory(returnType);
     }
 
