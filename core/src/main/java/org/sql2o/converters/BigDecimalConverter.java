@@ -16,12 +16,12 @@ public class BigDecimalConverter extends NumberConverter<BigDecimal> {
         if (val instanceof BigDecimal) {
             return (BigDecimal) val;
         }
+        
         if (val instanceof BigInteger) {
             return new BigDecimal((BigInteger) val);
         }
-        else {
-            return new BigDecimal(val.doubleValue());
-        }
+        
+        return new BigDecimal(val.doubleValue());
     }
 
     @Override
