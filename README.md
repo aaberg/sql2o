@@ -3,7 +3,7 @@
 Sql2o is a small java library, with the purpose of making database interaction easy.
 When fetching data from the database, the ResultSet will automatically be filled into your POJO objects.
 Kind of like an ORM, but without the SQL generation capabilities.
-Sql2o requires at least Java 7 to run
+Sql2o requires at Java 7 or 8 to run. Java versions past 8 may work, but is currently not supported.
 
 ### Examples
 
