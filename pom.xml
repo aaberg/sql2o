@@ -35,7 +35,7 @@
         <jdbi.version>2.53</jdbi.version>
         <joda-time.version>2.0</joda-time.version>
         <jooq.version>3.3.0</jooq.version>
-        <junit.version>4.12</junit.version>
+        <junit.version>4.13.1</junit.version>
         <mockito.version>1.9.5</mockito.version>
         <mybatis.version>3.2.4</mybatis.version>
         <persistence-api.version>1.0.2</persistence-api.version>
