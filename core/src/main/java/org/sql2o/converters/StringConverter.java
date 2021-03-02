@@ -52,6 +52,6 @@ public class StringConverter extends ConverterBase<String> {
             }
         }
 
-        return val.toString().trim();
+        return val.toString();
     }
 }
