@@ -1,9 +1,8 @@
 package org.sql2o.reflection;
 
-import org.sql2o.Sql2oException;
-
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
+import org.sql2o.Sql2oException;
 
 /**
  * used internally to set property values via its setter method.
@@ -19,6 +18,7 @@ public class MethodSetter implements  Setter{
         type = method.getParameterTypes()[0];
     }
 
+    @Override
     public void setProperty(Object obj, Object value) {
         if (value == null && type.isPrimitive()){
             return; // dont try to set null to a setter to a primitive type.
@@ -32,6 +32,7 @@ public class MethodSetter implements  Setter{
         }
     }
 
+    @Override
     public Class getType() {
         return type;
     }

@@ -1,20 +1,22 @@
 package org.sql2o.quirks;
 
-import org.sql2o.Sql2oException;
-import org.sql2o.converters.Convert;
-import org.sql2o.converters.Converter;
-import org.sql2o.quirks.parameterparsing.impl.DefaultSqlParameterParsingStrategy;
-import org.sql2o.quirks.parameterparsing.SqlParameterParsingStrategy;
-
 import java.io.InputStream;
-import java.sql.*;
+import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.ResultSetMetaData;
 import java.sql.SQLException;
+import java.sql.Statement;
+import java.sql.Time;
+import java.sql.Timestamp;
+import java.sql.Types;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.UUID;
+import org.sql2o.converters.Convert;
+import org.sql2o.converters.Converter;
+import org.sql2o.quirks.parameterparsing.SqlParameterParsingStrategy;
+import org.sql2o.quirks.parameterparsing.impl.DefaultSqlParameterParsingStrategy;
 
 /**
  * @author aldenquimby@gmail.com
@@ -121,6 +123,7 @@ public class NoQuirks implements Quirks {
     }
 
 
+    @Override
     public void setParameter(PreparedStatement statement, int paramIdx, Boolean value) throws SQLException {
         if (value == null)
             statement.setNull(paramIdx, Types.BOOLEAN);

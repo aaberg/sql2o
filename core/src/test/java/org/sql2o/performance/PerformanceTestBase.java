@@ -24,6 +24,7 @@ public abstract class PerformanceTestBase implements Function<Integer, Void>, Au
 
     public abstract void init();
     public abstract void run(int input);
+    @Override
     public abstract void close();
 
     String getName()

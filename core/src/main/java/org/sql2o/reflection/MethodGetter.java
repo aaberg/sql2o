@@ -1,9 +1,8 @@
 package org.sql2o.reflection;
 
-import org.sql2o.Sql2oException;
-
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
+import org.sql2o.Sql2oException;
 
 /**
  * used internally to get property values via its getter method.
@@ -21,6 +20,7 @@ public class MethodGetter implements Getter {
         type = method.getReturnType();
     }
 
+    @Override
     public Object getProperty(Object obj) {
         try {
             return this.method.invoke(obj);
@@ -31,6 +31,7 @@ public class MethodGetter implements Getter {
         }
     }
 
+    @Override
     public Class getType() {
         return type;
     }

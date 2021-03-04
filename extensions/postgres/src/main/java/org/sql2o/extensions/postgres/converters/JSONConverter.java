@@ -3,13 +3,12 @@ package org.sql2o.extensions.postgres.converters;
 import com.google.gson.Gson;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonParser;
+import java.util.Map;
 import org.postgresql.util.PGobject;
 import org.sql2o.converters.Converter;
 import org.sql2o.converters.ConverterException;
 import org.sql2o.converters.ConvertersProvider;
 import org.sql2o.converters.StringConverter;
-
-import java.util.Map;
 
 /**
  * User: dimzon
@@ -17,10 +16,12 @@ import java.util.Map;
  * Time: 12:08 AM
  */
 public class JSONConverter implements Converter<JsonElement>, ConvertersProvider {
+    @Override
     public void fill(Map<Class<?>, Converter<?>> mapToFill) {
         mapToFill.put(JsonElement.class, this);
     }
 
+    @Override
     public JsonElement convert(Object val) throws ConverterException {
         if (val == null) return null;
         if (val instanceof JsonElement) return (JsonElement) val;
@@ -38,6 +39,7 @@ public class JSONConverter implements Converter<JsonElement>, ConvertersProvider
         return parserHolder.parser.parse(jsonString);
     }
 
+    @Override
     public Object toDatabaseParam(JsonElement val) {
         if (val == null) return null;
         final StringBuilder stringBuilder = new StringBuilder();

@@ -10,6 +10,7 @@ import java.io.ByteArrayInputStream;
  * To change this template use File | Settings | File Templates.
  */
 public class InputStreamConverter extends ConverterBase<ByteArrayInputStream> {
+    @Override
     public ByteArrayInputStream convert(Object val) throws ConverterException {
         if (val == null) return null;
 

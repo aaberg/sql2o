@@ -1,12 +1,11 @@
 package org.sql2o;
 
-import org.sql2o.quirks.Quirks;
-
 import java.sql.ResultSet;
 import java.sql.ResultSetMetaData;
 import java.sql.SQLException;
 import java.util.Iterator;
 import java.util.NoSuchElementException;
+import org.sql2o.quirks.Quirks;
 
 /**
  * Iterator for a {@link java.sql.ResultSet}. Tricky part here is getting {@link #hasNext()}
@@ -37,6 +36,7 @@ public abstract class ResultSetIteratorBase<T> implements Iterator<T> {
     private ResultSetValue<T> next; // keep track of next item in case hasNext() is called multiple times
     private boolean resultSetFinished; // used to note when result set exhausted
 
+    @Override
     public boolean hasNext() {
         // check if we already fetched next item
         if (next != null) {
@@ -62,6 +62,7 @@ public abstract class ResultSetIteratorBase<T> implements Iterator<T> {
         return false;
     }
 
+    @Override
     public T next() {
         if (!hasNext()) {
             throw new NoSuchElementException();
@@ -74,6 +75,7 @@ public abstract class ResultSetIteratorBase<T> implements Iterator<T> {
         return result;
     }
 
+    @Override
     public void remove() {
         throw new UnsupportedOperationException();
     }

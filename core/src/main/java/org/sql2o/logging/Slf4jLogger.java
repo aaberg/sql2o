@@ -11,18 +11,22 @@ public class Slf4jLogger implements Logger {
         this.slf4jLogger = slf4jLogger;
     }
 
+    @Override
     public void debug(String format, Object[] argArray) {
         slf4jLogger.debug(format, argArray);
     }
 
+    @Override
     public void debug(String format, Object arg) {
         slf4jLogger.debug(format, arg);
     }
 
+    @Override
     public void warn(String format) {
         slf4jLogger.warn(format);
     }
 
+    @Override
     public void warn(String format, Throwable exception) {
         slf4jLogger.warn(format, exception);
     }

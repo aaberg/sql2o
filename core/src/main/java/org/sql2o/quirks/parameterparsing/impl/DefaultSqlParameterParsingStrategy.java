@@ -1,11 +1,8 @@
 package org.sql2o.quirks.parameterparsing.impl;
 
-import org.sql2o.quirks.parameterparsing.SqlParameterParsingStrategy;
-import org.sql2o.tools.AbstractCache;
-
-import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+import org.sql2o.quirks.parameterparsing.SqlParameterParsingStrategy;
 
 /**
  * Created by lars on 11.04.14.
@@ -22,6 +19,7 @@ public class DefaultSqlParameterParsingStrategy implements SqlParameterParsingSt
         };
     }
 
+    @Override
     @SuppressWarnings("ConstantConditions")
     public String parseSql(String statement, Map<String, List<Integer>> paramMap) {
         final int length = statement.length();

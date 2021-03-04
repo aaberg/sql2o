@@ -1,11 +1,10 @@
 package org.sql2o.converters;
 
-import org.sql2o.tools.IOUtils;
-
 import java.io.IOException;
 import java.io.InputStream;
 import java.sql.Blob;
 import java.sql.SQLException;
+import org.sql2o.tools.IOUtils;
 
 /**
  * User: lars
@@ -14,6 +13,7 @@ import java.sql.SQLException;
  */
 public class ByteArrayConverter extends ConverterBase<byte[]> {
 
+    @Override
     public byte[] convert(Object val) throws ConverterException {
         if (val == null) return null;
 

@@ -10,6 +10,7 @@ import java.lang.reflect.Field;
  * To change this template use File | Settings | File Templates.
  */
 public class ReflectionFieldSetterFactory implements FieldSetterFactory {
+    @Override
     public Setter newSetter(Field field) {
         return new FieldSetter(field);
     }

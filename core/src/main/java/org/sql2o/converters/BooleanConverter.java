@@ -9,6 +9,7 @@ package org.sql2o.converters;
  */
 public class BooleanConverter extends ConverterBase<Boolean> {
 
+    @Override
     public Boolean convert(Object val) throws ConverterException {
         if (val == null) return null;
 

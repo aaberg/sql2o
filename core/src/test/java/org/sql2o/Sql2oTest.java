@@ -1,6 +1,21 @@
 package org.sql2o;
 
 import com.google.common.collect.ImmutableList;
+import java.io.ByteArrayInputStream;
+import java.io.IOException;
+import java.io.InputStream;
+import java.math.BigDecimal;
+import java.sql.SQLException;
+import java.sql.Time;
+import java.sql.Timestamp;
+import java.util.ArrayList;
+import java.util.Date;
+import java.util.HashMap;
+import java.util.Iterator;
+import java.util.List;
+import java.util.Map;
+import javax.naming.Context;
+import javax.naming.InitialContext;
 import org.hsqldb.jdbc.JDBCDataSource;
 import org.joda.time.DateTime;
 import org.joda.time.LocalTime;
@@ -11,22 +26,25 @@ import org.junit.runners.Parameterized;
 import org.sql2o.data.LazyTable;
 import org.sql2o.data.Row;
 import org.sql2o.data.Table;
-import org.sql2o.pojos.*;
+import org.sql2o.pojos.BigDecimalPojo;
+import org.sql2o.pojos.ComplexEntity;
+import org.sql2o.pojos.EntityWithPrivateFields;
+import org.sql2o.pojos.StringConversionPojo;
+import org.sql2o.pojos.SuperPojo;
 import org.sql2o.tools.IOUtils;
 
-import javax.naming.Context;
-import javax.naming.InitialContext;
-import java.io.ByteArrayInputStream;
-import java.io.IOException;
-import java.io.InputStream;
-import java.math.BigDecimal;
-import java.sql.SQLException;
-import java.sql.Time;
-import java.sql.Timestamp;
-import java.util.*;
-
-import static org.hamcrest.CoreMatchers.*;
-import static org.junit.Assert.*;
+import static org.hamcrest.CoreMatchers.equalTo;
+import static org.hamcrest.CoreMatchers.is;
+import static org.hamcrest.CoreMatchers.not;
+import static org.hamcrest.CoreMatchers.notNullValue;
+import static org.hamcrest.CoreMatchers.nullValue;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertNull;
+import static org.junit.Assert.assertThat;
+import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.fail;
 import static org.sql2o.connectionsources.ConnectionSources.join;
 
 /**
@@ -648,6 +666,7 @@ public class Sql2oTest extends BaseMemDbTest {
 
         try{
             sql2o.runInTransaction(new StatementRunnable() {
+                @Override
                 public void run(Connection connection, Object argument) throws Throwable {
                     connection.createQuery("insert into runinsidetransactiontable(value) values(:value)")
                             .addParameter("value", "test").executeUpdate();
@@ -667,6 +686,7 @@ public class Sql2oTest extends BaseMemDbTest {
         assertEquals(0, rowCount);
 
         sql2o.runInTransaction(new StatementRunnable() {
+            @Override
             public void run(Connection connection, Object argument) throws Throwable {
                 connection.createQuery("insert into runinsidetransactiontable(value) values(:value)")
                         .addParameter("value", "test").executeUpdate();
@@ -680,6 +700,7 @@ public class Sql2oTest extends BaseMemDbTest {
         String argument = "argument test";
 
         sql2o.runInTransaction(new StatementRunnable() {
+            @Override
             public void run(Connection connection, Object argument) throws Throwable {
                 Integer id = connection.createQuery("insert into runinsidetransactiontable(value) values(:value)")
                         .addParameter("value", argument).executeUpdate().getKey(Integer.class);
@@ -701,6 +722,7 @@ public class Sql2oTest extends BaseMemDbTest {
 
     private static class runnerWithResultTester implements StatementRunnableWithResult<List<Integer>> {
 
+        @Override
         public List<Integer> run(Connection connection, Object argument) throws Throwable {
             String[] vals = (String[])argument;
             List<Integer> keys = new ArrayList<Integer>();
@@ -744,6 +766,7 @@ public class Sql2oTest extends BaseMemDbTest {
 
         try{
             sql2o.runInTransaction(new StatementRunnable() {
+                @Override
                 public void run(Connection connection, Object argument) throws Throwable {
                     connection.createQuery("insert into testExceptionInRunnable(id, value) values(:id, :val)")
                             .addParameter("id", 1)
@@ -763,6 +786,7 @@ public class Sql2oTest extends BaseMemDbTest {
 
 
         sql2o.runInTransaction(new StatementRunnable() {
+            @Override
             public void run(Connection connection, Object argument) throws Throwable {
                 connection.createQuery("insert into testExceptionInRunnable(id, value) values(:id, :val)")
                         .addParameter("id", 1)
@@ -1272,6 +1296,7 @@ public class Sql2oTest extends BaseMemDbTest {
 
 
         sql2o.withConnection(new StatementRunnable() {
+            @Override
             public void run(Connection connection, Object argument) throws Throwable {
 
                 connection.createQuery(insertsql)
@@ -1296,6 +1321,7 @@ public class Sql2oTest extends BaseMemDbTest {
         });
 
         List<User> users = sql2o.withConnection(new StatementRunnableWithResult<List<User>>() {
+            @Override
             public List<User> run(Connection connection, Object argument) throws Throwable {
                 return sql2o.createQuery("select * from User").executeAndFetch(User.class);
             }
@@ -1305,6 +1331,7 @@ public class Sql2oTest extends BaseMemDbTest {
 
         try{
             sql2o.withConnection(new StatementRunnable() {
+                @Override
                 public void run(Connection connection, Object argument) throws Throwable {
 
                     connection.createQuery(insertsql)
