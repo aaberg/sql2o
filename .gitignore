@@ -11,3 +11,4 @@ settings-orig.xml
 
 # OSX
 .DS_Store
+/bin/

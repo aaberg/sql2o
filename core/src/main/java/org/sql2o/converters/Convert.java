@@ -54,6 +54,7 @@ public class Convert {
         mapToFill.put(byte.class, new ByteConverter(true));
 
         mapToFill.put(BigDecimal.class, new BigDecimalConverter());
+        mapToFill.put(BigInteger.class, new BigIntegerConverter());
 
         mapToFill.put(String.class, new StringConverter());
 

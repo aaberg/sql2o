@@ -1,16 +1,15 @@
 package org.sql2o;
 
-import org.sql2o.connectionsources.DataSourceConnectionSource;
-import org.sql2o.connectionsources.ConnectionSource;
-import org.sql2o.logging.LocalLoggerFactory;
-import org.sql2o.logging.Logger;
-import org.sql2o.quirks.Quirks;
-import org.sql2o.quirks.QuirksDetector;
-
-import javax.sql.DataSource;
 import java.sql.SQLException;
 import java.util.HashMap;
 import java.util.Map;
+
+import javax.sql.DataSource;
+
+import org.sql2o.connectionsources.ConnectionSource;
+import org.sql2o.connectionsources.DataSourceConnectionSource;
+import org.sql2o.quirks.Quirks;
+import org.sql2o.quirks.QuirksDetector;
 
 /**
  * Sql2o is the main class for the sql2o library.
@@ -32,13 +31,17 @@ public class Sql2o {
     private boolean defaultCaseSensitive;
 
     private ConnectionSource connectionSource;
-
-    private final static Logger logger = LocalLoggerFactory.getLogger(Sql2o.class);
-
+    
+    private ResultSetHandlerFactoryBuilder defaultResultSetHandlerFactoryBuilder;
+    
     public Sql2o(String jndiLookup) {
-        this(JndiDataSource.getJndiDatasource(jndiLookup));
+        this(JndiDataSource.getJndiDatasource(jndiLookup), (ResultSetHandlerFactoryBuilder) null);
     }
-
+    
+    public Sql2o(String jndiLookup, ResultSetHandlerFactoryBuilder defaultResultSetHandlerFactoryBuilder) {
+        this(JndiDataSource.getJndiDatasource(jndiLookup), defaultResultSetHandlerFactoryBuilder);
+    }
+    
     /**
      * Creates a new instance of the Sql2o class. Internally this constructor will create a {@link GenericDatasource},
      * and call the {@link Sql2o#Sql2o(javax.sql.DataSource)} constructor which takes a DataSource as parameter.
@@ -46,8 +49,12 @@ public class Sql2o {
      * @param user  database username
      * @param pass  database password
      */
-    public Sql2o(String url, String user, String pass){
-        this(url, user, pass, QuirksDetector.forURL(url));
+    public Sql2o(String url, String user, String pass, ResultSetHandlerFactoryBuilder defaultResultSetHandlerFactoryBuilder) {
+        this(url, user, pass, QuirksDetector.forURL(url), defaultResultSetHandlerFactoryBuilder);
+    }
+    
+    public Sql2o(String url, String user, String pass) {
+        this(url, user, pass, QuirksDetector.forURL(url), null);
     }
 
     /**
@@ -58,31 +65,50 @@ public class Sql2o {
      * @param pass   database password
      * @param quirks {@link org.sql2o.quirks.Quirks} allows sql2o to work around known quirks and issues in different JDBC drivers.
      */
-    public Sql2o(String url, String user, String pass, Quirks quirks) {
-        this(new GenericDatasource(url, user, pass), quirks);
+    public Sql2o(
+        String url, 
+        String user, 
+        String pass, 
+        Quirks quirks, 
+        ResultSetHandlerFactoryBuilder defaultResultSetHandlerFactoryBuilder
+    ) {
+        this(new GenericDatasource(url, user, pass), quirks, defaultResultSetHandlerFactoryBuilder);
     }
-
+    
+    public Sql2o(String url, String user, String pass, Quirks quirks) {
+        this(new GenericDatasource(url, user, pass), quirks, null);
+    }
+    
     /**
      * Creates a new instance of the Sql2o class, which uses the given DataSource to acquire connections to the database.
      * @param dataSource    The DataSource Sql2o uses to acquire connections to the database.
      */
-    public Sql2o(DataSource dataSource) {
-        this(dataSource, QuirksDetector.forObject(dataSource));
+    public Sql2o(DataSource dataSource, ResultSetHandlerFactoryBuilder defaultResultSetHandlerFactoryBuilder) {
+        this(dataSource, QuirksDetector.forObject(dataSource), defaultResultSetHandlerFactoryBuilder);
     }
-
+    
+    public Sql2o(DataSource dataSource) {
+        this(dataSource, QuirksDetector.forObject(dataSource), null);
+    }
+    
     /**
      * Creates a new instance of the Sql2o class, which uses the given DataSource to acquire connections to the database.
      * @param dataSource The DataSource Sql2o uses to acquire connections to the database.
      * @param quirks     {@link org.sql2o.quirks.Quirks} allows sql2o to work around known quirks and issues in different JDBC drivers.
      */
-    public Sql2o(DataSource dataSource, Quirks quirks){
+    public Sql2o(DataSource dataSource, Quirks quirks, ResultSetHandlerFactoryBuilder defaultResultSetHandlerFactoryBuilder) {
         this.connectionSource = new DataSourceConnectionSource(dataSource);
         this.quirks=quirks;
         this.defaultColumnMappings = new HashMap<String, String>();
+        this.defaultResultSetHandlerFactoryBuilder = defaultResultSetHandlerFactoryBuilder;
     }
-
+    
+    public Sql2o(DataSource dataSource, Quirks quirks) {
+        this(dataSource, quirks, null);
+    }
+    
     public Quirks getQuirks() {
-        return quirks;
+        return this.quirks;
     }
 
      /**
@@ -92,10 +118,9 @@ public class Sql2o {
      */
      @Deprecated
     public DataSource getDataSource() {
-        if (connectionSource instanceof DataSourceConnectionSource)
-            return ((DataSourceConnectionSource) connectionSource).getDataSource();
-        else
-            return null;
+        if (this.connectionSource instanceof DataSourceConnectionSource)
+            return ((DataSourceConnectionSource) this.connectionSource).getDataSource();
+        return null;
     }
 
     /**
@@ -103,7 +128,7 @@ public class Sql2o {
      * @return The ConnectionSource instance
      */
     public ConnectionSource getConnectionSource() {
-        return connectionSource;
+        return this.connectionSource;
     }
 
     /**
@@ -121,7 +146,7 @@ public class Sql2o {
      * names.
      */
     public Map<String, String> getDefaultColumnMappings() {
-        return defaultColumnMappings;
+        return this.defaultColumnMappings;
     }
 
     /**
@@ -132,14 +157,22 @@ public class Sql2o {
     public void setDefaultColumnMappings(Map<String, String> defaultColumnMappings) {
         this.defaultColumnMappings = defaultColumnMappings;
     }
-
+    
+    public ResultSetHandlerFactoryBuilder getDefaultResultSetHandlerFactoryBuilder() {
+        return this.defaultResultSetHandlerFactoryBuilder;
+    }
+    
+    public void setDefaultResultSetHandlerFactoryBuilder(ResultSetHandlerFactoryBuilder defaultResultSetHandlerFactoryBuilder) {
+        this.defaultResultSetHandlerFactoryBuilder = defaultResultSetHandlerFactoryBuilder;
+    }
+    
     /**
      * Gets value indicating if this instance of Sql2o is case sensitive when mapping between columns names and property
      * names.
      * @return
      */
     public boolean isDefaultCaseSensitive() {
-        return defaultCaseSensitive;
+        return this.defaultCaseSensitive;
     }
 
     /**
@@ -165,8 +198,10 @@ public class Sql2o {
      * </code>
      */
     @Deprecated
-    public Query createQuery(String query, boolean returnGeneratedKeys) {
-        return new Connection(this, true).createQuery(query, returnGeneratedKeys);
+    public Query createQuery(String sql, boolean returnGeneratedKeys) {
+        try (Connection con = new Connection(this, true); Query query = con.createQuery(sql, returnGeneratedKeys)) {
+            return query;
+        }
     }
 
     /**
@@ -184,8 +219,9 @@ public class Sql2o {
     @Deprecated
     public Query createQuery(String query){
 
-        Connection connection = new Connection(this, true);
-        return connection.createQuery(query);
+        try (Connection connection = new Connection(this, true)) {
+            return connection.createQuery(query);
+        }
     }
 
     /**
@@ -195,7 +231,7 @@ public class Sql2o {
      * @return instance of the {@link org.sql2o.Connection} class.
      */
     public Connection open(ConnectionSource connectionSource) {
-        return new Connection(this, connectionSource, false);
+        return new Connection(this, connectionSource, false, this.defaultResultSetHandlerFactoryBuilder);
     }
 
     /**
@@ -203,7 +239,7 @@ public class Sql2o {
      * @return instance of the {@link org.sql2o.Connection} class.
      */
     public Connection open() {
-        return new Connection(this, false);
+        return new Connection(this, false, this.defaultResultSetHandlerFactoryBuilder);
     }
 
     /**
@@ -214,18 +250,11 @@ public class Sql2o {
      * @param <V>
      * @return
      */
-    @SuppressWarnings("unchecked")
     public <V> V withConnection(StatementRunnableWithResult<V> runnable, Object argument) {
-        Connection connection = null;
-        try{
-            connection = open();
-            return (V)runnable.run(connection, argument);
+        try (Connection connection = open()) {
+            return runnable.run(connection, argument);
         } catch (Throwable t) {
             throw new Sql2oException("An error occurred while executing StatementRunnable", t);
-        } finally {
-            if (connection != null) {
-                connection.close();
-            }
         }
     }
 
@@ -256,17 +285,10 @@ public class Sql2o {
      * @param argument
      */
     public void withConnection(StatementRunnable runnable, Object argument) {
-        Connection connection = null;
-        try{
-            connection = open();
-
+        try (Connection connection = open()) {
             runnable.run(connection, argument);
         } catch (Throwable t) {
             throw new Sql2oException("An error occurred while executing StatementRunnable", t);
-        } finally{
-            if (connection != null) {
-                connection.close();
-            }
         }
     }
 
@@ -292,7 +314,7 @@ public class Sql2o {
      */
     public Connection beginTransaction(ConnectionSource connectionSource, int isolationLevel) {
 
-        Connection connection = new Connection(this, connectionSource, false);
+        Connection connection = new Connection(this, connectionSource, false, this.defaultResultSetHandlerFactoryBuilder);
 
         boolean success = false;
         try {
@@ -373,16 +395,13 @@ public class Sql2o {
      */
     public void runInTransaction(StatementRunnable runnable, Object argument, int isolationLevel){
 
-        Connection connection = this.beginTransaction(isolationLevel);
-        connection.setRollbackOnException(false);
-
-        try {
+        try (Connection connection = this.beginTransaction(isolationLevel)) {
+            connection.setRollbackOnException(false);
             runnable.run(connection, argument);
+            connection.commit();
         } catch (Throwable throwable) {
-            connection.rollback();
             throw new Sql2oException("An error occurred while executing StatementRunnable. Transaction is rolled back.", throwable);
         }
-        connection.commit();
     }
 
     public <V> V runInTransaction(StatementRunnableWithResult<V> runnableWithResult){
@@ -395,18 +414,16 @@ public class Sql2o {
 
     @SuppressWarnings("unchecked")
     public <V> V runInTransaction(StatementRunnableWithResult<V> runnableWithResult, Object argument, int isolationLevel){
-        Connection connection = this.beginTransaction(isolationLevel);
         Object result;
         
-        try{
+        try (Connection connection = this.beginTransaction(isolationLevel)) {
             result = runnableWithResult.run(connection, argument);
+            
+            connection.commit();
+            return (V)result;
         } catch (Throwable throwable) {
-            connection.rollback();
             throw new Sql2oException("An error occurred while executing StatementRunnableWithResult. Transaction rolled back.", throwable);
         }
-        
-        connection.commit();
-        return (V)result;
     }
 
 }
