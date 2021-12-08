@@ -127,6 +127,7 @@ public class UnsafeFieldSetterFactory implements FieldSetterFactory, ObjectConst
             }
             return new Setter() {
                 public void setProperty(Object obj, Object value) {
+                    verifyValueType(value, type);
                     theUnsafe.putObject(obj, offset, value);
                 }
 
@@ -234,6 +235,7 @@ public class UnsafeFieldSetterFactory implements FieldSetterFactory, ObjectConst
         }
         return new Setter() {
             public void setProperty(Object obj, Object value) {
+                verifyValueType(value, type);
                 theUnsafe.putObjectVolatile(obj, offset, value);
             }
 
@@ -241,6 +243,14 @@ public class UnsafeFieldSetterFactory implements FieldSetterFactory, ObjectConst
                 return type;
             }
         };
+    }
+
+    private void verifyValueType(Object value, Class type) {
+        if (value != null && !type.isAssignableFrom(value.getClass())) {
+            String message = String.format("Value \"%s\" is of type %s, but expected: %s",
+                value, value.getClass().getName(), type.getName());
+            throw new IllegalArgumentException(message);
+        }
     }
 
     public ObjectConstructor newConstructor(final Class<?> clazz) {
