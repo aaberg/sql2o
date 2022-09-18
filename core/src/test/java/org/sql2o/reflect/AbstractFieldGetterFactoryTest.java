@@ -1,7 +1,6 @@
 package org.sql2o.reflect;
 
 import junit.framework.TestCase;
-
 import org.sql2o.reflection.FieldGetterFactory;
 import org.sql2o.reflection.Getter;
 

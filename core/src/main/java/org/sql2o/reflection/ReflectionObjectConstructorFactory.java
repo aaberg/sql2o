@@ -20,7 +20,11 @@ public class ReflectionObjectConstructorFactory implements ObjectConstructorFact
                 }
             };
         } catch (Throwable e) {
-            throw new Sql2oException("Could not find parameter-less constructor of class " + clazz, e);
+            if (clazz.getEnclosingClass() == null) {
+                throw new Sql2oException("Could not find parameter-less constructor of class " + clazz, e);
+            } else {
+                throw new Sql2oException("Could not find parameter-less constructor of class " + clazz + ", if your pojo is a nested class, you could try to make it static.", e);
+            }
         }
     }
 }

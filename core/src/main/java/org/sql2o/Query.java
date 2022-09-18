@@ -13,21 +13,8 @@ import org.sql2o.reflection.PojoIntrospector;
 
 import java.io.InputStream;
 import java.lang.reflect.InvocationTargetException;
-import java.sql.PreparedStatement;
-import java.sql.ResultSet;
-import java.sql.ResultSetMetaData;
-import java.sql.SQLException;
-import java.sql.Statement;
-import java.sql.Time;
-import java.sql.Timestamp;
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.Iterator;
-import java.util.List;
-import java.util.Map;
-import java.util.UUID;
+import java.sql.*;
+import java.util.*;
 
 import static org.sql2o.converters.Convert.throwIfNull;
 
@@ -56,6 +43,13 @@ public class Query implements AutoCloseable {
     private int currentBatchRecords = 0;
 
     private ResultSetHandlerFactoryBuilder resultSetHandlerFactoryBuilder;
+
+    private Class[] primitives = new Class[] {
+        Integer.class,
+        Double.class,
+        String.class,
+        Float.class
+    };
 
     @Override
     public String toString() {
@@ -584,6 +578,10 @@ public class Query implements AutoCloseable {
     }
 
     public <T> List<T> executeAndFetch(Class<T> returnType){
+        if (returnType.isPrimitive() || Arrays.stream(primitives).anyMatch(n -> returnType.equals(n)))
+        {
+            return executeScalarList(returnType);
+        }
         return executeAndFetch(newResultSetHandlerFactory(returnType));
     }
 
@@ -604,6 +602,10 @@ public class Query implements AutoCloseable {
     }
 
     public <T> T executeAndFetchFirst(Class<T> returnType){
+        if (returnType.isPrimitive() || Arrays.stream(primitives).anyMatch(n -> returnType.equals(n)))
+        {
+            return executeScalar(returnType);
+        }
         return executeAndFetchFirst(newResultSetHandlerFactory(returnType));
     }
 

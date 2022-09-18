@@ -1,13 +1,11 @@
 package org.sql2o.reflect;
 
-import javax.persistence.Column;
-
+import com.google.common.collect.ImmutableMap;
+import junit.framework.TestCase;
 import org.junit.Test;
 import org.sql2o.reflection.PojoMetadata;
 
-import com.google.common.collect.ImmutableMap;
-
-import junit.framework.TestCase;
+import javax.persistence.Column;
 
 @SuppressWarnings("unused")
 public class ReadColumnAnnotationTest extends TestCase {

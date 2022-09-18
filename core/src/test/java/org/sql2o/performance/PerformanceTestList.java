@@ -1,6 +1,5 @@
 package org.sql2o.performance;
 
-import com.google.common.base.CharMatcher;
 import com.google.common.base.Function;
 import com.google.common.collect.Ordering;
 

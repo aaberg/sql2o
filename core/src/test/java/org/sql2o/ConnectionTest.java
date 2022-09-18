@@ -4,9 +4,8 @@ import junit.framework.TestCase;
 import org.sql2o.quirks.NoQuirks;
 
 import javax.sql.DataSource;
-
-import java.sql.*;
 import java.sql.Connection;
+import java.sql.PreparedStatement;
 
 import static org.mockito.Mockito.*;
 

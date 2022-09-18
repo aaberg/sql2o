@@ -1,6 +1,8 @@
 package org.sql2o.data;
 
-import java.util.*;
+import java.util.AbstractList;
+import java.util.List;
+import java.util.Map;
 
 /**
  * Represents an offline result set with columns and rows and data.

@@ -6,7 +6,10 @@ import org.sql2o.quirks.Quirks;
 
 import java.sql.ResultSet;
 import java.sql.SQLException;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 
 /**
  * @author aldenquimby@gmail.com
