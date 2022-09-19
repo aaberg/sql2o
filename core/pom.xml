@@ -109,6 +109,13 @@
             <artifactId>spring-jdbc</artifactId>
             <version>${spring-jdbc.version}</version>
         </dependency>
+        <dependency>
+            <scope>test</scope>
+            <groupId>org.jodd</groupId>
+            <artifactId>jodd-db</artifactId>
+            <!-- 3.8.0+ java 8 is required -->
+            <version>3.7.1</version>
+        </dependency>
 
         <dependency>
             <groupId>org.mockito</groupId>
