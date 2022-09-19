@@ -1,9 +1,7 @@
 package org.sql2o.quirks.parameterparsing.impl;
 
 import org.sql2o.quirks.parameterparsing.SqlParameterParsingStrategy;
-import org.sql2o.tools.AbstractCache;
 
-import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 

@@ -1,7 +1,5 @@
 package org.sql2o.converters;
 
-import org.sql2o.Sql2oException;
-
 import java.util.Map;
 
 /**

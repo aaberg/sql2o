@@ -5,7 +5,6 @@ import org.junit.Test;
 import javax.sql.DataSource;
 import java.sql.SQLException;
 
-import static org.mockito.Matchers.anyString;
 import static org.mockito.Mockito.*;
 
 /**
@@ -31,7 +30,7 @@ public class QueryTest {
         Connection con = sql2o.open();
         con.createQuery("sql", "colname").buildPreparedStatement();
 
-        verify(jdbcCon, times(1)).prepareStatement(anyString(), new String[]{anyString()});
+        verify(jdbcCon, times(1)).prepareStatement(eq("sql"), eq(new String[]{"colname"}));
 
     }
 

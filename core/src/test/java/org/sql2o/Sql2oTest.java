@@ -1132,7 +1132,7 @@ public class Sql2oTest extends BaseMemDbTest {
             connection.close();
         }
 
-        int count = sql2o.createQuery("select count(*) from testTransactionAutoClosable").executeAndFetchFirst(Integer.class);
+        int count = sql2o.createQuery("select count(*) from testTransactionAutoClosable").executeScalar(Integer.class);
         assertThat(count, is(equalTo(0)));
 
         connection = null;
@@ -1323,8 +1323,25 @@ public class Sql2oTest extends BaseMemDbTest {
 
         List<User> users2 = sql2o.createQuery("select * from User").executeAndFetch(User.class);
 
-        // expect that that the last insert was committed, as this should not be run in a transaction.
+        // expect that the last insert was committed, as this should not be run in a transaction.
         assertThat(users2.size(), is(equalTo(10004)));
+    }
+
+    static class LocalPojo{
+        private long idVal;
+        private String anotherVeryExcitingValue;
+
+        public long getIdVal() {
+            return idVal;
+        }
+
+        public String getAnotherVeryExcitingValue() {
+            return anotherVeryExcitingValue;
+        }
+
+        public void setAnotherVeryExcitingValue(String anotherVeryExcitingValue) {
+            this.anotherVeryExcitingValue = anotherVeryExcitingValue;
+        }
     }
 
     @Test
@@ -1333,22 +1350,7 @@ public class Sql2oTest extends BaseMemDbTest {
         String insertSql = "insert into testAutoDeriveColumnNames values (:id, :val)";
         String selectSql = "select * from testAutoDeriveColumnNames";
 
-        class LocalPojo{
-            private long idVal;
-            private String anotherVeryExcitingValue;
 
-            public long getIdVal() {
-                return idVal;
-            }
-
-            public String getAnotherVeryExcitingValue() {
-                return anotherVeryExcitingValue;
-            }
-
-            public void setAnotherVeryExcitingValue(String anotherVeryExcitingValue) {
-                this.anotherVeryExcitingValue = anotherVeryExcitingValue;
-            }
-        }
 
         try (Connection con = sql2o.open()) {
             con.createQuery(createTableSql).executeUpdate();

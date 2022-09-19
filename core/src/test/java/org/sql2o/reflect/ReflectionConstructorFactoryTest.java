@@ -1,6 +1,5 @@
 package org.sql2o.reflect;
 
-import org.sql2o.reflection.ObjectConstructorFactory;
 import org.sql2o.reflection.ReflectionObjectConstructorFactory;
 
 /**

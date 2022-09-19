@@ -1,13 +1,12 @@
 package org.sql2o.data;
 
 import org.sql2o.Sql2oException;
-import org.sql2o.converters.*;
+import org.sql2o.converters.ConverterException;
 import org.sql2o.quirks.Quirks;
 
 import java.math.BigDecimal;
 import java.util.*;
 
-import static java.util.Arrays.asList;
 import static org.sql2o.converters.Convert.throwIfNull;
 
 /**

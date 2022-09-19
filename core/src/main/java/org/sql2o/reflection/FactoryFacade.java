@@ -8,33 +8,33 @@ public class FactoryFacade {
     private final static FactoryFacade instance;
 
     static {
-        MethodGetterFactory mg;
-        MethodSetterFactory m;
-        ObjectConstructorFactory o;
-        try {
-            m = (MethodSetterFactory) Class
-                    .forName("org.sql2o.reflection.MethodAccessorsGenerator")
-                    .newInstance();
-            mg = (MethodGetterFactory) m;
-            o = (ObjectConstructorFactory) m;
-        } catch (Throwable ex) {
-            mg = new ReflectionMethodGetterFactory();
-            m = new ReflectionMethodSetterFactory();
-            o = null;
-        }
-        FieldGetterFactory fg;
-        FieldSetterFactory f;
-        try {
-            Class clsg = Class.forName("org.sql2o.reflection.UnsafeFieldGetterFactory");
-            fg = (FieldGetterFactory) clsg.newInstance();
-            Class cls = Class.forName("org.sql2o.reflection.UnsafeFieldSetterFactory");
-            f = (FieldSetterFactory) cls.newInstance();
-            if(o==null) o = (ObjectConstructorFactory) f;
-        } catch (Throwable ex) {
-            fg = new ReflectionFieldGetterFactory();
-            f = new ReflectionFieldSetterFactory();
-            o = new ReflectionObjectConstructorFactory();
-        }
+        MethodGetterFactory mg = new ReflectionMethodGetterFactory();
+        MethodSetterFactory m = new ReflectionMethodSetterFactory();
+        ObjectConstructorFactory o = new ReflectionObjectConstructorFactory();
+//        try {
+//            m = (MethodSetterFactory) Class
+//                    .forName("org.sql2o.reflection.MethodAccessorsGenerator")
+//                    .newInstance();
+//            mg = (MethodGetterFactory) m;
+//            o = (ObjectConstructorFactory) m;
+//        } catch (Throwable ex) {
+//            mg = new ReflectionMethodGetterFactory();
+//            m = new ReflectionMethodSetterFactory();
+//            o = null;
+//        }
+        FieldGetterFactory fg = new ReflectionFieldGetterFactory();
+        FieldSetterFactory f = new ReflectionFieldSetterFactory();
+//        try {
+//            Class clsg = Class.forName("org.sql2o.reflection.UnsafeFieldGetterFactory");
+//            fg = (FieldGetterFactory) clsg.newInstance();
+//            Class cls = Class.forName("org.sql2o.reflection.UnsafeFieldSetterFactory");
+//            f = (FieldSetterFactory) cls.newInstance();
+//            if(o==null) o = (ObjectConstructorFactory) f;
+//        } catch (Throwable ex) {
+//            fg = new ReflectionFieldGetterFactory();
+//            f = new ReflectionFieldSetterFactory();
+//            o = new ReflectionObjectConstructorFactory();
+//        }
         instance = new FactoryFacade(fg, mg, f, m, o);
     }
 

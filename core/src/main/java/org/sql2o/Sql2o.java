@@ -1,7 +1,7 @@
 package org.sql2o;
 
-import org.sql2o.connectionsources.DataSourceConnectionSource;
 import org.sql2o.connectionsources.ConnectionSource;
+import org.sql2o.connectionsources.DataSourceConnectionSource;
 import org.sql2o.logging.LocalLoggerFactory;
 import org.sql2o.logging.Logger;
 import org.sql2o.quirks.Quirks;

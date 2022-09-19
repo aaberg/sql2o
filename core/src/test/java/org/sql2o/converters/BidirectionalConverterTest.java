@@ -3,13 +3,18 @@ package org.sql2o.converters;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
-import org.sql2o.*;
+import org.sql2o.Query;
+import org.sql2o.Sql2o;
+import org.sql2o.Sql2oException;
 import org.sql2o.quirks.NoQuirks;
 import org.sql2o.quirks.Quirks;
 
-import java.util.*;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.UUID;
 
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
 
 /**
  * @author aldenquimby@gmail.com
