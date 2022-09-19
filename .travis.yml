@@ -14,3 +14,7 @@ script:
 - mvn test -B -V -pl core,extensions,extensions/postgres,extensions/db2 
 after_script:
 - mvn jacoco:report coveralls:report
+
+cache:
+  directories:
+  - $HOME/.m2
