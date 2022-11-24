@@ -5,6 +5,7 @@ import org.sql2o.reflection.FieldSetterFactory;
 import org.sql2o.reflection.Setter;
 
 import java.lang.reflect.Field;
+import java.util.Arrays;
 
 /**
  * User: dimzon
@@ -61,7 +62,9 @@ public abstract class AbstractFieldSetterFactoryTest extends TestCase {
 
         assertFalse(pojo1.equals(pojo2));
 
-        Field[] fields = pojo1.getClass().getDeclaredFields();
+        Field[] fields = Arrays.stream(pojo1.getClass().getDeclaredFields())
+            .filter(f -> !f.isSynthetic())
+            .toArray(Field[]::new);
         for (Field field : fields) {
             Setter setter = fsf.newSetter(field);
             assertSame(field.getType(),setter.getType());
