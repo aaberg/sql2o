@@ -27,6 +27,7 @@
         <!--<module>oracle</module>-->
         <!--<module>oracle-joda-time</module>-->
         <module>db2</module>
+        <module>sql2o-mysql</module>
     </modules>
 
     <dependencies>

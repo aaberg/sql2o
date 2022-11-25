@@ -10,10 +10,10 @@
 
 <project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
     <modelVersion>4.0.0</modelVersion>
-    <artifactId>sql2o-postgres</artifactId>
+    <artifactId>sql2o-mysql</artifactId>
     <packaging>jar</packaging>
-    <name>sql2o-postgres</name>
-    <description>Postgres extension for sql2o</description>
+    <name>sql2o-mysql</name>
+    <description>MySQL extension for sql2o</description>
     <url>http://www.sql2o.org</url>
     <parent>
         <groupId>org.sql2o.extensions</groupId>
@@ -24,31 +24,16 @@
     <dependencies>
 
         <dependency>
-            <groupId>com.google.code.gson</groupId>
-            <artifactId>gson</artifactId>
-            <version>2.2.4</version>
-        </dependency>
-
-        <dependency>
-            <scope>compile</scope>
-            <groupId>postgresql</groupId>
-            <artifactId>postgresql</artifactId>
-            <version>9.1-901.jdbc4</version>
+            <groupId>mysql</groupId>
+            <artifactId>mysql-connector-java</artifactId>
+            <version>8.0.31</version>
             <optional>true</optional>
         </dependency>
         <dependency>
             <groupId>org.testcontainers</groupId>
-            <artifactId>postgresql</artifactId>
+            <artifactId>mysql</artifactId>
             <version>1.17.6</version>
             <scope>test</scope>
         </dependency>
-        <dependency>
-            <groupId>com.impossibl.pgjdbc-ng</groupId>
-            <artifactId>pgjdbc-ng</artifactId>
-            <version>0.3</version>
-            <scope>test</scope>
-            <classifier>complete</classifier>
-        </dependency>
     </dependencies>
-
 </project>

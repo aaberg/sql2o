@@ -43,9 +43,6 @@ public class PostgresTest extends PostgresTestSupport {
         try {
             try (Connection connection = sql2o.open()) {
                 connection.createQuery("create table test_table(id SERIAL, val varchar(20))").executeUpdate();
-            }
-
-            try (Connection connection = sql2o.open()) {
                 Long key = connection.createQuery("insert into test_table (val) values(:val)", true)
                                      .addParameter("val", "something").executeUpdate().getKey(Long.class);
                 assertNotNull(key);
