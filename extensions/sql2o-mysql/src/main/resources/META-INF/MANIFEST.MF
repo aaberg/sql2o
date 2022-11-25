@@ -1,0 +1,2 @@
+Library-Name: Sql2o.extensions.mysql
+Library-Description: MySQL plugin for sql2o
