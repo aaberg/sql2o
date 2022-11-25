@@ -33,7 +33,7 @@ public class PostgresTestSupport {
     @Parameterized.Parameters(name = "{index} - {4}")
     public static Collection<Object[]> getData(){
         return Arrays.asList(new Object[][]{
-                {"jdbc:postgresql:testdb", "test", "testtest", "Official postgres driver"},
+                {"jdbc:tc:postgresql:9.6.8:///testdb", "test", "testtest", "Official postgres driver"},
 //                {"jdbc:pgsql://localhost/testdb", "test", "testtest", "Impossibl postgres driver"}
         });
     }
