@@ -98,6 +98,9 @@ public class Convert {
 
         mapToFill.put(UUID.class, new UUIDConverter());
 
+        mapToFill.put(java.time.LocalDate.class, new org.sql2o.converters.LocalDateConverter());
+        mapToFill.put(java.time.LocalDateTime.class, new org.sql2o.converters.LocalDateTimeConverter());
+
         if (FeatureDetector.isJodaTimeAvailable()) {
             mapToFill.put(DateTime.class, new DateTimeConverter());
             mapToFill.put(LocalTime.class, new LocalTimeConverter());
