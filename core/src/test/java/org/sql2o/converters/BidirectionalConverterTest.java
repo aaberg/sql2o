@@ -1,6 +1,7 @@
 package org.sql2o.converters;
 
 import org.junit.After;
+import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
 import org.sql2o.Query;
@@ -13,8 +14,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.*;
 
 /**
  * @author aldenquimby@gmail.com
@@ -61,7 +61,8 @@ public class BidirectionalConverterTest {
                                            .executeAndFetch(UUIDWrapper.class);
 
         // if conversion from database worked, should have the list we inserted
-        assertEquals(wrappers, converted);
+        assertEquals(wrappers.size(), converted.size());
+        assertTrue(converted.containsAll(wrappers));
     }
 
     /************** Helper stuff ******************/

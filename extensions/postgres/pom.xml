@@ -14,7 +14,7 @@
     <packaging>jar</packaging>
     <name>sql2o-postgres</name>
     <description>Postgres extension for sql2o</description>
-    <url>http://www.sql2o.org</url>
+    <url>https://www.sql2o.org</url>
     <parent>
         <groupId>org.sql2o.extensions</groupId>
         <artifactId>extensions-parent</artifactId>
@@ -31,17 +31,10 @@
 
         <dependency>
             <scope>compile</scope>
-            <groupId>postgresql</groupId>
+            <groupId>org.postgresql</groupId>
             <artifactId>postgresql</artifactId>
-            <version>9.1-901.jdbc4</version>
+            <version>42.7.2</version>
             <optional>true</optional>
-        </dependency>
-        <dependency>
-            <groupId>com.impossibl.pgjdbc-ng</groupId>
-            <artifactId>pgjdbc-ng</artifactId>
-            <version>0.3</version>
-            <scope>test</scope>
-            <classifier>complete</classifier>
         </dependency>
     </dependencies>
 

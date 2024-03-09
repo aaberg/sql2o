@@ -67,13 +67,17 @@ public class H2Tests {
     @Test
     public void testIssue172NPEWhenCreatingBasicDataSourceInline(){
 
-        DataSource ds = new JdbcDataSource() {{
-            setURL(url);
-            setUser(user);
-            setPassword(pass);
-        }};
+        JdbcDataSource ds2 = new JdbcDataSource();
+        ds2.setURL(url);
+        ds2.setUser(user);
+        ds2.setPassword(pass);
+//        ds = new JdbcDataSource() {{
+//            setURL(url);
+//            setUser(user);
+//            setPassword(pass);
+//        }};
 
-        Sql2o sql2o = new Sql2o(ds);
+        Sql2o sql2o = new Sql2o(ds2);
 
         assertThat(sql2o.getQuirks(), is(instanceOf(H2Quirks.class)));
     }

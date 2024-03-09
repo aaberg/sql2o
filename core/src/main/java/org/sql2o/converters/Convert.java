@@ -11,6 +11,8 @@ import org.sql2o.tools.FeatureDetector;
 import java.io.ByteArrayInputStream;
 import java.io.InputStream;
 import java.math.BigDecimal;
+import java.time.OffsetDateTime;
+import java.time.OffsetTime;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.ServiceLoader;
@@ -65,13 +67,7 @@ public class Convert {
                         return new java.sql.Date(millisecond);
                     }
                 });
-        mapToFill.put(java.sql.Time.class,
-                new AbstractDateConverter<java.sql.Time>(java.sql.Time.class) {
-                    @Override
-                    protected java.sql.Time fromMilliseconds(long millisecond) {
-                        return new java.sql.Time(millisecond);
-                    }
-                });
+        mapToFill.put(java.sql.Time.class, new SqlTimeConverter());
         mapToFill.put(java.sql.Timestamp.class,
                 new AbstractDateConverter<java.sql.Timestamp>(java.sql.Timestamp.class) {
                     @Override
@@ -85,11 +81,6 @@ public class Convert {
         mapToFill.put(boolean.class, booleanConverter);
 
         ByteArrayConverter byteArrayConverter = new ByteArrayConverter();
-        //it's impossible to cast Byte[].class <-> byte[].class
-        // and I'm too lazy to implement converter for Byte[].class
-        // since it's really doesn't wide-used
-        // otherwise someone already detect this error
-        //mapToFill.put(Byte[].class, byteArrayConverter);
         mapToFill.put(byte[].class, byteArrayConverter);
 
         InputStreamConverter inputStreamConverter = new InputStreamConverter();
@@ -97,6 +88,9 @@ public class Convert {
         mapToFill.put(ByteArrayInputStream.class, inputStreamConverter);
 
         mapToFill.put(UUID.class, new UUIDConverter());
+
+        mapToFill.put(OffsetTime.class, new OffsetTimeConverter());
+        mapToFill.put(OffsetDateTime.class, new OffsetDateTimeConverter());
 
         if (FeatureDetector.isJodaTimeAvailable()) {
             mapToFill.put(DateTime.class, new DateTimeConverter());

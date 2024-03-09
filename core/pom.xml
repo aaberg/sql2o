@@ -73,42 +73,6 @@
         </dependency>
         -->
         <!-- other ORMs for performance testing -->
-        <dependency>
-            <scope>test</scope>
-            <groupId>org.hibernate</groupId>
-            <artifactId>hibernate-core</artifactId>
-            <version>${hibernate-core.version}</version>
-        </dependency>
-        <dependency>
-            <scope>test</scope>
-            <groupId>org.jdbi</groupId>
-            <artifactId>jdbi</artifactId>
-            <version>${jdbi.version}</version>
-        </dependency>
-        <dependency>
-            <scope>test</scope>
-            <groupId>org.jooq</groupId>
-            <artifactId>jooq</artifactId>
-            <version>${jooq.version}</version>
-        </dependency>
-        <dependency>
-            <scope>test</scope>
-            <groupId>commons-dbutils</groupId>
-            <artifactId>commons-dbutils</artifactId>
-            <version>${commons-dbutils.version}</version>
-        </dependency>
-        <dependency>
-            <scope>test</scope>
-            <groupId>org.mybatis</groupId>
-            <artifactId>mybatis</artifactId>
-            <version>${mybatis.version}</version>
-        </dependency>
-        <dependency>
-            <scope>test</scope>
-            <groupId>org.springframework</groupId>
-            <artifactId>spring-jdbc</artifactId>
-            <version>${spring-jdbc.version}</version>
-        </dependency>
 
         <dependency>
             <groupId>org.mockito</groupId>
@@ -141,8 +105,8 @@
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-compiler-plugin</artifactId>
                 <configuration>
-                    <source>8</source>
-                    <target>8</target>
+                    <source>11</source>
+                    <target>11</target>
                 </configuration>
             </plugin>
 

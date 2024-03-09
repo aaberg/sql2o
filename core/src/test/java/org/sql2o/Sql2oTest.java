@@ -23,6 +23,7 @@ import java.math.BigDecimal;
 import java.sql.SQLException;
 import java.sql.Time;
 import java.sql.Timestamp;
+import java.time.OffsetTime;
 import java.util.*;
 
 import static org.hamcrest.CoreMatchers.*;
@@ -79,7 +80,7 @@ public class Sql2oTest extends BaseMemDbTest {
         try (Connection con = sql2o.open()) {
 
             Date before = new Date();
-            List<User> allUsers = con.createQuery("select * from User").executeAndFetch(User.class);
+            List<User> allUsers = con.createQuery("select * from user_table").executeAndFetch(User.class);
 
 
             assertNotNull(allUsers);
@@ -90,7 +91,7 @@ public class Sql2oTest extends BaseMemDbTest {
 
             // repeat this
             before = new Date();
-            allUsers = con.createQuery("select * from User").executeAndFetch(User.class);
+            allUsers = con.createQuery("select * from user_table").executeAndFetch(User.class);
             after = new Date();
             span = after.getTime() - before.getTime();
             System.out.println(String.format("Again Fetched %s user: %s ms", insertIntoUsers, span));
@@ -139,13 +140,13 @@ public class Sql2oTest extends BaseMemDbTest {
     @Test
     public void testBatch(){
         sql2o.createQuery(
-                "create table User(\n" +
+                "create table user_table(\n" +
                 "id int identity primary key,\n" +
                 "name varchar(20),\n" +
                 "email varchar(255),\n" +
                 "text varchar(100))").executeUpdate();
 
-        String insQuery = "insert into User(name, email, text) values (:name, :email, :text)";
+        String insQuery = "insert into user_table(name, email, text) values (:name, :email, :text)";
 
         Connection con = sql2o.beginTransaction();
         int[] inserted = con.createQuery(insQuery).addParameter("name", "test").addParameter("email", "test@test.com").addParameter("text", "something exciting").addToBatch()
@@ -166,10 +167,10 @@ public class Sql2oTest extends BaseMemDbTest {
     public void testExecuteScalar(){
         createAndFillUserTable();
 
-        Object o = sql2o.createQuery("select text from User where id = 2").executeScalar();
+        Object o = sql2o.createQuery("select text from user_table where id = 2").executeScalar();
         assertTrue(o.getClass().equals(String.class));
 
-        Object o2 = sql2o.createQuery("select 10").executeScalar();
+        Object o2 = sql2o.createQuery("select 10 from (values(0))").executeScalar();
         assertEquals(o2, 10);
 
         deleteUserTable();
@@ -179,13 +180,13 @@ public class Sql2oTest extends BaseMemDbTest {
     public void testBatchNoTransaction(){
 
         sql2o.createQuery(
-                "create table User(\n" +
+                "create table user_table(\n" +
                 "id int identity primary key,\n" +
                 "name varchar(20),\n" +
                 "email varchar(255),\n" +
                 "text varchar(100))").executeUpdate();
 
-        String insQuery = "insert into User(name, email, text) values (:name, :email, :text)";
+        String insQuery = "insert into user_table(name, email, text) values (:name, :email, :text)";
 
         sql2o.createQuery(insQuery).addParameter("name", "test").addParameter("email", "test@test.com").addParameter("text", "something exciting").addToBatch()
                 .addParameter("name", "test2").addParameter("email", "test2@test.com").addParameter("text", "something exciting too").addToBatch()
@@ -346,12 +347,12 @@ public class Sql2oTest extends BaseMemDbTest {
 
     @Test
     public void testUpdateNoTransaction() throws SQLException {
-        String ddlQuery = "create table testUpdateNoTransaction(id int primary key, value varchar(50))";
+        String ddlQuery = "create table testUpdateNoTransaction(id int primary key, \"value\" varchar(50))";
         Connection connection = sql2o.createQuery(ddlQuery).executeUpdate();
 
         assertTrue(connection.getJdbcConnection().isClosed());
 
-        String insQuery = "insert into testUpdateNoTransaction(id, value) values (:id, :value)";
+        String insQuery = "insert into testUpdateNoTransaction(id, \"value\") values (:id, :value)";
         sql2o.createQuery(insQuery).addParameter("id",1).addParameter("value", "test1").executeUpdate()
                 .createQuery(insQuery).addParameter("id", 2).addParameter("value", "val2").executeUpdate();
 
@@ -373,10 +374,10 @@ public class Sql2oTest extends BaseMemDbTest {
     @Test
     public void testGetResult(){
 
-        sql2o.createQuery("create table get_result_test(id integer primary key, value varchar(20))").executeUpdate();
+        sql2o.createQuery("create table get_result_test(id integer primary key, \"value\" varchar(20))").executeUpdate();
 
         String insertSql =
-                "insert into get_result_test(id, value) " +
+                "insert into get_result_test(id, \"value\") " +
                 "select 1, 'hello' from (values(0)) union " +
                 "select 2, 'hello2' from (values(0)) union " +
                 "select 3, 'hello3' from (values(0))";
@@ -389,9 +390,9 @@ public class Sql2oTest extends BaseMemDbTest {
     @Test
     public void testGetKeys(){
 
-        sql2o.createQuery("create table get_keys_test(id integer identity primary key, value varchar(20))").executeUpdate();
+        sql2o.createQuery("create table get_keys_test(id integer identity primary key, \"value\" varchar(20))").executeUpdate();
 
-        String insertSql = "insert into get_keys_test(value) values(:val)";
+        String insertSql = "insert into get_keys_test(\"value\") values(:val)";
 //        try{
 //            Integer key = (Integer)sql2o.createQuery(insertSql).addParameter("val", "something").executeUpdate().getKey();
 //            throw new RuntimeException("Sql2oException expected in code line above");
@@ -405,7 +406,7 @@ public class Sql2oTest extends BaseMemDbTest {
         assertNotNull(key);
         assertTrue(key >= 0);
 
-        String multiInsertSql = "insert into get_keys_test(value) select 'a val' col1 from (values(0)) union select 'another val' col1 from (values(0))";
+        String multiInsertSql = "insert into get_keys_test(\"value\") select 'a val' col1 from (values(0)) union select 'another val' col1 from (values(0))";
         Object[] keys = sql2o.createQuery(multiInsertSql).executeUpdate().getKeys();
 
         assertNotNull(keys);
@@ -423,9 +424,9 @@ public class Sql2oTest extends BaseMemDbTest {
 
     @Test
     public void testExecuteBatchGetKeys() {
-        sql2o.createQuery("create table get_keys_test2(id integer identity primary key, value varchar(20))").executeUpdate();
+        sql2o.createQuery("create table get_keys_test2(id integer identity primary key, \"value\" varchar(20))").executeUpdate();
 
-        String insertSql = "insert into get_keys_test2(value) values(:val)";
+        String insertSql = "insert into get_keys_test2(\"value\") values(:val)";
 
         List<String> vals = new ArrayList<String>(){{
             add("something1");
@@ -461,19 +462,19 @@ public class Sql2oTest extends BaseMemDbTest {
     @Test
     public void testRollback(){
 
-        sql2o.createQuery("create table test_rollback_table(id integer identity primary key, value varchar(25))").executeUpdate();
+        sql2o.createQuery("create table test_rollback_table(id integer identity primary key, \"value\" varchar(25))").executeUpdate();
 
         sql2o
                 //first insert something, and commit it.
                 .beginTransaction()
-                .createQuery("insert into test_rollback_table(value) values (:val)")
+                .createQuery("insert into test_rollback_table(\"value\") values (:val)")
                 .addParameter("val", "something")
                 .executeUpdate()
                 .commit()
 
                         // insert something else, and roll it back.
                 .beginTransaction()
-                .createQuery("insert into test_rollback_table(value) values (:val)")
+                .createQuery("insert into test_rollback_table(\"value\") values (:val)")
                 .addParameter("val", "something to rollback")
                 .executeUpdate()
                 .rollback();
@@ -526,7 +527,7 @@ public class Sql2oTest extends BaseMemDbTest {
 
     @Test
     public void testSetPrivateFields(){
-        EntityWithPrivateFields entity = sql2o.createQuery("select 1 id, 'hello' value from (values(0))").executeAndFetchFirst(EntityWithPrivateFields.class);
+        EntityWithPrivateFields entity = sql2o.createQuery("select 1 id, 'hello' \"value\" from (values(0))").executeAndFetchFirst(EntityWithPrivateFields.class);
 
         assertEquals(1, entity.getId());
         assertEquals("hello1", entity.getValue());
@@ -534,8 +535,8 @@ public class Sql2oTest extends BaseMemDbTest {
 
     @Test
     public void testFetchTable(){
-        sql2o.createQuery("create table tabletest(id integer identity primary key, value varchar(20), value2 decimal(5,1))").executeUpdate();
-        sql2o.createQuery("insert into tabletest(value,value2) values (:value, :value2)")
+        sql2o.createQuery("create table tabletest(id integer identity primary key, \"VALUE\" varchar(20), value2 decimal(5,1))").executeUpdate();
+        sql2o.createQuery("insert into tabletest(\"VALUE\",value2) values (:value, :value2)")
                 .addParameter("value", "something").addParameter("value2", new BigDecimal("3.4")).addToBatch()
                 .addParameter("value", "bla").addParameter("value2", new BigDecimal("5.5")).addToBatch().executeBatch();
 
@@ -567,7 +568,7 @@ public class Sql2oTest extends BaseMemDbTest {
 
         List<Map<String, Object>> rows;
         try (Connection con = sql2o.open()) {
-            Table table = con.createQuery("select * from user").executeAndFetchTable();
+            Table table = con.createQuery("select * from user_table").executeAndFetchTable();
 
             rows = table.asList();
         }
@@ -598,7 +599,7 @@ public class Sql2oTest extends BaseMemDbTest {
 
     @Test
     public void testSuperPojo(){
-        SuperPojo pojo = sql2o.createQuery("select 1 id, 'something' value from (values(0))").executeAndFetchFirst(SuperPojo.class);
+        SuperPojo pojo = sql2o.createQuery("select 1 id, 'something' \"value\" from (values(0))").executeAndFetchFirst(SuperPojo.class);
 
         assertEquals(1, pojo.getId());
         assertEquals("something1", pojo.getValue());
@@ -613,43 +614,16 @@ public class Sql2oTest extends BaseMemDbTest {
         assertEquals("something1", pojo.getEntity().getValue());
     }
 
-//    public void testMultiResult(){
-//        sql2o.createQuery("create table multi1(id integer identity primary key, value varchar(20))").executeUpdate();
-//        sql2o.createQuery("create table multi2(id integer identity primary key, value2 varchar(20))").executeUpdate();
-//
-//        sql2o.createQuery("insert into multi1(value) values (:val)")
-//                .addParameter("val", "test1").addToBatch()
-//                .addParameter("val", "test2").addToBatch()
-//                .executeBatch();
-//
-//        sql2o.createQuery("insert into multi2(value2) values (:val)")
-//                .addParameter("val", "test3").addToBatch()
-//                .addParameter("val", "test4").addToBatch()
-//                .executeBatch();
-//
-//        List[] results = sql2o.createQuery("select * from multi1 order by id; select * from multi2 order by id").executeAndFetchMultiple(Multi1.class, Multi2.class);
-//        //List<Multi1> results = sql2o.createQuery("select * from multi1 order by id; select * from multi2 order by id").executeAndFetch(Multi1.class);
-//
-//        List<Multi1> res1 = results[0];
-//        List<Multi2> res2 = results[1];
-//
-//        assertEquals((Long)1L, res1.get(0).getId());
-//        assertEquals("test2", res1.get(1).getValue());
-//
-//        assertEquals("test3", res2.get(0).getValue2());
-//        assertEquals(4, res2.get(1).getId());
-//    }
-
     @Test
     public void testRunInsideTransaction(){
 
-        sql2o.createQuery("create table runinsidetransactiontable(id integer identity primary key, value varchar(50))").executeUpdate();
+        sql2o.createQuery("create table runinsidetransactiontable(id integer identity primary key, \"value\" varchar(50))").executeUpdate();
         boolean failed = false;
 
         try{
             sql2o.runInTransaction(new StatementRunnable() {
                 public void run(Connection connection, Object argument) throws Throwable {
-                    connection.createQuery("insert into runinsidetransactiontable(value) values(:value)")
+                    connection.createQuery("insert into runinsidetransactiontable(\"value\") values(:value)")
                             .addParameter("value", "test").executeUpdate();
 
                     throw new RuntimeException("ouch!");
@@ -668,7 +642,7 @@ public class Sql2oTest extends BaseMemDbTest {
 
         sql2o.runInTransaction(new StatementRunnable() {
             public void run(Connection connection, Object argument) throws Throwable {
-                connection.createQuery("insert into runinsidetransactiontable(value) values(:value)")
+                connection.createQuery("insert into runinsidetransactiontable(\"value\") values(:value)")
                         .addParameter("value", "test").executeUpdate();
             }
         });
@@ -681,10 +655,10 @@ public class Sql2oTest extends BaseMemDbTest {
 
         sql2o.runInTransaction(new StatementRunnable() {
             public void run(Connection connection, Object argument) throws Throwable {
-                Integer id = connection.createQuery("insert into runinsidetransactiontable(value) values(:value)")
+                Integer id = connection.createQuery("insert into runinsidetransactiontable(\"value\") values(:value)")
                         .addParameter("value", argument).executeUpdate().getKey(Integer.class);
 
-                String insertedValue = connection.createQuery("select value from runinsidetransactiontable where id = :id").addParameter("id", id).executeScalar(String.class);
+                String insertedValue = connection.createQuery("select \"value\" from runinsidetransactiontable where id = :id").addParameter("id", id).executeScalar(String.class);
                 assertEquals("argument test", insertedValue);
             }
         }, argument);
@@ -695,7 +669,7 @@ public class Sql2oTest extends BaseMemDbTest {
 
     @Test
     public void testRunInsideTransactionWithResult(){
-        sql2o.createQuery("create table testRunInsideTransactionWithResultTable(id integer identity primary key, value varchar(50))").executeUpdate();
+        sql2o.createQuery("create table testRunInsideTransactionWithResultTable(id integer identity primary key, \"value\" varchar(50))").executeUpdate();
 
     }
 
@@ -717,39 +691,39 @@ public class Sql2oTest extends BaseMemDbTest {
 
     @Test
     public void testDynamicExecuteScalar(){
-        Object origVal = sql2o.createQuery("select 1").executeScalar();
+        Object origVal = sql2o.createQuery("select 1 from (values(0))").executeScalar();
         assertTrue(Integer.class.equals(origVal.getClass()));
         assertEquals(1, origVal);
 
-        Long intVal = sql2o.createQuery("select 1").executeScalar(Long.class);
+        Long intVal = sql2o.createQuery("select 1 from (values(0))").executeScalar(Long.class);
         assertEquals((Long)1l, intVal);
 
-        Short shortVal = sql2o.createQuery("select 2").executeScalar(Short.class);
+        Short shortVal = sql2o.createQuery("select 2 from (values(0))").executeScalar(Short.class);
         Short expected = 2;
         assertEquals(expected, shortVal);
     }
 
     @Test
     public void testUpdateWithNulls() {
-        sql2o.createQuery("create table testUpdateWithNulls_2(id integer identity primary key, value integer)").executeUpdate();
+        sql2o.createQuery("create table testUpdateWithNulls_2(id integer identity primary key, \"value\" integer)").executeUpdate();
 
         Integer nullInt = null;
 
-        sql2o.createQuery("insert into testUpdateWithNulls_2(value) values(:val)").addParameter("val", 2).addToBatch().addParameter("val", nullInt).addToBatch().executeBatch();
+        sql2o.createQuery("insert into testUpdateWithNulls_2(\"value\") values(:val)").addParameter("val", 2).addToBatch().addParameter("val", nullInt).addToBatch().executeBatch();
     }
 
     @Test
     public void testExceptionInRunnable() {
-        sql2o.createQuery("create table testExceptionInRunnable(id integer primary key, value varchar(20))").executeUpdate();
+        sql2o.createQuery("create table testExceptionInRunnable(id integer primary key, \"value\" varchar(20))").executeUpdate();
 
         try{
             sql2o.runInTransaction(new StatementRunnable() {
                 public void run(Connection connection, Object argument) throws Throwable {
-                    connection.createQuery("insert into testExceptionInRunnable(id, value) values(:id, :val)")
+                    connection.createQuery("insert into testExceptionInRunnable(id, \"value\") values(:id, :val)")
                             .addParameter("id", 1)
                             .addParameter("val", "something").executeUpdate();
 
-                    connection.createQuery("insert into testExceptionInRunnable(id, value) values(:id, :val)")
+                    connection.createQuery("insert into testExceptionInRunnable(id, \"value\") values(:id, :val)")
                             .addParameter("id", 1)
                             .addParameter("val", "something").executeUpdate();
                 }
@@ -764,12 +738,12 @@ public class Sql2oTest extends BaseMemDbTest {
 
         sql2o.runInTransaction(new StatementRunnable() {
             public void run(Connection connection, Object argument) throws Throwable {
-                connection.createQuery("insert into testExceptionInRunnable(id, value) values(:id, :val)")
+                connection.createQuery("insert into testExceptionInRunnable(id, \"value\") values(:id, :val)")
                         .addParameter("id", 1)
                         .addParameter("val", "something").executeUpdate();
 
                 try{
-                    connection.createQuery("insert into testExceptionInRunnable(id, value) values(:id, :val)")
+                    connection.createQuery("insert into testExceptionInRunnable(id, \"value\") values(:id, :val)")
                             .addParameter("id", 1)
                             .addParameter("val", "something").executeUpdate();
                 } catch(Sql2oException ex){
@@ -907,15 +881,23 @@ public class Sql2oTest extends BaseMemDbTest {
         Period p = new Period(new LocalTime(sqlTime), new LocalTime());
 
 
-        assertThat(sqlTime, is(notNullValue()));
-        assertTrue(p.getMinutes() == 0);
-
-        Date date = sql2o.createQuery(sql).executeScalar(Date.class);
-        assertThat(date, is(notNullValue()));
+        assertNotNull(sqlTime);
+        assertEquals(0, p.getMinutes());
 
         LocalTime jodaTime = sql2o.createQuery(sql).executeScalar(LocalTime.class);
         assertTrue(jodaTime.getMillisOfDay() > 0);
         assertThat(jodaTime.getHourOfDay(), is(equalTo(new LocalTime().getHourOfDay())));
+    }
+
+    @Test
+    public void testOffsetTimeConverter() {
+        String sql = "select current_time as col1 from (values(0))";
+
+        try (Connection connection = sql2o.open()) {
+            OffsetTime offsetTime = connection.createQuery(sql).executeScalar(OffsetTime.class);
+            assertNotNull(offsetTime);
+            assertEquals(offsetTime.getHour(), OffsetTime.now().getHour());
+        }
     }
 
     public static class BindablePojo{
@@ -1005,7 +987,7 @@ public class Sql2oTest extends BaseMemDbTest {
     public void testExecuteAndFetchLazy(){
         createAndFillUserTable();
 
-        ResultSetIterable<User> allUsers = sql2o.createQuery("select * from User").executeAndFetchLazy(User.class);
+        ResultSetIterable<User> allUsers = sql2o.createQuery("select * from user_table").executeAndFetchLazy(User.class);
 
         // read in batches, because maybe we are bulk exporting and can't fit them all into a list
         int totalSize = 0;
@@ -1030,7 +1012,7 @@ public class Sql2oTest extends BaseMemDbTest {
     public void testResultSetIterator_multipleHasNextWorks() {
         createAndFillUserTable();
 
-        ResultSetIterable<User> allUsers = sql2o.createQuery("select * from User").executeAndFetchLazy(User.class);
+        ResultSetIterable<User> allUsers = sql2o.createQuery("select * from user_table").executeAndFetchLazy(User.class);
 
         Iterator<User> usersIterator = allUsers.iterator();
 
@@ -1056,7 +1038,7 @@ public class Sql2oTest extends BaseMemDbTest {
         createAndFillUserTable();
 
         // this should NOT fallback to executeScalar
-        List<User> users = sql2o.createQuery("select name from User").executeAndFetch(User.class);
+        List<User> users = sql2o.createQuery("select name from user_table").executeAndFetch(User.class);
 
         // only the name should be set
         for (User u : users) {
@@ -1064,7 +1046,7 @@ public class Sql2oTest extends BaseMemDbTest {
         }
 
         // this SHOULD fallback to executeScalar
-        List<String> userNames = sql2o.createQuery("select name from User").executeAndFetch(String.class);
+        List<String> userNames = sql2o.createQuery("select name from user_table").executeAndFetch(String.class);
 
         assertEquals(users.size(), userNames.size());
 
@@ -1077,7 +1059,7 @@ public class Sql2oTest extends BaseMemDbTest {
 
         Connection con = sql2o.open();
 
-        try (ResultSetIterable<User> userIterable = con.createQuery("select * from User")
+        try (ResultSetIterable<User> userIterable = con.createQuery("select * from user_table")
                 .executeAndFetchLazy(User.class)) {
 
             userIterable.setAutoCloseConnection(true);
@@ -1096,7 +1078,7 @@ public class Sql2oTest extends BaseMemDbTest {
     public void testLazyTable() throws SQLException {
         createAndFillUserTable();
 
-        Query q = sql2o.createQuery("select * from User");
+        Query q = sql2o.createQuery("select * from user_table");
         LazyTable lt = null;
         try {
             lt = q.executeAndFetchTableLazy();
@@ -1253,7 +1235,7 @@ public class Sql2oTest extends BaseMemDbTest {
 
         assertThat(connection.getJdbcConnection().isClosed(), is(false));
 
-        List<User> users = connection.createQuery("select * from User").executeAndFetch(User.class);
+        List<User> users = connection.createQuery("select * from user_table").executeAndFetch(User.class);
 
         assertThat(users.size(), is(equalTo(NUMBER_OF_USERS_IN_THE_TEST)));
         assertThat(connection.getJdbcConnection().isClosed(), is(false));
@@ -1268,7 +1250,7 @@ public class Sql2oTest extends BaseMemDbTest {
 
         createAndFillUserTable();
 
-        final String insertsql = "insert into User(name, email, text) values (:name, :email, :text)";
+        final String insertsql = "insert into user_table(name, email, text) values (:name, :email, :text)";
 
 
         sql2o.withConnection(new StatementRunnable() {
@@ -1297,7 +1279,7 @@ public class Sql2oTest extends BaseMemDbTest {
 
         List<User> users = sql2o.withConnection(new StatementRunnableWithResult<List<User>>() {
             public List<User> run(Connection connection, Object argument) throws Throwable {
-                return sql2o.createQuery("select * from User").executeAndFetch(User.class);
+                return sql2o.createQuery("select * from user_table").executeAndFetch(User.class);
             }
         });
 
@@ -1321,7 +1303,7 @@ public class Sql2oTest extends BaseMemDbTest {
             // ignore. expected
         }
 
-        List<User> users2 = sql2o.createQuery("select * from User").executeAndFetch(User.class);
+        List<User> users2 = sql2o.createQuery("select * from user_table").executeAndFetch(User.class);
 
         // expect that the last insert was committed, as this should not be run in a transaction.
         assertThat(users2.size(), is(equalTo(10004)));
@@ -1413,7 +1395,7 @@ public class Sql2oTest extends BaseMemDbTest {
 
         try(Connection connection = sql2o.open()) {
             List<User> result = connection
-                    .createQuery("select * from user where id in(:ids)")
+                    .createQuery("select * from user_table where id in(:ids)")
                     .addParameter("ids", 1, 2, 3)
                     .executeAndFetch(User.class);
 
@@ -1422,7 +1404,7 @@ public class Sql2oTest extends BaseMemDbTest {
 
         try(Connection connection = sql2o.open()) {
             List<User> result = connection
-                    .createQuery("select * from user where" +
+                    .createQuery("select * from user_table where" +
                             " email like :email" +
                             " and id in(:ids)" +
                             " and text = :text")
@@ -1436,7 +1418,7 @@ public class Sql2oTest extends BaseMemDbTest {
 
         try(Connection connection = sql2o.open()) {
             List<User> result = connection
-                    .createQuery("select * from user where" +
+                    .createQuery("select * from user_table where" +
                             " email like :email" +
                             " and id in(:ids)" +
                             " and text = :text")
@@ -1450,7 +1432,7 @@ public class Sql2oTest extends BaseMemDbTest {
 
         try(Connection connection = sql2o.open()) {
             List<User> result = connection
-                    .createQuery("select * from user where" +
+                    .createQuery("select * from user_table where" +
                             " email like :email" +
                             " and id in(:ids)" +
                             " and text = :text")
@@ -1464,7 +1446,7 @@ public class Sql2oTest extends BaseMemDbTest {
 
         try(Connection connection = sql2o.open()) {
             List<User> result = connection
-                    .createQuery("select * from user where" +
+                    .createQuery("select * from user_table where" +
                             " email like :email" +
                             " and text = :text" +
                             " and id in(:ids)" +
@@ -1479,7 +1461,7 @@ public class Sql2oTest extends BaseMemDbTest {
         }
 
         try(Connection connection = sql2o.open()) {
-            connection.createQuery("insert into user (id, text_col) values(:id, :text)")
+            connection.createQuery("insert into user_table (id, text_col) values(:id, :text)")
                     .addParameter("id", 1, 2, 3).addParameter("text", "test1").addToBatch();
             fail("Batch with array parameter is not supported");
         } catch (Sql2oException e) {
@@ -1488,7 +1470,7 @@ public class Sql2oTest extends BaseMemDbTest {
 
         try(Connection connection = sql2o.open()) {
             List<User> result = connection
-                    .createQuery("select * from user where id in(:ids)")
+                    .createQuery("select * from user_table where id in(:ids)")
                     .addParameter("ids", new int[]{1, 2, 3})
                     .executeAndFetch(User.class);
 
@@ -1497,7 +1479,7 @@ public class Sql2oTest extends BaseMemDbTest {
 
         try(Connection connection = sql2o.open()) {
             List<User> result = connection
-                    .createQuery("select * from user where id in(:ids)")
+                    .createQuery("select * from user_table where id in(:ids)")
                     .addParameter("ids", (Object) ImmutableList.of(1, 2, 3))
                     .executeAndFetch(User.class);
 
@@ -1527,20 +1509,20 @@ public class Sql2oTest extends BaseMemDbTest {
     private void createAndFillUserTable(Connection connection, boolean useBind, int maxBatchRecords){
 
         try{
-            connection.createQuery("drop table User").executeUpdate();
+            connection.createQuery("drop table user_table").executeUpdate();
         } catch(Sql2oException e) {
             // if it fails, its because the User table doesn't exists. Just ignore this.
         }
 
         int rowCount = NUMBER_OF_USERS_IN_THE_TEST;
-        connection.createQuery(
-                "create table User(\n" +
-                        "id int identity primary key,\n" +
-                        "name varchar(20),\n" +
-                        "email varchar(255),\n" +
-                        "text varchar(100))").executeUpdate();
+        String sql = "create table user_table( " +
+            "id int identity primary key,\n" +
+            "name varchar(20),\n" +
+            "email varchar(255),\n" +
+            "text varchar(100))";
+        connection.createQuery(sql).executeUpdate();
 
-        Query insQuery = connection.createQuery("insert into User(name, email, text) values (:name, :email, :text)");
+        Query insQuery = connection.createQuery("insert into user_table(name, email, text) values (:name, :email, :text)");
         insQuery.setMaxBatchRecords(maxBatchRecords);
         UserInserter inserter = UserInserterFactory.buildUserInserter(useBind);
 
@@ -1559,14 +1541,14 @@ public class Sql2oTest extends BaseMemDbTest {
         Date after = new Date();
         Long span = after.getTime() - before.getTime();
 
-        System.out.println(String.format("inserted %d rows into User table. Time used: %s ms", rowCount, span));
+        System.out.println(String.format("inserted %d rows into user_table table. Time used: %s ms", rowCount, span));
 
         insertIntoUsers += rowCount;
 
     }
 
     private void genericTestOnUserData(Connection connection){
-        List<User> users = connection.createQuery("select * from User order by id").executeAndFetch(User.class);
+        List<User> users = connection.createQuery("select * from user_table order by id").executeAndFetch(User.class);
 
         assertThat(users.size(), is(equalTo(NUMBER_OF_USERS_IN_THE_TEST)));
 
@@ -1578,7 +1560,7 @@ public class Sql2oTest extends BaseMemDbTest {
     }
 
     private void deleteUserTable(){
-        sql2o.createQuery("drop table User").executeUpdate();
+        sql2o.createQuery("drop table user_table").executeUpdate();
         insertIntoUsers = 0;
     }
 }

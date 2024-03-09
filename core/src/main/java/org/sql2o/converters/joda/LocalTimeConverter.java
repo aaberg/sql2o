@@ -5,6 +5,7 @@ import org.sql2o.converters.Converter;
 import org.sql2o.converters.ConverterException;
 
 import java.sql.Timestamp;
+import java.time.OffsetTime;
 
 /**
  * Created by lars on 12/18/13.
@@ -14,6 +15,9 @@ public class LocalTimeConverter implements Converter<LocalTime> {
     public LocalTime convert(Object val) throws ConverterException {
         if (val == null) {
             return null;
+        }
+        if (val instanceof OffsetTime){
+            return LocalTime.fromMillisOfDay(((OffsetTime) val).toLocalTime().toNanoOfDay() / 1000000);
         }
         try {
             // Joda has it's own pluggable converters infrastructure
