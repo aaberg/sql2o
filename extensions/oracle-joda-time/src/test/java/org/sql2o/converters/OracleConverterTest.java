@@ -6,12 +6,9 @@ import org.joda.time.DateTime;
 import org.joda.time.LocalDate;
 import org.joda.time.LocalTime;
 import org.junit.Test;
-import org.sql2o.quirks.OracleQuirks;
 
-import javax.xml.bind.annotation.adapters.HexBinaryAdapter;
 import java.sql.Timestamp;
 import java.util.Date;
-import java.util.UUID;
 
 import static org.junit.Assert.assertEquals;
 

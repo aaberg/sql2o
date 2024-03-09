@@ -18,14 +18,14 @@
     <parent>
         <groupId>org.sql2o.extensions</groupId>
         <artifactId>extensions-parent</artifactId>
-        <version>1.6.0-RC4-SNAPSHOT</version>
+        <version>1.7.0-SNAPSHOT</version>
     </parent>
 
     <dependencies>
         <dependency>
-            <groupId>com.oracle.jdbc</groupId>
-            <artifactId>ojdbc8</artifactId>
-            <version>12.2.0.1</version>
+            <groupId>com.oracle.database.jdbc</groupId>
+            <artifactId>ojdbc11</artifactId>
+            <version>23.3.0.23.09</version>
         </dependency>
 
         <!-- optional dependencies -->
@@ -40,7 +40,7 @@
         <dependency>
             <groupId>org.sql2o.extensions</groupId>
             <artifactId>sql2o-oracle</artifactId>
-            <version>1.6.0-RC4-SNAPSHOT</version>
+            <version>1.7.0-SNAPSHOT</version>
             <scope>test</scope>
         </dependency>
 

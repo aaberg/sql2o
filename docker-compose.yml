@@ -11,40 +11,21 @@ services:
         networks:
             sql2o-network:
 
-    db2-db:
-        #privileged: true
+    oracle-xe-21c:
+        image: 'container-registry.oracle.com/database/express:latest'
         volumes:
-            - type: volume
-              source: db2-db
-              target: /database
-        cap_add:
-            - IPC_LOCK
-            - IPC_OWNER
-        ipc: host
-        image: 'icr.io/db2_community/db2'
+            - oracle-xe-21c-volume:/opt/oracle/oradata
         ports:
-            - 50000:50000
+            - "1521:1521"
+            - "5500:5500"
         environment:
-            - LICENSE=accept
-            - DB2INSTANCE=db2inst1
-            - DB2INST1_PASSWORD=testpassword
-            - DBNAME=testdb
-            - BLU=false
-            - ENABLE_ORACLE_COMPATIBILITY=false
-            - UPDATEAVAIL=NO
-            - TO_CREATE_SAMPLEDB=true
-            - REPODB=false
-            - IS_OSXFS=false
-            - PERSISTENT_HOME=false
-            - HADR_ENABLED=false
-            - ETCD_ENDPOINT=
-            - ETCD_USERNAME=
-            - ETCD_PASSWORD=
+            - ORACLE_PWD=testpassword
+            - ORACLE_CHARACTERSET=AL32UTF8
         networks:
             sql2o-network:
 
 volumes:
-    db2-db:
+    oracle-xe-21c-volume:
 
 networks:
     sql2o-network:
