@@ -63,28 +63,11 @@
             <version>${embedded-db-junit.version}</version>
             <scope>test</scope>
         </dependency>
-        <!-- Uncomment to run oracle tests.  -->
-        <!--
-        <dependency>
-            <scope>test</scope>
-            <groupId>com.oracle</groupId>
-            <artifactId>ojdbc6</artifactId>
-            <version>11.2.0.3</version>
-        </dependency>
-        -->
-        <!-- other ORMs for performance testing -->
 
         <dependency>
             <groupId>org.mockito</groupId>
             <artifactId>mockito-core</artifactId>
             <version>${mockito.version}</version>
-            <scope>test</scope>
-        </dependency>
-        <!-- Bytebuddy is required by mockito -->
-        <dependency>
-            <groupId>net.bytebuddy</groupId>
-            <artifactId>byte-buddy</artifactId>
-            <version>1.12.14</version>
             <scope>test</scope>
         </dependency>
     </dependencies>
