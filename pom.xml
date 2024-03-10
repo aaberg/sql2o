@@ -38,7 +38,7 @@
         <mockito.version>4.8.0</mockito.version>
         <mybatis.version>3.2.4</mybatis.version>
         <persistence-api.version>1.0.2</persistence-api.version>
-        <slf4j.version>1.7.25</slf4j.version>
+        <slf4j.version>2.0.12</slf4j.version>
         <spring-jdbc.version>4.0.2.RELEASE</spring-jdbc.version>
 
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
