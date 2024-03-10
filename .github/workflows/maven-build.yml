@@ -16,7 +16,7 @@ on:
 
 jobs:
   build:
-
+    name: Build, test and publish to Github Packages
     runs-on: ubuntu-latest
 
     steps:
@@ -31,10 +31,6 @@ jobs:
         cache: maven
     - name: Build with Maven
       run: mvn -B package --file pom.xml
-    - name: publish artifacts to Github Packages
-      run: mvn deploy -s $GITHUB_WORKSPACE/settings.xml
-      env:
-        GITHUB_TOKEN: ${{ github.token }}
 
     # Optional: Uploads the full dependency graph to GitHub to improve the quality of Dependabot alerts this repository can receive
     - name: Update dependency graph
