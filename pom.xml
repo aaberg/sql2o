@@ -191,7 +191,7 @@
                         </executions>
                         <configuration>
                             <stylesheet>java</stylesheet>
-                            <additionalparam>-Xdoclint:none</additionalparam>
+                            <doclint>none</doclint>
                         </configuration>
                     </plugin>
 
