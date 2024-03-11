@@ -18,7 +18,7 @@ on:
 
 jobs:
   build-and-test:
-    name: Build, test and publish to Github Packages
+    name: Build and test
     runs-on: ubuntu-latest
 
     steps:
@@ -39,13 +39,14 @@ jobs:
         uses: advanced-security/maven-dependency-submission-action@571e99aab1055c2e71a1e2309b9691de18d6b7d6
 
   deploy-maven-central:
+    name: Deploy to Maven Central
     runs-on: ubuntu-latest
     if: ${{ github.event_name == 'release'}}
     needs: build-and-test
     steps:
       - uses: actions/checkout@v4
-      #- name: Docker Compose Action
-      #  uses: isbang/compose-action@v1.5.1
+      - name: Docker Compose Action
+        uses: isbang/compose-action@v1.5.1
       - name: Set up JDK 17 and Set up Maven Central Repository
         uses: actions/setup-java@v4
         with:
