@@ -31,6 +31,8 @@ jobs:
           java-version: '21'
           distribution: 'temurin'
           cache: maven
+      - name: Print java version
+        run: java -version
       - name: Build and test with Maven java 21
         run: mvn -B package --file pom.xml
       - name: Set up JDK 17 for testing
@@ -39,6 +41,8 @@ jobs:
           java-version: '17'
           distribution: 'temurin'
           cache: maven
+      - name: Print java version
+        run: java -version
       - name: Test with Maven java 17
         run: mvn test
       - name: Setup JDK 11 for testing
@@ -47,6 +51,8 @@ jobs:
           java-version: '11'
           distribution: 'temurin'
           cache: maven
+      - name: Print java version
+        run: java -version
       - name: Test with Maven java 11
         run: mvn test
 
