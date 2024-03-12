@@ -1,6 +1,4 @@
- 
-
-# sql2o  ![Github Actions Build](https://github.com/aaberg/sql2o/actions/workflows/pipeline.yml/badge.svg) [![Maven Central](https://img.shields.io/maven-central/v/org.sql2o/sql2o.svg)](https://search.maven.org/search?q=g:org.sql2o%20a:sql2o) [![Coverage Status](https://coveralls.io/repos/github/aaberg/sql2o/badge.svg?branch=master)](https://coveralls.io/github/aaberg/sql2o?branch=master)
+# sql2o  [![Github Actions Build](https://github.com/aaberg/sql2o/actions/workflows/pipeline.yml/badge.svg)](https://github.com/aaberg/sql2o/actions) [![Maven Central](https://img.shields.io/maven-central/v/org.sql2o/sql2o.svg)](https://search.maven.org/search?q=g:org.sql2o%20a:sql2o) [![Coverage Status](https://coveralls.io/repos/github/aaberg/sql2o/badge.svg?branch=master)](https://coveralls.io/github/aaberg/sql2o?branch=master)
 
 
 Sql2o is a small java library, with the purpose of making database interaction easy.
