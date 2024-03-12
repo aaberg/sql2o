@@ -488,12 +488,12 @@ public class Sql2oTest extends BaseMemDbTest {
 
         sql2o.createQuery("create table bigdectesttable (id integer identity primary key, val1 numeric(5,3), val2 integer)").executeUpdate();
 
-        sql2o.createQuery("insert into bigdectesttable(val1, val2) values(:val1, :val2)").addParameter("val1",1.256).addParameter("val2", 4).executeUpdate();
+        sql2o.createQuery("insert into bigdectesttable(val1, val2) values(:val1, :val2)").addParameter("val1",1.256d).addParameter("val2", 4).executeUpdate();
 
         BigDecimalPojo pojo = sql2o.createQuery("select * from bigdectesttable").executeAndFetchFirst(BigDecimalPojo.class);
 
         assertEquals(new BigDecimal("1.256"), pojo.val1);
-        assertEquals(new BigDecimal("4.0"), pojo.val2);
+        assertEquals(new BigDecimal("4"), pojo.val2);
     }
 
     @Test
