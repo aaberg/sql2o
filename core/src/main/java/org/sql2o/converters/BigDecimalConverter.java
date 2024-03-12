@@ -17,13 +17,13 @@ public class BigDecimalConverter extends NumberConverter<BigDecimal>{
             return (BigDecimal)val;
         }
         else{
-            return BigDecimal.valueOf(val.doubleValue());
+            return new BigDecimal(val.toString());
         }
     }
 
     @Override
     protected BigDecimal convertStringValue(String val) {
-        return BigDecimal.valueOf(Double.parseDouble(val));
+        return new BigDecimal(val);
     }
 
     @Override
