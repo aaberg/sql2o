@@ -7,6 +7,8 @@ import java.time.LocalDateTime;
  * Used by sql2o to convert a value from the database into a {@link java.time.LocalDateTime}.
  *
  * @author Agit Rubar Demir | @agitrubard
+ * @version 1.8.0
+ * @since 13/2/2024
  */
 public class LocalDateTimeConverter implements Converter<LocalDateTime> {
 

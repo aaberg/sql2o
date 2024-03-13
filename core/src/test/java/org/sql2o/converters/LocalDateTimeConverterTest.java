@@ -14,6 +14,22 @@ import java.time.LocalDateTime;
 import java.util.List;
 import java.util.stream.Collectors;
 
+/**
+ * {@code LocalDateTimeConverterTest} is a JUnit test class designed to validate the functionality
+ * of the custom converter {@code MockLocalDateTimeConverter} within the context of Sql2o.
+ * The class includes tests for inserting and retrieving LocalDateTime instances from a database
+ * using the converter, as well as ensuring proper handling of conversion exceptions.
+ *
+ * <p>The tests cover various scenarios, such as creating tables, inserting initial data, and verifying
+ * the expected behavior when working with LocalDateTime instances through Sql2o.</p>
+ *
+ * <p>Note: This class assumes the existence of the {@code MockLocalDateTime} class and the corresponding
+ * converter {@code MockLocalDateTimeConverter} for testing purposes.</p>
+ *
+ * @author Agit Rubar Demir | @agitrubard
+ * @version 1.8.0
+ * @since 13/2/2024
+ */
 public class LocalDateTimeConverterTest {
 
     private Sql2o sql2o;
