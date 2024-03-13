@@ -1,0 +1,33 @@
+version: '3.9'
+
+services:
+    postgres-db:
+        image: 'postgres:latest'
+        ports:
+            - 15432:5432
+        environment:
+            - POSTGRES_USER=testuser
+            - POSTGRES_PASSWORD=testpassword
+        networks:
+            sql2o-network:
+
+    oracle-xe-21c:
+        image: 'container-registry.oracle.com/database/express:latest'
+        volumes:
+            - oracle-xe-21c-volume:/opt/oracle/oradata
+        ports:
+            - "1521:1521"
+            - "5500:5500"
+        environment:
+            - ORACLE_PWD=testpassword
+            - ORACLE_CHARACTERSET=AL32UTF8
+        networks:
+            sql2o-network:
+
+volumes:
+    oracle-xe-21c-volume:
+
+networks:
+    sql2o-network:
+        name: sql2o-network
+        driver: bridge

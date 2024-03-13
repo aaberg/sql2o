@@ -17,7 +17,7 @@ public class Sql2oDataSourceTest extends TestCase {
 
     private Sql2o sql2o;
 
-    private String url = "jdbc:h2:mem:test2;DB_CLOSE_DELAY=-1";
+    private String url = "jdbc:h2:mem:test2;MODE=MSSQLServer;DB_CLOSE_DELAY=-1";
     private String user = "sa";
     private String pass = "";
 

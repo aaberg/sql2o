@@ -22,7 +22,7 @@ import java.util.Collection;
 public class BaseMemDbTest {
 
     public enum DbType{
-        H2("jdbc:h2:mem:test;DB_CLOSE_DELAY=-1", "sa", ""),
+        H2("jdbc:h2:mem:test;MODE=MSSQLServer;DB_CLOSE_DELAY=-1", "sa", ""),
         HyperSQL("jdbc:hsqldb:mem:testmemdb", "SA", "");
 
         public final String url;
@@ -51,10 +51,11 @@ public class BaseMemDbTest {
         this.dbType = dbType;
         this.sql2o = new Sql2o(dbType.url, dbType.user, dbType.pass);
 
-        if (dbType == DbType.HyperSQL) {
-            try (Connection con = sql2o.open()){
-                con.createQuery("set database sql syntax MSS true").executeUpdate();
-            }
-        }
+
+//        if (dbType == DbType.HyperSQL) {
+//            try (Connection con = sql2o.open()){
+//                con.createQuery("set database sql syntax MSS true").executeUpdate();
+//            }
+//        }
     }
 }

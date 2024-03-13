@@ -9,6 +9,7 @@ import java.sql.SQLException;
  * Iterator for a {@link java.sql.ResultSet}. Tricky part here is getting {@link #hasNext()}
  * to work properly, meaning it can be called multiple times without calling {@link #next()}.
  *
+ * @param <T> the type of the objects that this iterator will return
  * @author aldenquimby@gmail.com
  */
 public class PojoResultSetIterator<T> extends ResultSetIteratorBase<T> {

@@ -33,7 +33,7 @@ import static org.junit.Assert.fail;
 
 /**
  * Created with IntelliJ IDEA.
- * User: ac23513
+ * User: Lars Aaberg
  * Date: 20.02.13
  * Time: 14:27
  * To change this template use File | Settings | File Templates.
@@ -50,7 +50,7 @@ public class OracleTest {
             throw new RuntimeException(t);
         }
 
-        this.sql2o = new Sql2o("jdbc:oracle:thin:@//localhost:1521/orcl", "test", "test", new OracleQuirks());
+        this.sql2o = new Sql2o("jdbc:oracle:thin:@//localhost:1521/XE", "system", "testpassword", new OracleQuirks());
     }
 
     /**
@@ -65,11 +65,9 @@ public class OracleTest {
      *
      *
      */
-    @Test @Ignore
+    @Test
     public void testForIssue8OracleTimestamps() {
         String sql = "select CURRENT_TIMESTAMP from dual";
-
-        //new TIMESTAMPTZ().timestampValue()
 
         Date dateVal = sql2o.createQuery(sql).executeScalar(Date.class);
         DateTime dateTimeVal = sql2o.createQuery(sql).executeScalar(DateTime.class);

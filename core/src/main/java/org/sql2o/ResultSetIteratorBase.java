@@ -13,6 +13,7 @@ import java.util.NoSuchElementException;
  * to work properly, meaning it can be called multiple times without calling {@link #next()}.
  *
  * @author aldenquimby@gmail.com
+ * @param <T> the type of the objects that this iterator will return
  */
 public abstract class ResultSetIteratorBase<T> implements Iterator<T> {
     // fields needed to read result set

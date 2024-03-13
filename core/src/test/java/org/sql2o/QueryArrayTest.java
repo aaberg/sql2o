@@ -3,12 +3,12 @@ package org.sql2o;
 import org.junit.Rule;
 import org.junit.Test;
 import org.zapodot.junit.db.EmbeddedDatabaseRule;
+import org.zapodot.junit.db.common.CompatibilityMode;
 
 import java.util.List;
 
 import static org.hamcrest.CoreMatchers.equalTo;
 import static org.junit.Assert.assertThat;
-import static org.zapodot.junit.db.EmbeddedDatabaseRule.CompatibilityMode.Oracle;
 
 /**
  * @author zapodot
@@ -21,7 +21,7 @@ public class QueryArrayTest {
     
     @Rule
     public EmbeddedDatabaseRule databaseRule = EmbeddedDatabaseRule.builder()
-            .withMode(Oracle)
+            .withMode(CompatibilityMode.Oracle)
             .withInitialSql("CREATE TABLE FOO(BAR int PRIMARY KEY); INSERT INTO FOO VALUES(1); INSERT INTO FOO VALUES(2)")
             .build();
 

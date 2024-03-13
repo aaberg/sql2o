@@ -26,7 +26,7 @@ import static org.junit.Assert.fail;
 
 /**
  * Created with IntelliJ IDEA.
- * User: ac23513
+ * User: Lars Aaberg
  * Date: 20.02.13
  * Time: 14:27
  * To change this template use File | Settings | File Templates.
@@ -38,23 +38,26 @@ public class OracleTest {
     public OracleTest() {
         try {
             Class oracleDriverClass = this.getClass().getClassLoader().loadClass("oracle.jdbc.driver.OracleDriver");
-            DriverManager.registerDriver((Driver)oracleDriverClass.newInstance());
+            DriverManager.registerDriver((Driver) oracleDriverClass.newInstance());
         } catch (Throwable t) {
             throw new RuntimeException(t);
         }
 
-        this.sql2o = new Sql2o("jdbc:oracle:thin:@localhost:1521:XE", "test", "test", new OracleQuirks());
+        this.sql2o = new Sql2o("jdbc:oracle:thin:@localhost:1521:XE", "system", "testpassword", new OracleQuirks());
     }
 
-    @Test @Ignore
+    @Test
     public void testForIssue12ErrorReadingClobValue() {
         final String sql = "select to_clob('test') val from dual";
 
-        String val = sql2o.createQuery(sql).executeScalar(String.class);
-        assertEquals("test", val);
+        try (Connection con = sql2o.open()) {
+            String val = con.createQuery(sql).executeScalar(String.class);
+            assertEquals("test", val);
+        }
+
     }
 
-    @Test @Ignore
+    @Test
     public void testUUiID() {
 
         UUID uuid1 = UUID.randomUUID();
@@ -74,15 +77,14 @@ public class OracleTest {
                 insertQuery.addParameter("id", 1).addParameter("val", uuid1).executeUpdate();
                 insertQuery.addParameter("id", 2).addParameter("val", uuid2).executeUpdate();
 
-                Query selectQuery = connection.createQuery(selectSql);
-                UUID uuid1FromDb = selectQuery.addParameter("id", 1).executeScalar(UUID.class);
-                UUID uuid2FromDb = selectQuery.addParameter("id", 2).executeScalar(UUID.class);
+                UUID uuid1FromDb = connection.createQuery(selectSql).addParameter("id", 1).executeScalar(UUID.class);
+                UUID uuid2FromDb = connection.createQuery(selectSql).addParameter("id", 2).executeScalar(UUID.class);
 
                 assertEquals(uuid1, uuid1FromDb);
                 assertEquals(uuid2, uuid2FromDb);
             }
 
-        } catch(Exception e){
+        } catch (Exception e) {
             e.printStackTrace();
             fail("test failed. Exception");
         } finally {
@@ -92,50 +94,4 @@ public class OracleTest {
         }
 
     }
-
-
-    // test is weird. Some versions of Oracle returns a rowid instead of the generated sequence value.
-//    @Test
-//    public void testForIssue13ProblemWithGetGeneratedKeys() {
-//
-//        try{
-//            sql2o.createQuery("drop sequence fooseq", false).executeUpdate();
-//        } catch(Sql2oException ex) {
-//            // ignore errors, if objects doesn't exists already.
-//            int debug = 0;
-//        }
-//
-//        try{
-//            sql2o.createQuery("drop table testtable", false).executeUpdate();
-//        } catch(Sql2oException e) {
-//            // ignore errors, if objects doesn't exists already.
-//            int debug = 0;
-//        }
-//
-//
-//        sql2o.createQuery("create sequence fooseq", false).executeUpdate();
-//        sql2o.createQuery("create table testtable(id integer primary key, val varchar2(30))", false).executeUpdate();
-//
-//        Connection connection = null;
-//        try {
-//            connection = sql2o.beginTransaction();
-//
-//            String insertSomethingSql = "insert into testtable (id, val) values(fooseq.nextval, :val)";
-//            Long generatedKey = connection.createQuery(insertSomethingSql, true).addParameter("val", "foo").executeUpdate().getKey(Long.class);
-//
-//            Long fetchedKey = connection.createQuery("select id from test_tbl").executeScalar(Long.class);
-//
-//            assertEquals(generatedKey, fetchedKey);
-//        } finally {
-//            if (connection != null) {
-//                connection.rollback();
-//            }
-//
-//        }
-//
-//        sql2o.createQuery("drop sequence fooseq", false);
-//        sql2o.createQuery("drop table testtable");
-//
-//
-//    }
 }

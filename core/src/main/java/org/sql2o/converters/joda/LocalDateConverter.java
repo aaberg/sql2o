@@ -4,6 +4,8 @@ import org.joda.time.LocalDate;
 import org.sql2o.converters.Converter;
 import org.sql2o.converters.ConverterException;
 
+import java.time.OffsetTime;
+
 /**
  * Created by lars on 01.05.14.
  */

@@ -1,9 +1,9 @@
 package org.sql2o.converters;
 
+import jakarta.xml.bind.annotation.adapters.HexBinaryAdapter;
 import org.junit.Test;
 import org.sql2o.quirks.OracleQuirks;
 
-import javax.xml.bind.annotation.adapters.HexBinaryAdapter;
 import java.util.UUID;
 
 import static org.junit.Assert.assertEquals;

@@ -35,7 +35,7 @@ public class IssuesTest {
     @Parameterized.Parameters(name = "{index} - {4}")
     public static Collection<Object[]> getData(){
         return Arrays.asList(new Object[][]{
-                {null, "jdbc:h2:mem:test;DB_CLOSE_DELAY=-1","sa", "", "H2 test" },
+                {null, "jdbc:h2:mem:test;MODE=MSSQLServer;DB_CLOSE_DELAY=-1","sa", "", "H2 test" },
                 {new jdbcDriver(), "jdbc:hsqldb:mem:testmemdb", "SA", "", "HyperSQL DB test"}
         });
     }
