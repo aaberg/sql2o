@@ -70,6 +70,7 @@ public class Query implements AutoCloseable {
         this.columnNames = columnNames;
         this.setColumnMappings(connection.getSql2o().getDefaultColumnMappings());
         this.caseSensitive = connection.getSql2o().isDefaultCaseSensitive();
+        this.autoDeriveColumnNames = connection.getSql2o().isDefaultAutoDeriveColumnNames();
 
         paramNameToIdxMap = new HashMap<>();
         parameters = new HashMap<>();
