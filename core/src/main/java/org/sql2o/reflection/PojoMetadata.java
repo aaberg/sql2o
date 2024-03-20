@@ -127,6 +127,17 @@ public class PojoMetadata {
                     propertyGetters.put(propertyName, factoryFacade.newGetter(m));
                 }
 
+                if (m.getName().startsWith("is")) {
+                    String propertyName = m.getName().substring(2);
+                    if (caseSensitive) {
+                        propertyName = propertyName.substring(0, 1).toLowerCase() + propertyName.substring(1);
+                    } else {
+                        propertyName = propertyName.toLowerCase();
+                    }
+
+                    propertyGetters.put(propertyName, factoryFacade.newGetter(m));
+                }
+
                 if (m.getName().startsWith("set") && m.getParameterTypes().length == 1) {
                     String propertyName = readAnnotatedColumnName(m, isJpaColumnInClasspath);
                     if(propertyName == null) {
