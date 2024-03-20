@@ -39,6 +39,7 @@ public class Query implements AutoCloseable {
     private final Map<String, List<Integer>> paramNameToIdxMap;
     private final Map<String, ParameterSetter> parameters;
     private String parsedQuery;
+    private Integer fetchSize;
     private int maxBatchRecords = 0;
     private int currentBatchRecords = 0;
 
@@ -118,6 +119,15 @@ public class Query implements AutoCloseable {
 
     public Query setName(String name) {
         this.name = name;
+        return this;
+    }
+
+    public Integer getFetchSize() {
+        return fetchSize;
+    }
+
+    public Query setFetchSize(int fetchSize) {
+        this.fetchSize = fetchSize;
         return this;
     }
 
@@ -428,6 +438,9 @@ public class Query implements AutoCloseable {
                     preparedStatement = connection.getJdbcConnection().prepareStatement(parsedQuery, Statement.RETURN_GENERATED_KEYS);
                 } else {
                     preparedStatement = connection.getJdbcConnection().prepareStatement(parsedQuery);
+                }
+                if (preparedStatement != null && fetchSize != null) {
+                    preparedStatement.setFetchSize(fetchSize);
                 }
             } catch(SQLException ex) {
                 throw new Sql2oException(String.format("Error preparing statement - %s", ex.getMessage()), ex);

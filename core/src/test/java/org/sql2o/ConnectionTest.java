@@ -75,4 +75,29 @@ public class ConnectionTest extends TestCase {
         // check statement was closed
         verify(ps,times(1)).close();
     }
+
+    public void test_createQueryWithFetchSize() throws Throwable {
+        DataSource dataSource = mock(DataSource.class);
+        Connection jdbcConnection = mock(Connection.class);
+        when(jdbcConnection.isClosed()).thenReturn(false);
+        when(dataSource.getConnection()).thenReturn(jdbcConnection);
+        PreparedStatement ps = mock(PreparedStatement.class);
+        when(jdbcConnection.prepareStatement(anyString())).thenReturn(ps);
+
+        Sql2o sql2o = new Sql2o(dataSource,new NoQuirks(){
+            @Override
+            public boolean returnGeneratedKeysByDefault() {
+                return false;
+            }
+        });
+        org.sql2o.Connection cn = new org.sql2o.Connection(sql2o,false);
+        cn.createQueryWithParams("select * from Users").setFetchSize(10).buildPreparedStatement();
+
+        verify(dataSource,times(1)).getConnection();
+        verify(jdbcConnection).isClosed();
+        verify(jdbcConnection,times(1)).prepareStatement("select * from Users");
+        verify(ps, times(1)).setFetchSize(10);
+        // check statement still alive
+        verify(ps,never()).close();
+    }
 }
