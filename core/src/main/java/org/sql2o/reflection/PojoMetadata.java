@@ -115,6 +115,10 @@ public class PojoMetadata {
 
             // prepare methods. Methods will override fields, if both exists.
             for (Method m : theClass.getDeclaredMethods()) {
+                if (m.isBridge()) {
+                    // skip bridge methods: https://github.com/aaberg/sql2o/issues/314
+                    continue;
+                }
 
                 if (m.getName().startsWith("get")) {
                     String propertyName = m.getName().substring(3);
@@ -123,7 +127,6 @@ public class PojoMetadata {
                     } else {
                         propertyName = propertyName.toLowerCase();
                     }
-
                     propertyGetters.put(propertyName, factoryFacade.newGetter(m));
                 }
 
@@ -137,7 +140,6 @@ public class PojoMetadata {
                     } else {
                         propertyName = propertyName.toLowerCase();
                     }
-
                     propertySetters.put(propertyName, factoryFacade.newSetter(m));
                 }
             }
