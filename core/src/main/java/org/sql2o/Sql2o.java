@@ -4,6 +4,7 @@ import org.sql2o.connectionsources.ConnectionSource;
 import org.sql2o.connectionsources.DataSourceConnectionSource;
 import org.sql2o.logging.LocalLoggerFactory;
 import org.sql2o.logging.Logger;
+import org.sql2o.quirks.NoQuirks;
 import org.sql2o.quirks.Quirks;
 import org.sql2o.quirks.QuirksDetector;
 
@@ -35,6 +36,13 @@ public class Sql2o {
 
     private final static Logger logger = LocalLoggerFactory.getLogger(Sql2o.class);
 
+    /**
+     * Adds CDI's dependency injection support
+     */
+    Sql2o() {
+        quirks = new NoQuirks();
+    }
+    
     public Sql2o(String jndiLookup) {
         this(JndiDataSource.getJndiDatasource(jndiLookup));
     }
