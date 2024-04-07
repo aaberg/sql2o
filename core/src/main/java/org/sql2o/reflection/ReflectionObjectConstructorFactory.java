@@ -4,6 +4,8 @@ import org.sql2o.Sql2oException;
 
 import java.lang.reflect.Constructor;
 import java.lang.reflect.InvocationTargetException;
+import java.time.LocalDate;
+import java.time.LocalDateTime;
 
 public class ReflectionObjectConstructorFactory implements ObjectConstructorFactory {
     public ObjectConstructor newConstructor(final Class<?> clazz) {

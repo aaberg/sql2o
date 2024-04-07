@@ -3,18 +3,11 @@ package org.sql2o.extensions.postgres;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.Parameterized;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.sql2o.Connection;
 import org.sql2o.Query;
-import org.sql2o.Sql2o;
-import org.sql2o.converters.UUIDConverter;
 import org.sql2o.data.Row;
 import org.sql2o.data.Table;
-import org.sql2o.quirks.PostgresQuirks;
 
-import java.util.Arrays;
-import java.util.Collection;
 import java.util.UUID;
 
 import static org.hamcrest.CoreMatchers.equalTo;
