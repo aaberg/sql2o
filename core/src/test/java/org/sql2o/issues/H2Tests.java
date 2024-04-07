@@ -9,7 +9,7 @@ import org.sql2o.Connection;
 import org.sql2o.Query;
 import org.sql2o.Sql2o;
 import org.sql2o.converters.Converter;
-import org.sql2o.converters.joda.DateTimeConverter;
+import org.sql2o.converters.joda.JodaDateTimeConverter;
 import org.sql2o.data.Table;
 import org.sql2o.quirks.H2Quirks;
 import org.sql2o.quirks.NoQuirks;
@@ -52,7 +52,7 @@ public class H2Tests {
 
 
         Sql2o sql2o = new Sql2o(ds, new NoQuirks(new HashMap<Class, Converter>() {{
-            put(DateTime.class, new DateTimeConverter(DateTimeZone.getDefault()));
+            put(DateTime.class, new JodaDateTimeConverter(DateTimeZone.getDefault()));
         }}));
 
         assertThat(sql2o.getQuirks(), is(instanceOf(NoQuirks.class)));

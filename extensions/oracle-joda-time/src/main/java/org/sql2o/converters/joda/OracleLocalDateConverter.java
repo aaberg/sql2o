@@ -12,7 +12,7 @@ import java.util.Map;
 /**
  * Created by lars on 01.05.14.
  */
-public class OracleLocalDateConverter extends LocalDateConverter implements ConvertersProvider {
+public class OracleLocalDateConverter extends JodaLocalDateConverter implements ConvertersProvider {
     @Override
     public LocalDate convert(Object val) throws ConverterException {
 
