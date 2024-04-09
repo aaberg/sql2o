@@ -94,6 +94,8 @@ public class Convert {
 
         mapToFill.put(java.time.LocalDate.class, new LocalDateConverter());
         mapToFill.put(java.time.LocalTime.class, new LocalTimeConverter());
+        mapToFill.put(java.time.LocalDateTime.class, new LocalDateTimeConverter());
+        mapToFill.put(java.time.Instant.class, new InstantConverter());
 
         if (FeatureDetector.isJodaTimeAvailable()) {
             mapToFill.put(DateTime.class, new JodaDateTimeConverter());
