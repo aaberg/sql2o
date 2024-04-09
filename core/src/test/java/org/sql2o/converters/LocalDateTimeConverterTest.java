@@ -9,10 +9,8 @@ import org.sql2o.Query;
 import org.sql2o.Sql2o;
 import org.sql2o.quirks.NoQuirks;
 
-import java.sql.Timestamp;
 import java.time.LocalDateTime;
 import java.util.List;
-import java.util.stream.Collectors;
 
 /**
  * {@code LocalDateTimeConverterTest} is a JUnit test class designed to validate the functionality
@@ -26,9 +24,9 @@ import java.util.stream.Collectors;
  * <p>Note: This class assumes the existence of the {@code MockLocalDateTime} class and the corresponding
  * converter {@code MockLocalDateTimeConverter} for testing purposes.</p>
  *
- * @since 13/2/2024
  * @author Agit Rubar Demir | @agitrubard
  * @version 1.8.0
+ * @since 10/4/2024
  */
 public class LocalDateTimeConverterTest {
 
@@ -39,7 +37,7 @@ public class LocalDateTimeConverterTest {
 
         NoQuirks noQuirks = new NoQuirks() {
             {
-                this.converters.put(MockLocalDateTime.class, new MockLocalDateTimeConverter());
+                this.converters.put(LocalDateTime.class, new LocalDateTimeConverter());
             }
         };
         this.sql2o = new Sql2o(
@@ -92,11 +90,7 @@ public class LocalDateTimeConverterTest {
         List<LocalDateTime> localDateTimes;
         String sqlScriptOfFindAll = "select created_at from local_date_time_converter";
         try (Connection connection = sql2o.open(); Query query = connection.createQuery(sqlScriptOfFindAll)) {
-
-            List<MockLocalDateTime> mockLocalDateTimes = query.executeAndFetch(MockLocalDateTime.class);
-            localDateTimes = mockLocalDateTimes.stream()
-                .map(MockLocalDateTime::getLocalDateTime)
-                .collect(Collectors.toList());
+            localDateTimes = query.executeScalarList(LocalDateTime.class);
         }
 
         // Then
@@ -122,68 +116,13 @@ public class LocalDateTimeConverterTest {
         List<LocalDateTime> localDateTimes;
         String sqlScriptOfFindAll = "select created_at from local_date_time_converter";
         try (Connection connection = sql2o.open(); Query query = connection.createQuery(sqlScriptOfFindAll)) {
-
-            List<MockLocalDateTime> mockLocalDateTimes = query.executeAndFetch(MockLocalDateTime.class);
-
-            localDateTimes = mockLocalDateTimes.stream()
-                .map(MockLocalDateTime::getLocalDateTime)
-                .collect(Collectors.toList());
+            localDateTimes = query.executeScalarList(LocalDateTime.class);
         }
 
         // Then
         Assert.assertNotNull(localDateTimes);
         Assert.assertEquals(2, localDateTimes.size());
         Assert.assertEquals(LocalDateTime.class, localDateTimes.get(0).getClass());
-        Assert.assertEquals(LocalDateTime.class, localDateTimes.get(1).getClass());
-    }
-
-
-    private static class MockLocalDateTime {
-
-        private LocalDateTime localDateTime;
-
-        @SuppressWarnings("It's seems unused but It's used by sql2o internally.")
-        public MockLocalDateTime() {
-        }
-
-        public MockLocalDateTime(LocalDateTime localDateTime) {
-            this.localDateTime = localDateTime;
-        }
-
-        public LocalDateTime getLocalDateTime() {
-            return localDateTime;
-        }
-
-    }
-
-    private static class MockLocalDateTimeConverter implements Converter<MockLocalDateTime> {
-
-        @Override
-        public MockLocalDateTime convert(Object dateObject) throws ConverterException {
-
-            if (dateObject == null) {
-                return null;
-            }
-
-            try {
-                LocalDateTime localDateTime = Timestamp.valueOf(dateObject.toString()).toLocalDateTime();
-                return new MockLocalDateTime(localDateTime);
-            } catch (IllegalArgumentException exception) {
-                String dateObjectClassName = dateObject.getClass().getName();
-                String localDateTimeClassName = LocalDateTime.class.getName();
-                throw new ConverterException(
-                    String.format("Don't know how to convert from type '%s' to type '%s'", dateObjectClassName, localDateTimeClassName),
-                    exception
-                );
-            }
-        }
-
-        @Override
-        public Object toDatabaseParam(MockLocalDateTime mockLocalDateTime) {
-            LocalDateTime localDateTime = mockLocalDateTime.getLocalDateTime();
-            return Timestamp.valueOf(localDateTime);
-        }
-
     }
 
 }
