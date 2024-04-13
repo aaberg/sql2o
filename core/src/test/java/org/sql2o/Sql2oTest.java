@@ -108,7 +108,7 @@ public class Sql2oTest extends BaseMemDbTest {
 
         try (Connection con = sql2o.open()) {
 
-            User user = con.createQuery("select * from User u where u.id = 1").executeAndFetchUnique(User.class);
+            User user = con.createQuery("select * from user_table u where u.id = 1").executeAndFetchUnique(User.class);
 
             assertNotNull(user);
         }
@@ -122,7 +122,7 @@ public class Sql2oTest extends BaseMemDbTest {
 
         try (Connection con = sql2o.open()) {
 
-            User user = con.createQuery("select * from User u where u.id > 0").executeAndFetchUnique(User.class);
+            User user = con.createQuery("select * from user_table u where u.id > 0").executeAndFetchUnique(User.class);
         }
         finally {
             deleteUserTable();
