@@ -3,9 +3,9 @@ package org.sql2o.converters;
 import org.joda.time.DateTime;
 import org.joda.time.LocalDate;
 import org.joda.time.LocalTime;
-import org.sql2o.converters.joda.DateTimeConverter;
-import org.sql2o.converters.joda.LocalDateConverter;
-import org.sql2o.converters.joda.LocalTimeConverter;
+import org.sql2o.converters.joda.JodaDateTimeConverter;
+import org.sql2o.converters.joda.JodaLocalDateConverter;
+import org.sql2o.converters.joda.JodaLocalTimeConverter;
 import org.sql2o.tools.FeatureDetector;
 
 import java.io.ByteArrayInputStream;
@@ -89,13 +89,18 @@ public class Convert {
 
         mapToFill.put(UUID.class, new UUIDConverter());
 
-        mapToFill.put(OffsetTime.class, new OffsetTimeConverter());
-        mapToFill.put(OffsetDateTime.class, new OffsetDateTimeConverter());
+        mapToFill.put(java.time.Instant.class, new InstantConverter());
+        mapToFill.put(java.time.OffsetDateTime.class, new OffsetDateTimeConverter());
+
+        mapToFill.put(java.time.LocalDate.class, new LocalDateConverter());
+        mapToFill.put(java.time.LocalTime.class, new LocalTimeConverter());
+        mapToFill.put(java.time.LocalDateTime.class, new LocalDateTimeConverter());
+
 
         if (FeatureDetector.isJodaTimeAvailable()) {
-            mapToFill.put(DateTime.class, new DateTimeConverter());
-            mapToFill.put(LocalTime.class, new LocalTimeConverter());
-            mapToFill.put(LocalDate.class, new LocalDateConverter());
+            mapToFill.put(DateTime.class, new JodaDateTimeConverter());
+            mapToFill.put(LocalTime.class, new JodaLocalTimeConverter());
+            mapToFill.put(LocalDate.class, new JodaLocalDateConverter());
         }
     }
 

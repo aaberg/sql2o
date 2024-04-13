@@ -11,17 +11,17 @@ import java.sql.Timestamp;
 /**
  * Used by sql2o to convert a value from the database into a {@link DateTime} instance.
  */
-public class DateTimeConverter implements Converter<DateTime> {
+public class JodaDateTimeConverter implements Converter<DateTime> {
 
     private final DateTimeZone timeZone;
 
     // it's possible to create instance for other timezone
     // and re-register converter
-    public DateTimeConverter(DateTimeZone timeZone) {
+    public JodaDateTimeConverter(DateTimeZone timeZone) {
         this.timeZone = timeZone;
     }
 
-    public DateTimeConverter() {
+    public JodaDateTimeConverter() {
         this(DateTimeZone.getDefault());
     }
 

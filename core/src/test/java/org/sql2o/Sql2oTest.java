@@ -889,17 +889,6 @@ public class Sql2oTest extends BaseMemDbTest {
         assertThat(jodaTime.getHourOfDay(), is(equalTo(new LocalTime().getHourOfDay())));
     }
 
-    @Test
-    public void testOffsetTimeConverter() {
-        String sql = "select current_time as col1 from (values(0))";
-
-        try (Connection connection = sql2o.open()) {
-            OffsetTime offsetTime = connection.createQuery(sql).executeScalar(OffsetTime.class);
-            assertNotNull(offsetTime);
-            assertEquals(offsetTime.getHour(), OffsetTime.now().getHour());
-        }
-    }
-
     public static class BindablePojo{
         String data1;
         private Timestamp data2;

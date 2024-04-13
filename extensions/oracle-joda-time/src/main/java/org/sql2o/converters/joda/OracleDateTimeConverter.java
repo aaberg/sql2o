@@ -12,7 +12,7 @@ import java.util.Map;
 /**
  * Created by lars on 01.05.14.
  */
-public class OracleDateTimeConverter extends DateTimeConverter implements ConvertersProvider{
+public class OracleDateTimeConverter extends JodaDateTimeConverter implements ConvertersProvider{
 
     @Override
     public DateTime convert(Object val) throws ConverterException {

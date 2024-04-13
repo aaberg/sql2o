@@ -1,6 +1,8 @@
 package org.sql2o.converters;
 
+import java.time.Instant;
 import java.time.OffsetDateTime;
+import java.time.ZoneOffset;
 
 public class OffsetDateTimeConverter extends ConverterBase<OffsetDateTime>{
     @Override
@@ -9,16 +11,21 @@ public class OffsetDateTimeConverter extends ConverterBase<OffsetDateTime>{
             return (OffsetDateTime) val;
         }
 
-        if (val instanceof java.util.Date) {
-            return ((java.util.Date) val).toInstant().atOffset(java.time.ZoneOffset.UTC);
+        if (val instanceof java.sql.Timestamp) {
+            return ((java.sql.Timestamp) val).toInstant().atZone(ZoneOffset.systemDefault()).toOffsetDateTime();
         }
 
-        if (val instanceof Number) {
-            return java.time.Instant.ofEpochMilli(((Number) val).longValue()).atOffset(java.time.ZoneOffset.UTC);
+        if (val instanceof Long) {
+            final var instant = Instant.ofEpochMilli((Long)val);
+            return instant.atZone(ZoneOffset.systemDefault()).toOffsetDateTime();
         }
 
         if (val instanceof String) {
-            return OffsetDateTime.parse((String) val);
+            try {
+                return OffsetDateTime.parse((String) val);
+            } catch (Exception e) {
+                throw new ConverterException("Cannot convert String with value '" + val+ "' to java.time.OffsetDateTime", e);
+            }
         }
 
         throw new ConverterException("Cannot convert type " + val.getClass() + " to java.time.OffsetDateTime");

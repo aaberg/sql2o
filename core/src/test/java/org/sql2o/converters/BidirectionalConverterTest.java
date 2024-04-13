@@ -28,11 +28,7 @@ public class BidirectionalConverterTest {
     @Before
     public void setUp()
     {
-        Quirks quirks = new NoQuirks(){
-            {
-                this.converters.put(UUID.class, new CustomUUIDConverter());
-            }
-        };
+        Quirks quirks = new NoQuirks();
 
 
         this.sql2o = new Sql2o("jdbc:h2:mem:test;DB_CLOSE_DELAY=-1", "sa", "", quirks);

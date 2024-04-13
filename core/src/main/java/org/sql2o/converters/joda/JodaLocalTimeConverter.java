@@ -10,7 +10,7 @@ import java.time.OffsetTime;
 /**
  * Created by lars on 12/18/13.
  */
-public class LocalTimeConverter implements Converter<LocalTime> {
+public class JodaLocalTimeConverter implements Converter<LocalTime> {
 
     public LocalTime convert(Object val) throws ConverterException {
         if (val == null) {
