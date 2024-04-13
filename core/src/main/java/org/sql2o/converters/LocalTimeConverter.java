@@ -1,8 +1,6 @@
 package org.sql2o.converters;
 
 import java.time.LocalTime;
-import java.time.ZoneOffset;
-import java.util.Date;
 
 public class LocalTimeConverter extends ConverterBase<LocalTime> {
 
@@ -13,9 +11,6 @@ public class LocalTimeConverter extends ConverterBase<LocalTime> {
         }
         if (val instanceof java.sql.Timestamp) {
             return ((java.sql.Timestamp) val).toLocalDateTime().toLocalTime();
-        }
-        if (val instanceof Long) {
-            return LocalTime.ofInstant(new Date((Long) val).toInstant(), ZoneOffset.UTC);
         }
         if (val instanceof String) {
             try {

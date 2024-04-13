@@ -42,24 +42,6 @@ public class LocalTimeConverterTest {
     }
 
     @Test
-    void convert_epochMillis_returnsLocalTime() throws ConverterException {
-        // setup
-        final var converter = new LocalTimeConverter();
-        final var targetTime = LocalTime.of(0,0,1);
-
-        // test
-        final long inputTime = targetTime
-            .atDate(LocalDate.of(1970, 1, 1))
-            .atZone(ZoneOffset.UTC)
-            .toInstant()
-            .toEpochMilli();
-        final var convertedTime = converter.convert(inputTime);
-
-        // assert
-        assertEquals(targetTime, convertedTime);
-    }
-
-    @Test
     void convert_validTimeString_returnsLocalTime() throws ConverterException {
         // setup
         final var converter = new LocalTimeConverter();

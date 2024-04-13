@@ -89,13 +89,13 @@ public class Convert {
 
         mapToFill.put(UUID.class, new UUIDConverter());
 
-        mapToFill.put(OffsetTime.class, new OffsetTimeConverter());
-        mapToFill.put(OffsetDateTime.class, new OffsetDateTimeConverter());
+        mapToFill.put(java.time.Instant.class, new InstantConverter());
+        mapToFill.put(java.time.OffsetDateTime.class, new OffsetDateTimeConverter());
 
         mapToFill.put(java.time.LocalDate.class, new LocalDateConverter());
         mapToFill.put(java.time.LocalTime.class, new LocalTimeConverter());
         mapToFill.put(java.time.LocalDateTime.class, new LocalDateTimeConverter());
-        mapToFill.put(java.time.Instant.class, new InstantConverter());
+
 
         if (FeatureDetector.isJodaTimeAvailable()) {
             mapToFill.put(DateTime.class, new JodaDateTimeConverter());

@@ -2,6 +2,7 @@ package org.sql2o.converters;
 
 import java.time.Instant;
 import java.time.LocalDate;
+import java.time.ZoneOffset;
 
 public class LocalDateConverter extends ConverterBase<LocalDate> {
     @Override
@@ -9,8 +10,8 @@ public class LocalDateConverter extends ConverterBase<LocalDate> {
         if (val instanceof java.sql.Date) {
             return ((java.sql.Date) val).toLocalDate();
         }
-        if (val instanceof Number) {
-            return Instant.ofEpochMilli(((Number) val).longValue()).atZone(java.time.ZoneId.systemDefault()).toLocalDate();
+        if (val instanceof Long) {
+            return Instant.ofEpochMilli((Long) val).atOffset(ZoneOffset.UTC).toLocalDate();
         }
         if (val instanceof String) {
             try {
