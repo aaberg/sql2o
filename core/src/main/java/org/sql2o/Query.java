@@ -577,6 +577,26 @@ public class Query implements AutoCloseable {
         };
     }
 
+    public <T> T executeAndFetchUnique(Class<T> returnType){
+        return executeAndFetchUnique( newResultSetHandlerFactory( returnType ) );
+    }
+
+    public <T> T executeAndFetchUnique(ResultSetHandler<T> resultSetHandler){
+        return executeAndFetchUnique( newResultSetHandlerFactory( resultSetHandler ) );
+    }
+
+    public <T> T executeAndFetchUnique(ResultSetHandlerFactory<T> factory) {
+        List<T> list = executeAndFetch( factory );
+        int size = list.size();
+        if( size > 1 ) {
+            throw new Sql2oException( "Expected 0..1 results, found: " + list.size() );
+        }
+        if( size == 0 ){
+            return null;
+        }
+        return list.get( 0 );
+    }
+
     public <T> List<T> executeAndFetch(Class<T> returnType){
         if (returnType.isPrimitive() || Arrays.stream(primitives).anyMatch(n -> returnType.equals(n)))
         {
