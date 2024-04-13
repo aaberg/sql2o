@@ -13,7 +13,7 @@
     <parent>
         <groupId>org.sql2o</groupId>
         <artifactId>sql2o-parent</artifactId>
-        <version>1.7.0-SNAPSHOT</version>
+        <version>1.8.0-SNAPSHOT</version>
     </parent>
     <artifactId>sql2o</artifactId>
     <packaging>jar</packaging>
