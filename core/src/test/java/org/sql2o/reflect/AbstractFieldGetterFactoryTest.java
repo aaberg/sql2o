@@ -58,11 +58,14 @@ public abstract class AbstractFieldGetterFactoryTest extends TestCase {
         Field[] fields = pojo.getClass().getDeclaredFields();
 
         for (Field field : fields) {
-            Getter getter = fgf.newGetter(field);
-            assertSame(field.getType(),getter.getType());
+            if (!field.isSynthetic()) {
+                field.setAccessible(true);
+                Getter getter = fgf.newGetter(field);
+                assertSame(field.getType(),getter.getType());
 
-            Object val1 = field.get(pojo);
-            assertEquals(val1, getter.getProperty(pojo));
+                Object val1 = field.get(pojo);
+                assertEquals(val1, getter.getProperty(pojo));
+            }
         }
     }
 
