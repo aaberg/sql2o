@@ -1364,14 +1364,21 @@ public class Sql2oTest extends BaseMemDbTest {
 
             assertNotNull(ex);
 
-            LocalPojo p = con.createQuery(selectSql)
+            LocalPojo localPojo1 = con.createQuery(selectSql)
                     .setAutoDeriveColumnNames(true)
                     .executeAndFetchFirst(LocalPojo.class);
 
-            assertNotNull(p);
-            assertEquals(1, p.getIdVal());
-            assertEquals("test1", p.getAnotherVeryExcitingValue());
+            assertNotNull(localPojo1);
+            assertEquals(1, localPojo1.getIdVal());
+            assertEquals("test1", localPojo1.getAnotherVeryExcitingValue());
 
+            sql2o.setDefaultAutoDeriveColumnNames(true);
+            LocalPojo localPojo2 = con.createQuery(selectSql)
+                .executeAndFetchFirst(LocalPojo.class);
+
+            assertNotNull(localPojo2);
+            assertEquals(1, localPojo2.getIdVal());
+            assertEquals("test1", localPojo2.getAnotherVeryExcitingValue());
         }
     }
 
