@@ -52,7 +52,7 @@ public class Pojo {
                 setter.setProperty(this.object, subValue);
             }
             
-            PojoMetadata subMetadata = new PojoMetadata(setter.getType(), this.caseSensitive, this.metadata.isAutoDeriveColumnNames(), this.metadata.getColumnMappings(), this.metadata.throwOnMappingFailure);
+            PojoMetadata subMetadata = new PojoMetadata(setter.getType(), this.caseSensitive, this.metadata.isAutoDeriveColumnNames(), this.metadata.getColumnMappings());
             Pojo subPojo = new Pojo(subMetadata, this.caseSensitive, subValue);
             subPojo.setProperty(newPath, value, quirks);
         }

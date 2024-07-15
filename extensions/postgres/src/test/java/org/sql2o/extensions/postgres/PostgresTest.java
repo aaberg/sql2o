@@ -203,6 +203,24 @@ public class PostgresTest extends PostgresTestSupport {
 
     }
 
+    @Test
+    public void testArray() {
+        try (Connection con = sql2o.open()) {
+            con.createQuery("create table arraytest (id serial primary key, data text[])").executeUpdate();
+
+            final var data = new String[]{"foo", "bar", "baz"};
+
+            con.createQuery("insert into arraytest(data) values (:data)")
+                    .addParameter("data", data)
+                    .executeUpdate();
+
+            var fetchedData = con.createQuery("select data from arraytest")
+                    .executeScalar(String[].class);
+
+            assertThat(fetchedData, is(equalTo(data)));
+        }
+    }
+
 
 
 }

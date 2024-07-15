@@ -51,7 +51,7 @@ public class ReadColumnAnnotationTest extends TestCase {
     }
 
     private PojoMetadata newPojoMetadata(Class<?> clazz) {
-        return new PojoMetadata(clazz, false, false, ImmutableMap.<String, String> of(), true);
+        return new PojoMetadata(clazz, false, false, ImmutableMap.<String, String> of());
     }
 
     private static class NoAnnotation {

@@ -24,10 +24,9 @@ public class PojoMetadata {
     private final Map<String, String> columnMappings;
     private final FactoryFacade factoryFacade = FactoryFacade.getInstance();
 
-    private boolean caseSensitive;
-    private boolean autoDeriveColumnNames;
-    public final boolean throwOnMappingFailure;
-    private Class clazz;
+    private final boolean caseSensitive;
+    private final boolean autoDeriveColumnNames;
+    private final Class clazz;
 
     public boolean isCaseSensitive() {
         return caseSensitive;
@@ -59,15 +58,13 @@ public class PojoMetadata {
         return result;
     }
 
-    public PojoMetadata(Class clazz, boolean caseSensitive, boolean autoDeriveColumnNames, Map<String, String> columnMappings, boolean throwOnMappingError) {
+    public PojoMetadata(Class clazz, boolean caseSensitive, boolean autoDeriveColumnNames, Map<String, String> columnMappings) {
         this.caseSensitive = caseSensitive;
         this.autoDeriveColumnNames = autoDeriveColumnNames;
         this.clazz = clazz;
         this.columnMappings = columnMappings == null ? Collections.<String,String>emptyMap() : columnMappings;
 
         this.propertyInfo = getPropertyInfoThroughCache();
-        this.throwOnMappingFailure = throwOnMappingError;
-
     }
 
     public ObjectConstructor getObjectConstructor() {

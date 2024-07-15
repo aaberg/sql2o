@@ -48,31 +48,6 @@ public class Sql2oTest extends BaseMemDbTest {
         super(dbType, testName);
     }
 
-    //@Test  TODO. commented out. Can't get test to work without an application server.
-    public void testCreateSql2oFromJndi() throws Exception {
-        System.setProperty(Context.INITIAL_CONTEXT_FACTORY, "org.apache.naming.java.javaURLContextFactory");
-        System.setProperty(Context.URL_PKG_PREFIXES, "org.apache.naming");
-
-        InitialContext ic = new InitialContext();
-
-        ic.createSubcontext("java:");
-        ic.createSubcontext("java:comp");
-        ic.createSubcontext("java:comp/env");
-
-        JDBCDataSource datasource = new JDBCDataSource();
-        datasource.setUrl(dbType.url);
-        datasource.setUser(dbType.user);
-        datasource.setPassword(dbType.pass);
-
-        ic.bind("java:comp/env/Sql2o", datasource);
-
-        System.out.println("Datasource initialized.");
-
-        Sql2o jndiSql2o = new Sql2o("Sql2o");
-
-        assertTrue(jndiSql2o != null);
-    }
-
     @Test
     public void testExecuteAndFetch(){
         createAndFillUserTable();
