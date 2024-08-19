@@ -2,7 +2,7 @@ package org.sql2o.reflection;
 
 import org.sql2o.Sql2oException;
 import org.sql2o.tools.AbstractCache;
-import org.sql2o.tools.UnderscoreToCamelCase;
+import org.sql2o.tools.SnakeToCamelCase;
 
 import javax.persistence.Column;
 import java.lang.reflect.AnnotatedElement;
@@ -173,7 +173,7 @@ public class PojoMetadata {
         }
 
         if (autoDeriveColumnNames) {
-            name = UnderscoreToCamelCase.convert(name);
+            name = SnakeToCamelCase.convert(name);
             if (!this.caseSensitive) name = name.toLowerCase();
         }
 
@@ -204,7 +204,7 @@ public class PojoMetadata {
         }
 
         if (autoDeriveColumnNames) {
-            name = UnderscoreToCamelCase.convert(name);
+            name = SnakeToCamelCase.convert(name);
             if (!this.caseSensitive) name = name.toLowerCase();
         }
 

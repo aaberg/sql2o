@@ -61,7 +61,14 @@ public class DefaultResultSetHandlerFactoryBuilder implements ResultSetHandlerFa
 
         return new DefaultResultSetHandlerFactory<>(() -> {
             try {
-                return ObjectBuildableFactory.forClass(clazz, new Settings(new NamingConvention(caseSensitive), quirks));
+                return ObjectBuildableFactory.forClass(
+                    clazz,
+                    new Settings(
+                        new NamingConvention(caseSensitive, autoDeriveColumnNames),
+                        quirks,
+                        throwOnMappingError),
+                    getColumnMappings()
+                );
             } catch (ReflectiveOperationException e) {
                 throw new Sql2oException("Error while trying to construct object from class " + clazz, e);
             }

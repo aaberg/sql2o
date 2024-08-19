@@ -6,7 +6,7 @@ package org.sql2o.tools;
  * @author ryancarlson
  * @author dimzon - complete rewrite
  */
-public class UnderscoreToCamelCase {
+public class SnakeToCamelCase {
     public static String convert(String  underscore){
         if(underscore==null || underscore.isEmpty()) return underscore;
         return convert00(underscore);

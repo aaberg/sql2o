@@ -1,6 +1,7 @@
 package org.sql2o.reflection2;
 
 import org.sql2o.Settings;
+import org.sql2o.Sql2oException;
 
 import java.lang.reflect.*;
 import java.util.ArrayList;
@@ -15,11 +16,13 @@ public class PojoMetadata<T> {
     private final Constructor<T> constructor;
     private final Map<String, PojoProperty> pojoProperties;
     private final Settings settings;
+    private final Map<String, String> columnMappings;
 
-    public PojoMetadata(Class<T> clazz, Settings settings) throws ReflectiveOperationException {
+    public PojoMetadata(Class<T> clazz, Settings settings, Map<String, String> columnMappings) throws ReflectiveOperationException {
         this.constructor = clazz.getDeclaredConstructor();
         this.constructor.setAccessible(true);
         this.settings = settings;
+        this.columnMappings = columnMappings;
 
         final var pojoPropertyBuilders = getPojoPropertyBuilders(clazz);
 
@@ -38,7 +41,13 @@ public class PojoMetadata<T> {
     }
 
     public PojoProperty getPojoProperty(String name) {
-        return pojoProperties.get(name);
+        if (columnMappings.containsKey(name)) {
+            final var columnName = columnMappings.get(name);
+            if (pojoProperties.containsKey(columnName))
+                return pojoProperties.get(columnName);
+        }
+
+        return pojoProperties.getOrDefault(name, null);
     }
 
     private List<PojoPropertyBuilder> getPojoPropertyBuilders(Class<?> clazz) {

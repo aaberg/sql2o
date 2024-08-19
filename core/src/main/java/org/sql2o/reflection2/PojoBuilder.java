@@ -1,6 +1,7 @@
 package org.sql2o.reflection2;
 
 import org.sql2o.Settings;
+import org.sql2o.Sql2oException;
 
 public class PojoBuilder<T> implements ObjectBuildable<T> {
 
@@ -17,7 +18,15 @@ public class PojoBuilder<T> implements ObjectBuildable<T> {
     @Override
     public void withValue(String columnName, Object value) throws ReflectiveOperationException {
         final var derivedName = settings.getNamingConvention().deriveName(columnName);
-        pojoMetadata.getPojoProperty(derivedName).SetProperty(this.pojo, value);
+        final var pojoProperty = pojoMetadata.getPojoProperty(derivedName);
+
+        if (pojoProperty == null) {
+            if (settings.isThrowOnMappingError()){
+                throw new Sql2oException("Could not map " + columnName + " to any property.");
+            }
+            return;
+        }
+        pojoProperty.SetProperty(this.pojo, value);
     }
 
     @Override
