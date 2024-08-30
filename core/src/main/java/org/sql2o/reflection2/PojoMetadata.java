@@ -56,6 +56,10 @@ public class PojoMetadata<T> {
         return new ArrayList<>(pojoPropertyBuilders.values());
     }
 
+    public Map<String, String> getColumnMappings() {
+        return columnMappings;
+    }
+
     /***
      * This method fills the pojoPropertyBuilders parameter with instances of the PojoPropertyBuilder class, for each property in the class and its subclasses.
      * @param clazz

@@ -12,7 +12,8 @@ public class ObjectBuildableFactory {
             return new RecordBuilder<>(targetClass, settings);
         }
 
+        // todo cache PojoMetadata
         final var pojoMetadata = new PojoMetadata<>(targetClass, settings, columnMappings);
-        return new PojoBuilder<>(targetClass, settings, pojoMetadata);
+        return new PojoBuilder<>(settings, pojoMetadata);
     }
 }

@@ -2,6 +2,7 @@ package org.sql2o.quirks;
 
 import org.sql2o.converters.Convert;
 import org.sql2o.converters.Converter;
+import org.sql2o.converters.DefaultConverter;
 import org.sql2o.quirks.parameterparsing.SqlParameterParsingStrategy;
 import org.sql2o.quirks.parameterparsing.impl.DefaultSqlParameterParsingStrategy;
 
@@ -35,9 +36,19 @@ public class NoQuirks implements Quirks {
     public <E> Converter<E> converterOf(Class<E> ofClass) {
         // if nobody change this collection outside constructor
         // it's thread-safe
-        Converter c =  converters.get(ofClass);
+        var c =  converters.get(ofClass);
+
         // if no "local" converter let's look in global
-        return c!=null?c:Convert.getConverterIfExists(ofClass);
+        if (c == null) {
+            c = Convert.getConverterIfExists(ofClass);
+        }
+
+        // Fall back to the default converter
+        if (c == null) {
+            c = new DefaultConverter();
+        }
+
+        return c;
 
     }
 

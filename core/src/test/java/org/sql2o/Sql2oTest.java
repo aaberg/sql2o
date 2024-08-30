@@ -609,11 +609,13 @@ public class Sql2oTest extends BaseMemDbTest {
 
     @Test
     public void testComplexTypes(){
-        ComplexEntity pojo = sql2o.createQuery("select 1 id, 1 \"entity.id\", 'something' \"entity.value\" from (values(0))").setName("testComplexTypes").executeAndFetchFirst(ComplexEntity.class);
+        try (final var connection = sql2o.open()) {
+            ComplexEntity pojo = connection.createQuery("select 1 id, 1 \"entity.id\", 'something' \"entity.value\" from (values(0))").setName("testComplexTypes").executeAndFetchFirst(ComplexEntity.class);
 
-        assertEquals(1, pojo.id);
-        assertEquals(1, pojo.getEntity().getId());
-        assertEquals("something1", pojo.getEntity().getValue());
+            assertEquals(1, pojo.id);
+            assertEquals(1, pojo.getEntity().getId());
+            assertEquals("something1", pojo.getEntity().getValue());
+        }
     }
 
     @Test

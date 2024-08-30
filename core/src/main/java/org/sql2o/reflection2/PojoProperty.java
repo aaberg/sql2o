@@ -1,6 +1,7 @@
 package org.sql2o.reflection2;
 
 import org.sql2o.Settings;
+import org.sql2o.Sql2o;
 import org.sql2o.Sql2oException;
 import org.sql2o.converters.ConverterException;
 
@@ -67,5 +68,45 @@ public class PojoProperty {
         }
 
         throw new Sql2oException("No setter or field found for property " + name);
+    }
+
+    public Class<?> getType() {
+        if (setter != null) {
+            return setter.getParameters()[0].getType();
+        } else if (field != null) {
+            return field.getType();
+        }
+
+        throw new Sql2oException("Unexpected error. Could not get type of property " + getName());
+    }
+
+    // only used when setting complex types
+    public Object getValue(Object obj) throws ReflectiveOperationException {
+        if (getter != null) {
+            return getter.invoke(obj);
+        } else if (field != null) {
+            return field.get(obj);
+        }
+
+        throw new Sql2oException("No getter or field found for property " + name);
+    }
+
+    // only used when setting complex types
+    public Object initializeWithNewInstance(Object obj) throws ReflectiveOperationException {
+        if (setter != null) {
+            final var propertyType = setter.getParameters()[0].getType();
+            // create new instance. Assume empty constructor.
+            final var instance = propertyType.getDeclaredConstructor().newInstance();
+            setter.invoke(obj, instance);
+            return instance;
+        } else if (field != null) {
+            final var propertyType = field.getType();
+            // create new instance. Assume empty constructor.
+            final var instance = propertyType.getDeclaredConstructor().newInstance();
+            field.set(obj, instance);
+            return instance;
+        }
+
+        throw new Sql2oException("Could not initialize property " + getName() + " no setter or field found.");
     }
 }

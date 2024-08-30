@@ -9,15 +9,42 @@ public class PojoBuilder<T> implements ObjectBuildable<T> {
     private final PojoMetadata<T> pojoMetadata;
     private final T pojo;
 
-    public PojoBuilder(Class<T> pojoClass, Settings settings, PojoMetadata<T> pojoMetadata) throws ReflectiveOperationException {
+    public PojoBuilder(Settings settings, PojoMetadata<T> pojoMetadata) throws ReflectiveOperationException {
+        this(settings, pojoMetadata, pojoMetadata.getConstructor().newInstance());
+    }
+
+    public PojoBuilder(Settings settings, PojoMetadata<T> pojoMetadata, T pojo) {
         this.settings = settings;
         this.pojoMetadata = pojoMetadata;
-        pojo = pojoMetadata.getConstructor().newInstance();
+        this.pojo = pojo;
     }
 
     @Override
-    public void withValue(String columnName, Object value) throws ReflectiveOperationException {
-        final var derivedName = settings.getNamingConvention().deriveName(columnName);
+    public void withValue(String columnName, Object obj) throws ReflectiveOperationException {
+
+        final var dotIdx = columnName.indexOf('.');
+        String derivedName = null;
+        if (dotIdx > 0) {
+            final var subName = columnName.substring(0, dotIdx);
+            derivedName = settings.getNamingConvention().deriveName(subName);
+            final var subProperty = pojoMetadata.getPojoProperty(derivedName);
+            final var newPath = columnName.substring(dotIdx + 1);
+
+            var subObj = subProperty.getValue(this.pojo);
+            if (subObj == null) {
+                subObj = subProperty.initializeWithNewInstance(this.pojo);
+                subProperty.SetProperty(this.pojo, subObj);
+            }
+
+            final var subPojoMetadata = new PojoMetadata<>(subObj.getClass(), settings, pojoMetadata.getColumnMappings());
+            final var subObjectBuilder = new PojoBuilder(settings, subPojoMetadata, subObj);
+            subObjectBuilder.withValue(newPath, obj);
+            obj = subObjectBuilder.build();
+        }
+
+        if (derivedName == null) {
+            derivedName = settings.getNamingConvention().deriveName(columnName);
+        }
         final var pojoProperty = pojoMetadata.getPojoProperty(derivedName);
 
         if (pojoProperty == null) {
@@ -26,7 +53,7 @@ public class PojoBuilder<T> implements ObjectBuildable<T> {
             }
             return;
         }
-        pojoProperty.SetProperty(this.pojo, value);
+        pojoProperty.SetProperty(this.pojo, obj);
     }
 
     @Override
