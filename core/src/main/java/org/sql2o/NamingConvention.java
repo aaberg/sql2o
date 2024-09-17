@@ -2,6 +2,8 @@ package org.sql2o;
 
 import org.sql2o.tools.SnakeToCamelCase;
 
+import java.util.Map;
+
 public class NamingConvention {
 
     private final boolean caseSensitive;

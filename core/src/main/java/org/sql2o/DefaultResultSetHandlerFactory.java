@@ -1,19 +1,9 @@
 package org.sql2o;
 
-import org.sql2o.converters.Converter;
-import org.sql2o.converters.ConverterException;
 import org.sql2o.quirks.Quirks;
-import org.sql2o.reflection.Pojo;
-import org.sql2o.reflection.PojoMetadata;
-import org.sql2o.reflection.Setter;
-import org.sql2o.reflection2.ObjectBuildable;
-import org.sql2o.reflection2.ObjectBuildableFactory;
 import org.sql2o.reflection2.ObjectBuildableFactoryDelegate;
-import org.sql2o.tools.AbstractCache;
 
-import java.sql.ResultSet;
 import java.sql.ResultSetMetaData;
-import java.sql.SQLException;
 
 
 public class DefaultResultSetHandlerFactory<T> implements ResultSetHandlerFactory<T> {

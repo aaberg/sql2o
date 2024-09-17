@@ -1,10 +1,7 @@
 package org.sql2o;
 
 import org.sql2o.quirks.Quirks;
-import org.sql2o.reflection.PojoMetadata;
-import org.sql2o.reflection2.ObjectBuildable;
 import org.sql2o.reflection2.ObjectBuildableFactory;
-import org.sql2o.reflection2.ObjectBuildableFactoryDelegate;
 
 import java.util.Map;
 
