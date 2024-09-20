@@ -9,7 +9,7 @@ import org.sql2o.data.TableResultSetIterator;
 import org.sql2o.logging.LocalLoggerFactory;
 import org.sql2o.logging.Logger;
 import org.sql2o.quirks.Quirks;
-import org.sql2o.reflection.PojoIntrospector;
+import org.sql2o.reflection2.PojoIntrospector;
 
 import java.io.InputStream;
 import java.lang.reflect.InvocationTargetException;

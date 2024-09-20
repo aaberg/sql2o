@@ -143,13 +143,11 @@ public class Row {
      * View row as a simple map.
      */
     public Map<String, Object> asMap() {
-        Map map = new HashMap();
+        final var map = new HashMap<String, Object>();
         Set<String> keys = columnNameToIdxMap.keySet();
-        Iterator iterator = keys.iterator();
-        while (iterator.hasNext()) {
-            String colum = iterator.next().toString();
-            int index = columnNameToIdxMap.get(colum);
-            map.put(colum, values[index]);
+        for (String key : keys) {
+            int index = columnNameToIdxMap.get(key);
+            map.put(key, values[index]);
         }
         return map;
     }
