@@ -5,7 +5,7 @@ package org.sql2o.converters;
  */
 public abstract class NumberConverter<V extends Number> extends ConverterBase<V> {
 
-    private boolean isPrimitive;
+    private final boolean isPrimitive;
 
     public NumberConverter(boolean primitive) {
         isPrimitive = primitive;
@@ -16,23 +16,16 @@ public abstract class NumberConverter<V extends Number> extends ConverterBase<V>
             return isPrimitive ? convertNumberValue(0) : null;
         }
 
-        // val.getClass().isPrimitive() is ALWAYS false
-        // since boxing (i.e. Object val=(int)1;)
-        // changes type from Integet.TYPE to Integer.class
-        // learn 2 java :)
-
-        else if (/*val.getClass().isPrimitive() || */val instanceof Number ) {
-            return convertNumberValue((Number)val);
+        else if (val instanceof Number num) {
+            return convertNumberValue(num);
         }
-        else if (val instanceof String){
-            String stringVal = ((String)val).trim();
-            stringVal = stringVal.isEmpty() ? null : stringVal;
+        else if (val instanceof String strVal){
+            strVal = strVal.trim();
 
-            if (stringVal == null) {
+            if (strVal.isEmpty()) {
                 return isPrimitive ? convertNumberValue(0) : null;
             }
-
-            return convertStringValue(stringVal);
+            return convertStringValue(strVal);
         }
         else{
             throw new IllegalArgumentException("Cannot convert type " + val.getClass().toString() + " to " + getTypeDescription());

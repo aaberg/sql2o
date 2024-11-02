@@ -11,6 +11,9 @@ public class IntegerConverter extends NumberConverter<Integer>{
 
     @Override
     protected Integer convertNumberValue(Number val) {
+        if (val instanceof Integer intVal) {
+            return intVal;
+        }
         return val.intValue();
     }
 

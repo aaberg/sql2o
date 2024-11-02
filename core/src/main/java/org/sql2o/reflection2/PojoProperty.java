@@ -1,7 +1,6 @@
 package org.sql2o.reflection2;
 
 import org.sql2o.Settings;
-import org.sql2o.Sql2o;
 import org.sql2o.Sql2oException;
 import org.sql2o.converters.ConverterException;
 
@@ -41,7 +40,7 @@ public class PojoProperty {
     public void SetProperty(Object obj, Object value) throws ReflectiveOperationException {
         if (setter != null) {
             try {
-                final var propertyType = setter.getParameters()[0].getType();
+                final var propertyType = getSetterType();
                 final var convertedValue = settings.getQuirks().converterOf(propertyType).convert(value);
                 if (convertedValue == null && propertyType.isPrimitive()) {
                     return; // don't try to set null to a setter to a primitive type.
@@ -108,5 +107,13 @@ public class PojoProperty {
         }
 
         throw new Sql2oException("Could not initialize property " + getName() + " no setter or field found.");
+    }
+
+    private Class<?> setterType = null;
+    private Class<?> getSetterType() {
+        if (setterType == null) {
+            setterType = setter.getParameters()[0].getType();
+        }
+        return setterType;
     }
 }

@@ -17,6 +17,10 @@ public class StringConverter extends ConverterBase<String> {
             return null;
         }
 
+        if (val instanceof String stringVal){
+            return stringVal;
+        }
+
         if (val instanceof Clob) {
             Clob clobVal = (Clob)val;
             try
