@@ -1,4 +1,4 @@
-package org.sql2o.reflection;
+package org.sql2o.reflection2;
 
 import org.sql2o.tools.AbstractCache;
 

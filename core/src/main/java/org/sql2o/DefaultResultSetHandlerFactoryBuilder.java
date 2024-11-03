@@ -1,7 +1,7 @@
 package org.sql2o;
 
 import org.sql2o.quirks.Quirks;
-import org.sql2o.reflection.PojoMetadata;
+import org.sql2o.reflection2.ObjectBuildableFactory;
 
 import java.util.Map;
 
@@ -54,12 +54,22 @@ public class DefaultResultSetHandlerFactoryBuilder implements ResultSetHandlerFa
         this.quirks = quirks;
     }
 
-
-
-    @SuppressWarnings("unchecked")
     public <T> ResultSetHandlerFactory<T> newFactory(Class<T> clazz) {
-        PojoMetadata pojoMetadata = new PojoMetadata(clazz, caseSensitive, autoDeriveColumnNames, columnMappings, throwOnMappingError);
-        return new DefaultResultSetHandlerFactory(pojoMetadata, quirks);
+
+        return new DefaultResultSetHandlerFactory<>(() -> {
+            try {
+                return ObjectBuildableFactory.forClass(
+                    clazz,
+                    new Settings(
+                        new NamingConvention(caseSensitive, autoDeriveColumnNames),
+                        quirks,
+                        throwOnMappingError),
+                    getColumnMappings()
+                );
+            } catch (ReflectiveOperationException e) {
+                throw new Sql2oException("Error while trying to construct object from class " + clazz, e);
+            }
+        }, quirks);
     }
 
 }

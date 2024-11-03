@@ -12,24 +12,17 @@ package org.sql2o.issues;
 
 import org.joda.time.DateTime;
 import org.joda.time.LocalDate;
-import org.junit.Ignore;
 import org.junit.Test;
-import org.sql2o.Connection;
-import org.sql2o.Query;
 import org.sql2o.Sql2o;
-import org.sql2o.Sql2oException;
 import org.sql2o.quirks.OracleQuirks;
 
 import java.sql.Driver;
 import java.sql.DriverManager;
 import java.util.Date;
-import java.util.UUID;
 
 import static org.hamcrest.CoreMatchers.equalTo;
 import static org.hamcrest.CoreMatchers.is;
-import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertThat;
-import static org.junit.Assert.fail;
 
 /**
  * Created with IntelliJ IDEA.

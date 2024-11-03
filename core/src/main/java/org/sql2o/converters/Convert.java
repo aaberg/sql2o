@@ -11,8 +11,6 @@ import org.sql2o.tools.FeatureDetector;
 import java.io.ByteArrayInputStream;
 import java.io.InputStream;
 import java.math.BigDecimal;
-import java.time.OffsetDateTime;
-import java.time.OffsetTime;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.ServiceLoader;
@@ -127,17 +125,12 @@ public class Convert {
     }
 
     public static <E> Converter<E> getConverterIfExists(Class<E> clazz) {
-        Converter c;
-        rl.lock();
-        try {
-            c = registeredConverters.get(clazz);
-        } finally {
-            rl.unlock();
-        }
+        final var c = (Converter<E>)registeredConverters.get(clazz);
+
         if (c != null) return c;
 
         if (clazz.isEnum()) {
-            return registeredEnumConverterFactory.newConverter((Class) clazz);
+            return registeredEnumConverterFactory.newConverter((Class)clazz);
         }
         return null;
     }

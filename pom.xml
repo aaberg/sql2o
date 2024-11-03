@@ -14,7 +14,7 @@
     <groupId>org.sql2o</groupId>
     <artifactId>sql2o-parent</artifactId>
     <name>Sql2o parent</name>
-    <version>1.8.0-SNAPSHOT</version>
+    <version>1.9.0-SNAPSHOT</version>
     <description>
         Easy database query library
     </description>
@@ -43,6 +43,8 @@
         <spring-jdbc.version>4.0.2.RELEASE</spring-jdbc.version>
 
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+        <maven.compiler.source>1.8</maven.compiler.source>
+        <maven.compiler.target>1.8</maven.compiler.target>
     </properties>
     <developers>
         <developer>
@@ -140,8 +142,8 @@
                 <artifactId>maven-compiler-plugin</artifactId>
                 <version>3.1</version>
                 <configuration>
-                    <source>11</source>
-                    <target>11</target>
+                    <source>17</source>
+                    <target>17</target>
                 </configuration>
             </plugin>
 
