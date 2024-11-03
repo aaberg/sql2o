@@ -43,8 +43,8 @@
         <spring-jdbc.version>4.0.2.RELEASE</spring-jdbc.version>
 
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-        <maven.compiler.source>1.8</maven.compiler.source>
-        <maven.compiler.target>1.8</maven.compiler.target>
+        <maven.compiler.source>17</maven.compiler.source>
+        <maven.compiler.target>17</maven.compiler.target>
     </properties>
     <developers>
         <developer>
@@ -182,7 +182,7 @@
                     <plugin>
                         <groupId>org.apache.maven.plugins</groupId>
                         <artifactId>maven-javadoc-plugin</artifactId>
-                        <version>3.6.3</version>
+                        <version>3.10.1</version>
                         <executions>
                             <execution>
                                 <id>attach-javadoc</id>
