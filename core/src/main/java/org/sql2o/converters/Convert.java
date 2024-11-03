@@ -11,8 +11,6 @@ import org.sql2o.tools.FeatureDetector;
 import java.io.ByteArrayInputStream;
 import java.io.InputStream;
 import java.math.BigDecimal;
-import java.time.OffsetDateTime;
-import java.time.OffsetTime;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.ServiceLoader;

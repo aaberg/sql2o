@@ -8,25 +8,17 @@ import java.util.concurrent.locks.ReentrantReadWriteLock;
 
 public class Cache<Key, Value> {
     private final Map<Key, Value> cacheMap;
-    private final ReadWriteLock lock;
+    private final ReadWriteLock lock = new ReentrantReadWriteLock();
 
     public Cache() {
         cacheMap = new HashMap<>();
-        lock = new ReentrantReadWriteLock();
     }
 
     public Value get(Key key, Callable<Value> valueDelegate) {
-        Value value;
+        Value value = cacheMap.get(key);
 
-        // Check readlock first
-        lock.readLock().lock();
-        try {
-            value = cacheMap.get(key);
-            if (value != null) {
-                return value;
-            }
-        } finally {
-            lock.readLock().unlock();
+        if (value != null) {
+            return value;
         }
 
         // If not in cache, create a write lock, create and cache the object, and return it.
@@ -47,4 +39,5 @@ public class Cache<Key, Value> {
             lock.writeLock().unlock();
         }
     }
+
 }
