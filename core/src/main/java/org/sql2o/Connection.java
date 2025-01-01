@@ -123,6 +123,14 @@ public class Connection implements AutoCloseable, Closeable {
                 .withParams(paramValues);
     }
 
+    public void prepareForTransaction(int isolationLevel) throws SQLException {
+        if (!getJdbcConnection().getAutoCommit()) {
+            getJdbcConnection().setAutoCommit(true); // force autocommit to true to allow for transaction isolation level to be set
+        }
+        getJdbcConnection().setTransactionIsolation(isolationLevel);
+        getJdbcConnection().setAutoCommit(false);
+    }
+
     public Sql2o rollback(){
         return this.rollback(true).sql2o;
     }

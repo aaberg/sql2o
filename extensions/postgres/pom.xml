@@ -36,6 +36,13 @@
             <version>42.7.2</version>
             <optional>true</optional>
         </dependency>
+
+        <dependency>
+            <groupId>com.zaxxer</groupId>
+            <artifactId>HikariCP</artifactId>
+            <version>6.2.1</version>
+            <scope>test</scope>
+        </dependency>
     </dependencies>
 
 </project>

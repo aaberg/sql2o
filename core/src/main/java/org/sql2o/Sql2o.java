@@ -296,8 +296,7 @@ public class Sql2o {
 
         boolean success = false;
         try {
-            connection.getJdbcConnection().setAutoCommit(false);
-            connection.getJdbcConnection().setTransactionIsolation(isolationLevel);
+            connection.prepareForTransaction(isolationLevel);
             success = true;
         } catch (SQLException e) {
             throw new Sql2oException("Could not start the transaction - " + e.getMessage(), e);
