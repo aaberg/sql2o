@@ -11,8 +11,7 @@ import java.time.Instant;
 import java.time.ZoneOffset;
 import java.time.ZonedDateTime;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.*;
 
 public class InstantConverterTest {
 
@@ -106,5 +105,17 @@ public class InstantConverterTest {
 
         // Assert
         assertEquals(instantToInsert, result);
+    }
+
+    @Test
+    void convert_null_returnsNull() throws ConverterException {
+        // Arrange
+        InstantConverter converter = new InstantConverter();
+
+        // Act
+        Instant result = converter.convert(null);
+
+        // Assert
+        assertNull(result);
     }
 }

@@ -68,6 +68,18 @@ public class LocalDateTimeConverterTest {
         assertThrows(ConverterException.class, () -> converter.convert("invalid"));
     }
 
+    @Test
+    void convert_null_returns_null() throws ConverterException {
+        // setup
+        final var converter = new LocalDateTimeConverter();
+
+        // test
+        final var convertedTime = converter.convert(null);
+
+        // assert
+        assertNull(convertedTime);
+    }
+
     @ParameterizedTest(name = "{0}")
     @ArgumentsSource(TestDatabasesArgumentSourceProvider.class)
     void insertAndFetch_usingLocalDateTimeType_isSuccessfull(String dbName, String url, String user, String pass) {

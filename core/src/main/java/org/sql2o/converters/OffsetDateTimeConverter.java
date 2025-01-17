@@ -7,6 +7,9 @@ import java.time.ZoneOffset;
 public class OffsetDateTimeConverter extends ConverterBase<OffsetDateTime>{
     @Override
     public OffsetDateTime convert(Object val) throws ConverterException {
+        if (val == null) {
+            return null;
+        }
         if (val instanceof OffsetDateTime) {
             return (OffsetDateTime) val;
         }

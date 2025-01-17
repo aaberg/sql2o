@@ -6,6 +6,9 @@ public class LocalTimeConverter extends ConverterBase<LocalTime> {
 
     @Override
     public LocalTime convert(Object val) throws ConverterException {
+        if (val == null) {
+            return null;
+        }
         if (val instanceof java.sql.Time) {
             return ((java.sql.Time) val).toLocalTime();
         }

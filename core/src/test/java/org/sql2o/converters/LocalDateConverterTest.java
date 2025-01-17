@@ -92,6 +92,15 @@ public class LocalDateConverterTest {
         assertEquals(dateToInsert, pojo.getDate());
     }
 
+    @Test
+    public void convert_null_returns_null() throws ConverterException {
+        // setup
+        final var converter = new LocalDateConverter();
+
+        // test
+        final var convertedDate = converter.convert(null);
+        assertNull(convertedDate);
+    }
 
     private Sql2o setupDatabase(String url, String user, String pass) {
 

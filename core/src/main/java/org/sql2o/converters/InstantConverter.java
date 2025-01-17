@@ -7,6 +7,9 @@ import java.time.format.DateTimeParseException;
 public class InstantConverter extends ConverterBase<Instant> {
     @Override
     public Instant convert(Object val) throws ConverterException {
+        if (val == null) {
+            return null;
+        }
         if (val instanceof Timestamp) {
             return ((Timestamp)val).toInstant();
         }

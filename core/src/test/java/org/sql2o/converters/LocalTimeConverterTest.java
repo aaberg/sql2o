@@ -109,6 +109,18 @@ public class LocalTimeConverterTest {
         assertEquals(targetTime, pojo.getTime());
     }
 
+    @Test
+    void convert_null_returns_null() throws ConverterException {
+        // setup
+        final var converter = new LocalTimeConverter();
+
+        // test
+        final var convertedTime = converter.convert(null);
+
+        // assert
+        assertNull(convertedTime);
+    }
+
     static class LocalTimePojo {
         private int id;
         private LocalTime time;

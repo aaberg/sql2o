@@ -145,4 +145,16 @@ public class OffsetDateTimeConverterTest {
         // Assert
         assertEquals(targetTime.toInstant(), resultTime.toInstant());
     }
+
+    @Test
+    void convert_null_returnsNull() throws ConverterException {
+        // Arrange
+        final var converter = new OffsetDateTimeConverter();
+
+        // Act
+        final var convertedTime = converter.convert(null);
+
+        // Assert
+        assertNull(convertedTime);
+    }
 }

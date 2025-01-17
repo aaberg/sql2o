@@ -7,6 +7,9 @@ import java.time.ZoneOffset;
 public class LocalDateTimeConverter extends ConverterBase<LocalDateTime> {
     @Override
     public LocalDateTime convert(Object val) throws ConverterException {
+        if (val == null) {
+            return null;
+        }
         if (val instanceof java.sql.Timestamp) {
             return ((java.sql.Timestamp) val).toLocalDateTime();
         }
