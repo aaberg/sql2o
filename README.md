@@ -1,19 +1,56 @@
-# sql2o  [![Github Actions Build](https://github.com/aaberg/sql2o/actions/workflows/pipeline.yml/badge.svg)](https://github.com/aaberg/sql2o/actions) [![Maven Central](https://img.shields.io/maven-central/v/org.sql2o/sql2o.svg)](https://search.maven.org/search?q=g:org.sql2o%20a:sql2o)
+# sql2o  &#x20;
 
+Sql2o is a lightweight Java library designed to simplify database interaction. It automatically maps query results into POJO objects, providing an easy-to-use alternative to ORMs, without SQL generation capabilities.
 
-Sql2o is a small java library, with the purpose of making database interaction easy.
-When fetching data from the database, the ResultSet will automatically be filled into your POJO objects.
-Kind of like an ORM, but without the SQL generation capabilities.
-Sql2o requires at Java 7 or 8 to run. Java versions past 8 may work, but is currently not supported.
+Sql2o is compatible with **Java 8 and later versions**, including Java 11 and 17.
 
-# Announcements
-*2024-03-12* | [Sql2o 1.7.0 was released](https://github.com/aaberg/sql2o/discussions/365)
+## Announcements
 
+- *2024-03-12* | [Sql2o 1.7.0 was released](https://github.com/aaberg/sql2o/discussions/365)
 
-# Examples
+## Quick Start Example
 
-Check out the [sql2o website](http://www.sql2o.org) for examples.
+Here's a basic example demonstrating how to use Sql2o to interact with a database:
 
-# Coding guidelines.
+```java
+import org.sql2o.*;
 
-When hacking sql2o, please follow [these coding guidelines](https://github.com/aaberg/sql2o/wiki/Coding-guidelines).
+public class Main {
+    public static void main(String[] args) {
+        String url = "jdbc:h2:mem:test"; // Example using H2 in-memory database
+        try (Sql2o sql2o = new Sql2o(url, "username", "password");
+             Connection con = sql2o.open()) {
+            
+            con.createQuery("CREATE TABLE users (id INTEGER PRIMARY KEY, name VARCHAR(50))").executeUpdate();
+            con.createQuery("INSERT INTO users (id, name) VALUES (:id, :name)")
+                .addParameter("id", 1)
+                .addParameter("name", "Alice")
+                .executeUpdate();
+            
+            User user = con.createQuery("SELECT * FROM users WHERE id = :id")
+                            .addParameter("id", 1)
+                            .executeAndFetchFirst(User.class);
+            
+            System.out.println("User: " + user.name);
+        }
+    }
+}
+
+class User {
+    public int id;
+    public String name;
+}
+```
+
+## Coding Guidelines
+
+When contributing to Sql2o, please follow [these coding guidelines](https://github.com/aaberg/sql2o/wiki/Coding-guidelines).
+
+## Documentation
+
+For more details and examples, visit the [Sql2o GitHub repository](https://github.com/aaberg/sql2o).
+
+## Wiki
+
+For additional information, check out the [Sql2o Wiki](https://github.com/aaberg/sql2o/wiki).
+
