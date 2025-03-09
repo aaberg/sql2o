@@ -1,8 +1,11 @@
-# sql2o  &#x20;
+# sql2o  [![Github Actions Build](https://github.com/aaberg/sql2o/actions/workflows/pipeline.yml/badge.svg)](https://github.com/aaberg/sql2o/actions) [![Maven Central](https://img.shields.io/maven-central/v/org.sql2o/sql2o.svg)](https://search.maven.org/search?q=g:org.sql2o%20a:sql2o)
 
 Sql2o is a lightweight Java library designed to simplify database interaction. It automatically maps query results into POJO objects, providing an easy-to-use alternative to ORMs, without SQL generation capabilities.
 
-Sql2o is compatible with **Java 8 and later versions**, including Java 11 and 17.
+## Java versions
+* Sql2o **1.9.0** and newer is only compatible with Java 17 or later because it adds support for records.
+* If you use Java 11, sql2o 1.8.x is compatible.
+* If you are still on Java 8, use sql2o 1.6.x.
 
 ## Announcements
 
