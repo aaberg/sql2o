@@ -410,6 +410,16 @@ public class Query implements AutoCloseable {
     // -------------------- Execute -------------------
     // ------------------------------------------------
 
+    PreparedStatement buildPreparedStatementWithTimeout(int seconds) {
+        try {
+            PreparedStatement preparedStatement = buildPreparedStatement(true);
+            preparedStatement.setQueryTimeout(seconds);
+            return preparedStatement;
+        } catch (SQLException ex) {
+            throw new Sql2oException(String.format("Error preparing statement - %s", ex.getMessage()), ex);
+        }
+    }
+
     // visible for testing
     PreparedStatement buildPreparedStatement() {
         return buildPreparedStatement(true);
