@@ -3,6 +3,11 @@ package org.sql2o.converters;
 public class SqlTimeConverter extends ConverterBase<java.sql.Time>{
     @Override
     public java.sql.Time convert(Object val) throws ConverterException {
+
+        if (val == null) {
+            return null;
+        }
+
         if (val instanceof java.sql.Time) {
             return (java.sql.Time) val;
         }
