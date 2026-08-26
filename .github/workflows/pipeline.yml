@@ -74,8 +74,10 @@ jobs:
           MAVEN_GPG_PASSPHRASE: ${{ secrets.GPG_SIGNING_KEY_PASSWORD }}
       - name: finish and publish deployment to Portal
         run: |
-          AUTH=$(printf '%s:%s' "${{ secrets.MAVEN_CENTRAL_USERNAME }}" "${{ secrets.MAVEN_CENTRAL_TOKEN }}" | base64)
+          AUTH=$(printf '%s' "$SONATYPE_AUTH" | base64)
           curl -s -X POST \
             -H "Authorization: Bearer $AUTH" \
             "https://ossrh-staging-api.central.sonatype.com/manual/upload/defaultRepository/org.sql2o?publishing_type=automatic" \
             -w "\nHTTP %{http_code}\n"
+        env:
+          SONATYPE_AUTH: ${{ format('{0}:{1}', secrets.MAVEN_CENTRAL_USERNAME, secrets.MAVEN_CENTRAL_TOKEN) }}
