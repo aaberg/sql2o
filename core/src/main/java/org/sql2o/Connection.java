@@ -22,7 +22,7 @@ import static org.sql2o.converters.Convert.throwIfNull;
  * Represents a connection to the database with a transaction.
  */
 public class Connection implements AutoCloseable, Closeable {
-    
+
     private final static Logger logger = LocalLoggerFactory.getLogger(Connection.class);
 
     private ConnectionSource connectionSource;
@@ -33,7 +33,7 @@ public class Connection implements AutoCloseable, Closeable {
     private int[] batchResult = null;
     private List<Object> keys;
     private boolean canGetKeys;
-    
+
     private boolean rollbackOnException = true;
 
     private Boolean originalAutoCommit;
