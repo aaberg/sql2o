@@ -11,6 +11,7 @@ import org.sql2o.tools.FeatureDetector;
 import java.io.ByteArrayInputStream;
 import java.io.InputStream;
 import java.math.BigDecimal;
+import java.math.BigInteger;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.ServiceLoader;
@@ -54,6 +55,7 @@ public class Convert {
         mapToFill.put(byte.class, new ByteConverter(true));
 
         mapToFill.put(BigDecimal.class, new BigDecimalConverter());
+        mapToFill.put(BigInteger.class,new BigIntegerConverter());
 
         mapToFill.put(String.class, new StringConverter());
 
