@@ -30,6 +30,7 @@ public class Sql2o {
     final Quirks quirks;
     private Map<String, String> defaultColumnMappings;
     private boolean defaultCaseSensitive;
+    private boolean defaultAutoDeriveColumnNames;
 
     private ConnectionSource connectionSource;
 
@@ -149,6 +150,24 @@ public class Sql2o {
      */
     public void setDefaultCaseSensitive(boolean defaultCaseSensitive) {
         this.defaultCaseSensitive = defaultCaseSensitive;
+    }
+
+    /**
+     * Gets value indicating if this instance of Sql2o will automatically derive column names
+     * @see #setDefaultAutoDeriveColumnNames
+     * @return defaultAutoDeriveColumnNames
+     */
+    public boolean isDefaultAutoDeriveColumnNames() {
+        return defaultAutoDeriveColumnNames;
+    }
+
+    /**
+     * Sets a value indicating if this instance of Sql2o will auto derive column names by default. If your database uses
+     * underscores in column names and your properties do not, then this will handle the conversion.
+     * @param defaultAutoDeriveColumnNames
+     */
+    public void setDefaultAutoDeriveColumnNames(boolean defaultAutoDeriveColumnNames) {
+        this.defaultAutoDeriveColumnNames = defaultAutoDeriveColumnNames;
     }
 
     /**
