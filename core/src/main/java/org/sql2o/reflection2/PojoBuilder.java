@@ -8,7 +8,7 @@ import java.util.Map;
 public class PojoBuilder<T> implements ObjectBuildable<T> {
 
     private final Settings settings;
-    private final PojoMetadata<T> pojoMetadata;
+    private final PojoMetadata<?> pojoMetadata;
     private final T pojo;
     private final Map<String, String> columnMappings;
 
@@ -16,7 +16,7 @@ public class PojoBuilder<T> implements ObjectBuildable<T> {
         this(settings, pojoMetadata, columnMappings, pojoMetadata.getConstructor().newInstance());
     }
 
-    public PojoBuilder(Settings settings, PojoMetadata<T> pojoMetadata, Map<String, String> columnMappings, T pojo) {
+    public PojoBuilder(Settings settings, PojoMetadata<?> pojoMetadata, Map<String, String> columnMappings, T pojo) {
         this.settings = settings;
         this.pojoMetadata = pojoMetadata;
         this.columnMappings = columnMappings;
@@ -44,8 +44,10 @@ public class PojoBuilder<T> implements ObjectBuildable<T> {
                 subProperty.SetProperty(this.pojo, subObj, settings.getQuirks());
             }
 
-            final var subPojoMetadata = new PojoMetadata<>(subObj.getClass(), settings);
-            final var subObjectBuilder = new PojoBuilder(settings, subPojoMetadata, columnMappings, subObj);
+            // The runtime class of the nested object is only known as Class<?>, so the metadata is requested as
+            // a wildcard. The nested builder is handed the instance to fill, it never constructs one itself.
+            final PojoMetadata<?> subPojoMetadata = ObjectBuildableFactory.pojoMetadata(subObj.getClass(), settings);
+            final var subObjectBuilder = new PojoBuilder<>(settings, subPojoMetadata, columnMappings, subObj);
             subObjectBuilder.withValue(newPath, obj);
             obj = subObjectBuilder.build();
         }
