@@ -25,80 +25,42 @@ public class PojoBuilder<T> implements ObjectBuildable<T> {
 
     @Override
     public void withValue(String columnName, Object obj) throws ReflectiveOperationException {
-
-        final var dotIdx = columnName.indexOf('.');
-        String derivedName = null;
-        if (dotIdx > 0) {
-            final var subName = columnName.substring(0, dotIdx);
-            derivedName = settings.getNamingConvention().deriveName(subName);
-            final var subProperty = pojoMetadata.getPojoProperty(derivedName, columnMappings);
-            if (subProperty == null) {
-                handleMissingProperty(columnName);
-                return;
-            }
-            final var newPath = columnName.substring(dotIdx + 1);
-
-            var subObj = subProperty.getValue(this.pojo);
-            if (subObj == null) {
-                subObj = subProperty.initializeWithNewInstance(this.pojo);
-                subProperty.SetProperty(this.pojo, subObj, settings.getQuirks());
-            }
-
-            // The nested object is filled in place instead of through a nested PojoBuilder. Its metadata
-            // belongs to the runtime class of the value, while the value itself is only known as the declared
-            // property type, so there is no type parameter that could tie a builder to that metadata: a nested
-            // builder could only be created by giving up on generics, which is what the raw type fallback
-            // used to do here.
-            setNestedValue(subObj, newPath, obj);
-            obj = subObj;
-        }
-
-        if (derivedName == null) {
-            derivedName = settings.getNamingConvention().deriveName(columnName);
-        }
-        final var pojoProperty = pojoMetadata.getPojoProperty(derivedName, columnMappings);
-
-        if (pojoProperty == null) {
-            handleMissingProperty(columnName);
-            return;
-        }
-        pojoProperty.SetProperty(this.pojo, obj, settings.getQuirks());
+        setValue(pojoMetadata, this.pojo, columnName, obj);
     }
 
     /**
-     * Applies a column name, which may itself be dotted, to an object that already exists. The metadata is
-     * resolved from the runtime class of the object, which is why this cannot go through a PojoBuilder.
+     * Applies a column name, which may itself be dotted, to the given object, creating and assigning the
+     * intermediate objects it walks through.
+     *
+     * <p>The object is passed along instead of a nested PojoBuilder because the metadata of a nested object
+     * belongs to the runtime class of the value, while the value itself is only known as the declared
+     * property type. There is no type parameter that could tie a builder to that metadata.
      */
-    private void setNestedValue(Object target, String columnName, Object value) throws ReflectiveOperationException {
-        final var metadata = ObjectBuildableFactory.pojoMetadata(target.getClass(), settings);
+    private void setValue(PojoMetadata<?> metadata, Object target, String columnName, Object value)
+            throws ReflectiveOperationException {
 
         final var dotIdx = columnName.indexOf('.');
-        if (dotIdx > 0) {
-            final var subProperty = metadata.getPojoProperty(
-                    settings.getNamingConvention().deriveName(columnName.substring(0, dotIdx)), columnMappings);
-            if (subProperty == null) {
-                handleMissingProperty(columnName);
-                return;
-            }
+        final var head = dotIdx > 0 ? columnName.substring(0, dotIdx) : columnName;
 
-            var subTarget = subProperty.getValue(target);
-            if (subTarget == null) {
-                subTarget = subProperty.initializeWithNewInstance(target);
-                subProperty.SetProperty(target, subTarget, settings.getQuirks());
-            }
-
-            setNestedValue(subTarget, columnName.substring(dotIdx + 1), value);
-            return;
-        }
-
-        final var property = metadata.getPojoProperty(
-                settings.getNamingConvention().deriveName(columnName), columnMappings);
+        final var property = metadata.getPojoProperty(settings.getNamingConvention().deriveName(head), columnMappings);
         if (property == null) {
             handleMissingProperty(columnName);
             return;
         }
 
-        property.SetProperty(target, value, settings.getQuirks());
+        if (dotIdx <= 0) {
+            property.SetProperty(target, value, settings.getQuirks());
+            return;
+        }
+
+        Object nested = property.getValue(target);
+        if (nested == null) {
+            // initializeWithNewInstance assigns the new instance to the target itself, calling the setter
+            // or setting the field, so assigning it again here would invoke the setter twice.
+            nested = property.initializeWithNewInstance(target);
+        }
+
+        setValue(ObjectBuildableFactory.pojoMetadata(nested.getClass(), settings), nested, columnName.substring(dotIdx + 1), value);
     }
 
     /**
