@@ -31,6 +31,7 @@
         <guava.version>33.0.0-jre</guava.version>
         <h2.version>2.2.224</h2.version>
         <hamcrest.version>2.2</hamcrest.version>
+        <jacoco.version>0.8.15</jacoco.version>
         <hibernate-core.version>4.3.1.Final</hibernate-core.version>
         <hsqldb.version>2.7.2</hsqldb.version>
         <jdbi.version>2.53</jdbi.version>
@@ -188,6 +189,30 @@
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-surefire-plugin</artifactId>
                 <version>3.5.4</version>
+            </plugin>
+
+            <!-- Writes an HTML report per module to target/site/jacoco, plus jacoco.csv for quick diffing.
+                 The report is bound to the test phase so that a plain "mvn -pl core test" produces it.
+                 Only core is measured locally: the extension tests need the docker services. -->
+            <plugin>
+                <groupId>org.jacoco</groupId>
+                <artifactId>jacoco-maven-plugin</artifactId>
+                <version>${jacoco.version}</version>
+                <executions>
+                    <execution>
+                        <id>jacoco-prepare-agent</id>
+                        <goals>
+                            <goal>prepare-agent</goal>
+                        </goals>
+                    </execution>
+                    <execution>
+                        <id>jacoco-report</id>
+                        <phase>test</phase>
+                        <goals>
+                            <goal>report</goal>
+                        </goals>
+                    </execution>
+                </executions>
             </plugin>
         </plugins>
     </build>
