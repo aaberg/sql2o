@@ -1,7 +1,6 @@
 package org.sql2o;
 
 import com.google.common.collect.ImmutableList;
-import org.hsqldb.jdbc.JDBCDataSource;
 import org.joda.time.DateTime;
 import org.joda.time.LocalTime;
 import org.joda.time.Period;
@@ -11,8 +10,6 @@ import org.sql2o.data.Table;
 import org.sql2o.pojos.*;
 import org.sql2o.tools.IOUtils;
 
-import javax.naming.Context;
-import javax.naming.InitialContext;
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.InputStream;
@@ -20,7 +17,6 @@ import java.math.BigDecimal;
 import java.sql.SQLException;
 import java.sql.Time;
 import java.sql.Timestamp;
-import java.time.OffsetTime;
 import java.util.*;
 import java.util.stream.Stream;
 
