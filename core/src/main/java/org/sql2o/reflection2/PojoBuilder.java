@@ -8,7 +8,7 @@ import java.util.Map;
 public class PojoBuilder<T> implements ObjectBuildable<T> {
 
     private final Settings settings;
-    private final PojoMetadata<?> pojoMetadata;
+    private final PojoMetadata<T> pojoMetadata;
     private final T pojo;
     private final Map<String, String> columnMappings;
 
@@ -16,7 +16,7 @@ public class PojoBuilder<T> implements ObjectBuildable<T> {
         this(settings, pojoMetadata, columnMappings, pojoMetadata.getConstructor().newInstance());
     }
 
-    public PojoBuilder(Settings settings, PojoMetadata<?> pojoMetadata, Map<String, String> columnMappings, T pojo) {
+    public PojoBuilder(Settings settings, PojoMetadata<T> pojoMetadata, Map<String, String> columnMappings, T pojo) {
         this.settings = settings;
         this.pojoMetadata = pojoMetadata;
         this.columnMappings = columnMappings;
@@ -44,12 +44,13 @@ public class PojoBuilder<T> implements ObjectBuildable<T> {
                 subProperty.SetProperty(this.pojo, subObj, settings.getQuirks());
             }
 
-            // The runtime class of the nested object is only known as Class<?>, so the metadata is requested as
-            // a wildcard. The nested builder is handed the instance to fill, it never constructs one itself.
-            final PojoMetadata<?> subPojoMetadata = ObjectBuildableFactory.pojoMetadata(subObj.getClass(), settings);
-            final var subObjectBuilder = new PojoBuilder<>(settings, subPojoMetadata, columnMappings, subObj);
-            subObjectBuilder.withValue(newPath, obj);
-            obj = subObjectBuilder.build();
+            // The nested object is filled in place instead of through a nested PojoBuilder. Its metadata
+            // belongs to the runtime class of the value, while the value itself is only known as the declared
+            // property type, so there is no type parameter that could tie a builder to that metadata: a nested
+            // builder could only be created by giving up on generics, which is what the raw type fallback
+            // used to do here.
+            setNestedValue(subObj, newPath, obj);
+            obj = subObj;
         }
 
         if (derivedName == null) {
@@ -62,6 +63,42 @@ public class PojoBuilder<T> implements ObjectBuildable<T> {
             return;
         }
         pojoProperty.SetProperty(this.pojo, obj, settings.getQuirks());
+    }
+
+    /**
+     * Applies a column name, which may itself be dotted, to an object that already exists. The metadata is
+     * resolved from the runtime class of the object, which is why this cannot go through a PojoBuilder.
+     */
+    private void setNestedValue(Object target, String columnName, Object value) throws ReflectiveOperationException {
+        final var metadata = ObjectBuildableFactory.pojoMetadata(target.getClass(), settings);
+
+        final var dotIdx = columnName.indexOf('.');
+        if (dotIdx > 0) {
+            final var subProperty = metadata.getPojoProperty(
+                    settings.getNamingConvention().deriveName(columnName.substring(0, dotIdx)), columnMappings);
+            if (subProperty == null) {
+                handleMissingProperty(columnName);
+                return;
+            }
+
+            var subTarget = subProperty.getValue(target);
+            if (subTarget == null) {
+                subTarget = subProperty.initializeWithNewInstance(target);
+                subProperty.SetProperty(target, subTarget, settings.getQuirks());
+            }
+
+            setNestedValue(subTarget, columnName.substring(dotIdx + 1), value);
+            return;
+        }
+
+        final var property = metadata.getPojoProperty(
+                settings.getNamingConvention().deriveName(columnName), columnMappings);
+        if (property == null) {
+            handleMissingProperty(columnName);
+            return;
+        }
+
+        property.SetProperty(target, value, settings.getQuirks());
     }
 
     /**
