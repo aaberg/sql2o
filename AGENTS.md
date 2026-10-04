@@ -35,7 +35,7 @@ Nothing in the build enforces any of this (no checkstyle/lint plugin), so it is 
 ## Testing traps
 
 - **Core is on JUnit 5, extensions are still on JUnit 4.** `junit:junit` + `junit-vintage-engine` exist in the root pom solely for `extensions/{postgres,oracle,oracle-joda-time}`; drop both once those are migrated. Hamcrest comes from the explicit `org.hamcrest:hamcrest` dependency (junit's transitive `hamcrest-core` is excluded) — use `org.hamcrest.MatcherAssert.assertThat`, since `org.junit.Assert.assertThat` does not exist in JUnit 5.
-- `mvn -pl core test` must report **210** tests. That number is the regression guard for the test sources: if it changes, a test was lost, renamed or silently not discovered.
+- `mvn -pl core test` must report **212** tests. That number is the regression guard for the test sources: if it changes, a test was lost, renamed or silently not discovered.
 - In-memory H2/HSQLDB databases use `DB_CLOSE_DELAY=-1`, so they **survive between test methods in the same JVM** — a `create table` in a second test fails with "table already exists". Drop the table first (see `QueryArrayTest`) or use a distinct database name per test.
 - Per-database parameterization: use `TestDatabase` + the composed `@DatabaseTest` annotation (both in `core/src/test/java/org/sql2o/`). A test class needs `static Stream<TestDatabase> databases()` and a `@DatabaseTest` method taking a single `TestDatabase`. `IssuesTest` keeps its own local holder because it needs extra HSQLDB setup.
 - In-memory databases are also shared with other test classes (`jdbc:h2:mem:test` is used by several), so table names must be unique across the whole suite.

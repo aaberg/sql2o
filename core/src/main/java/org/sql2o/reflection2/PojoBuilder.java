@@ -41,7 +41,7 @@ public class PojoBuilder<T> implements ObjectBuildable<T> {
             var subObj = subProperty.getValue(this.pojo);
             if (subObj == null) {
                 subObj = subProperty.initializeWithNewInstance(this.pojo);
-                subProperty.SetProperty(this.pojo, subObj);
+                subProperty.SetProperty(this.pojo, subObj, settings.getQuirks());
             }
 
             final var subPojoMetadata = new PojoMetadata<>(subObj.getClass(), settings);
@@ -59,7 +59,7 @@ public class PojoBuilder<T> implements ObjectBuildable<T> {
             handleMissingProperty(columnName);
             return;
         }
-        pojoProperty.SetProperty(this.pojo, obj);
+        pojoProperty.SetProperty(this.pojo, obj, settings.getQuirks());
     }
 
     /**
