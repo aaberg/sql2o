@@ -173,6 +173,12 @@
                 <configuration>
                     <source>17</source>
                     <target>17</target>
+                    <compilerArgs>
+                        <!-- The build is expected to produce no unchecked warnings. A new one either gets
+                             rewritten, or gets a local SuppressWarnings explaining why it is safe there.
+                             rawtypes is deliberately not enabled, it would add a lot of noise. -->
+                        <arg>-Xlint:unchecked</arg>
+                    </compilerArgs>
                 </configuration>
             </plugin>
 
