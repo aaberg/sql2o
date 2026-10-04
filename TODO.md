@@ -18,15 +18,28 @@ Found by the code review. Each item is a bug, not a cleanup.
 
 Verification for all four: `mvn -pl core test` (207 tests) plus a new regression test per item.
 
-## P1 — thread safety of the caches
+## P1 — POJO metadata cache key
 
-- [ ] `Cache.get()` reads a plain `HashMap` without holding a lock while writing under the write lock
-      (`Cache.java:18` vs `Cache.java:31`). `AbstractCache` next to it does it correctly.
-- [ ] `Convert.registeredConverters` is read without the read lock, and the declared read lock is never
-      acquired anywhere (`Convert.java:28`, `Convert.java:128`).
 - [ ] `ObjectBuildableFactory` caches `PojoMetadata` under the class only, so the first `Sql2o` instance
       in the JVM fixes naming convention, case sensitivity and `throwOnMappingError` for all others
       (`ObjectBuildableFactory.java:10,19`). Include the relevant `Settings` in the cache key.
+
+## P3 — cache locking (low severity, read this before touching it)
+
+Reading a `HashMap` is fine as long as nothing writes concurrently, so neither of these is a race in the
+normal case. They are contract violations with a narrow window, not observed bugs.
+
+- [ ] `Cache.get()` reads the map outside the lock (`Cache.java:18`) and writes under the write lock
+      (`Cache.java:31`). The lookup runs per mapped row
+      (`DefaultResultSetHandlerFactory.java:21` -> `ObjectBuildableFactory.forClass`), but the write only
+      happens on a cache miss, so the read-during-write window is limited to concurrent warm-up. The
+      likely symptom is a redundant recompute, not corruption. `AbstractCache` next to it does it
+      correctly. One line fixes it: use a `ConcurrentHashMap` or take the read lock.
+- [ ] `Convert.registeredConverters` is read without the read lock and the declared `rl` is never
+      acquired anywhere (`Convert.java:28`, `Convert.java:128`). It is written only in the static
+      initializer, which is safe, or by the public `Convert.registerConverter()` under `wl`. The real
+      defect is visibility, not integrity: the field is not `volatile` and readers take no lock, so a
+      converter registered at runtime may never become visible to other threads.
 
 ## P1 — POJO mapping
 
