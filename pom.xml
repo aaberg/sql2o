@@ -36,6 +36,7 @@
         <jdbi.version>2.53</jdbi.version>
         <joda-time.version>2.12.7</joda-time.version>
         <junit.version>4.13.2</junit.version>
+        <junit-jupiter.version>5.11.4</junit-jupiter.version>
         <mockito.version>4.8.0</mockito.version>
         <mybatis.version>3.2.4</mybatis.version>
         <persistence-api.version>1.0.2</persistence-api.version>
@@ -111,7 +112,15 @@
         <dependency>
             <groupId>org.junit.jupiter</groupId>
             <artifactId>junit-jupiter</artifactId>
-            <version>5.11.4</version>
+            <version>${junit-jupiter.version}</version>
+            <scope>test</scope>
+        </dependency>
+        <!-- Runs the JUnit 4 and JUnit 3 tests that are not migrated to JUnit 5 yet.
+             Remove together with junit:junit once every module is migrated. -->
+        <dependency>
+            <groupId>org.junit.vintage</groupId>
+            <artifactId>junit-vintage-engine</artifactId>
+            <version>${junit-jupiter.version}</version>
             <scope>test</scope>
         </dependency>
 
