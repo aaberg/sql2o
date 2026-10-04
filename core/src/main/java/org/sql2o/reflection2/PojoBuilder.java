@@ -32,6 +32,10 @@ public class PojoBuilder<T> implements ObjectBuildable<T> {
             final var subName = columnName.substring(0, dotIdx);
             derivedName = settings.getNamingConvention().deriveName(subName);
             final var subProperty = pojoMetadata.getPojoProperty(derivedName, columnMappings);
+            if (subProperty == null) {
+                handleMissingProperty(columnName);
+                return;
+            }
             final var newPath = columnName.substring(dotIdx + 1);
 
             var subObj = subProperty.getValue(this.pojo);
@@ -52,12 +56,20 @@ public class PojoBuilder<T> implements ObjectBuildable<T> {
         final var pojoProperty = pojoMetadata.getPojoProperty(derivedName, columnMappings);
 
         if (pojoProperty == null) {
-            if (settings.isThrowOnMappingError()){
-                throw new Sql2oException("Could not map " + columnName + " to any property.");
-            }
+            handleMissingProperty(columnName);
             return;
         }
         pojoProperty.SetProperty(this.pojo, obj);
+    }
+
+    /**
+     * Reports a column that has no matching property, or silently ignores it when mapping errors are
+     * not configured to be thrown.
+     */
+    private void handleMissingProperty(String columnName) {
+        if (settings.isThrowOnMappingError()) {
+            throw new Sql2oException("Could not map " + columnName + " to any property.");
+        }
     }
 
     @Override

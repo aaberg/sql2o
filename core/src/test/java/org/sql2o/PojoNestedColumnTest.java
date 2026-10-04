@@ -5,6 +5,7 @@ import org.junit.jupiter.api.Test;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 
 /**
@@ -42,14 +43,25 @@ public class PojoNestedColumnTest {
     }
 
     @Test
-    public void dottedColumnName_withoutMatchingProperty_throwsNullPointerException() {
-        // Characterisation test: the dotted branch of withValue dereferences the looked up sub property
-        // without the null check that the non-dotted branch has, so an unmapped prefix ends in an NPE
-        // instead of "Could not map ... to any property.". Invert this expectation once that is fixed.
+    public void dottedColumnName_withoutMatchingProperty_throwsMappingError() {
         try (Connection con = sql2o.open()) {
-            assertThrows(NullPointerException.class, () ->
+            Sql2oException ex = assertThrows(Sql2oException.class, () ->
                     con.createQuery("select 42 as \"nothing.here\" from (values(0))")
                             .executeAndFetchFirst(OuterPojo.class));
+
+            assertEquals("Could not map nothing.here to any property.", ex.getMessage());
+        }
+    }
+
+    @Test
+    public void dottedColumnName_withoutMatchingProperty_isIgnoredWhenMappingErrorsAreOff() {
+        try (Connection con = sql2o.open()) {
+            OuterPojo pojo = con.createQuery("select 42 as \"nothing.here\" from (values(0))")
+                    .throwOnMappingFailure(false)
+                    .executeAndFetchFirst(OuterPojo.class);
+
+            assertNotNull(pojo);
+            assertNull(pojo.sub);
         }
     }
 }
