@@ -61,10 +61,13 @@ scratch test as the regression test.
       `RecordBuilder.java:21`), never calls `setAccessible`, ignores `columnMappings` and
       `throwOnMappingError` (`ObjectBuildableFactory.java:15`), and throws `IllegalArgumentException`
       where `PojoBuilder` throws `Sql2oException`.
-- [read] **`PojoBuilder` builds nested metadata per row.** For a dotted column name it creates
-      `new PojoMetadata<>(...)` on every row, bypassing the cache, and dereferences `subProperty` without
-      the null check that the non-dotted branch has (`PojoBuilder.java:37-43`) — a dotted column with no
-      matching property gives an NPE instead of "Could not map ...".
+- [run] **`PojoBuilder` NPEs on a dotted column with no matching property**, and rebuilds nested metadata on
+      every row. The dotted branch of `withValue` dereferences the looked up sub property without the null
+      check the non-dotted branch has, and creates `new PojoMetadata<>(subObj.getClass(), settings)` per
+      row, bypassing the cache (`PojoBuilder.java:37-43`). Covered by `PojoNestedColumnTest`: the working
+      nested mapping is a regression guard, the NPE is asserted as the current behaviour and must be
+      inverted to `Sql2oException("Could not map ... to any property.")` when fixed. The per-row rebuild
+      is a performance claim only, not covered by a test.
 
 ## P2 — converters
 
