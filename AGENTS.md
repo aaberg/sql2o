@@ -17,7 +17,8 @@ Nothing in the build enforces any of this (no checkstyle/lint plugin), so it is 
 
 - `git diff --check` before committing — reports trailing whitespace.
 - Review `git diff` for unrelated hunks: whitespace-only or drive-by changes get a PR rejected, and drive-by fixes belong in their own PR.
-- New behaviour needs tests; `mvn -pl core test` must stay at 207.
+- The compiler runs with `-Xlint:unchecked`, and the build is expected to produce **zero** unchecked warnings. A new one either gets rewritten, or gets a local `@SuppressWarnings("unchecked")` with a comment proving why that specific spot is safe. `rawtypes` is deliberately not enabled: it would add a lot of noise and mostly covers published API.
+- New behaviour needs tests; `mvn -pl core test` must stay at 212.
 
 ## Commands
 

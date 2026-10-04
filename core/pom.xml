@@ -82,6 +82,10 @@
                 <configuration>
                     <source>17</source>
                     <target>17</target>
+                    <!-- Keep in sync with the root pom. -->
+                    <compilerArgs>
+                        <arg>-Xlint:unchecked</arg>
+                    </compilerArgs>
                 </configuration>
             </plugin>
 

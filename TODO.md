@@ -58,12 +58,12 @@ scratch test as the regression test.
       `RecordBuilder.java:21`), never calls `setAccessible`, ignores `columnMappings` and
       `throwOnMappingError` (`ObjectBuildableFactory.java:15`), and throws `IllegalArgumentException`
       where `PojoBuilder` throws `Sql2oException`.
-- [read] **`PojoBuilder` rebuilds nested metadata on every row.** For a dotted column name it creates
-      `new PojoMetadata<>(subObj.getClass(), settings)` per row, bypassing the cache
-      (`PojoBuilder.java:47`). Performance only, no functional symptom, and not covered by a test. It can now
-      be routed through `ObjectBuildableFactory.pojoMetadata` safely: the cache key carries the naming
-      convention and nothing else that varies per instance. The NPE that used to happen for an unmapped
-      prefix in the same branch is fixed and covered by `PojoNestedColumnTest`.
+- [run] **`PojoBuilder` rebuilt nested metadata on every row.** For a dotted column name it created
+      `new PojoMetadata<>(subObj.getClass(), settings)` per row, bypassing the cache. It now asks
+      `ObjectBuildableFactory` for it like any other class, so the nested metadata is cached and shared
+      between instances that use the same naming convention. That change also removed the raw type the
+      nested builder used to fall back to, which had silently erased its generic contract. The NPE that used
+      to happen for an unmapped prefix in the same branch is fixed and covered by `PojoNestedColumnTest`.
 
 ## P2 — converters
 
@@ -153,6 +153,14 @@ normal operation. They are contract violations with a narrow window.
 
 ## Low priority — cleanups
 
+- [read] **`PojoBuilder` rebuilt nested metadata on every row** — fixed: a dotted column name now asks
+      `ObjectBuildableFactory` for the nested metadata like any other class, so it comes from the cache.
+- [read] **24 `rawtypes` warnings remain**, deliberately not enabled in the compiler config. They are mostly
+      published generics: `NoQuirks(Map<Class, Converter>)` and the converters registry, `Convert.getConverter`
+      and `registerConverter`, `EnumConverterFactory`/`DefaultEnumConverterFactory`, plus internals in `Query`,
+      `Connection`, `LocalLoggerFactory` and `ResultSetIteratorBase`. Fixing them means changing published
+      signatures such as `Map<Class, Converter>` to `Map<Class<?>, Converter<?>>`, which breaks every
+      third party converter and quirks implementation, so it needs its own decision.
 - `MANIFEST.MF` files only carry `Library-Name`/`Library-Description`; the OSGi metadata is inert and the
   split packages (`org.sql2o.quirks`, `org.sql2o.converters`) would break under OSGi.
 - `README.md` quick start does not compile: `Sql2o` is not `Closeable`. Already noted in `AGENTS.md`.
