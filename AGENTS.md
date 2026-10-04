@@ -5,7 +5,9 @@ Java 17 library (no SQL generation; maps `ResultSet` -> POJO/record). Maven mult
 - `core` — artifactId `sql2o`, groupId `org.sql2o`. Everything lives under `org.sql2o.*`.
 - `extensions/{postgres,oracle,oracle-joda-time,db2}` — groupId `org.sql2o.extensions`, each depends on core.
 
-Upstream is `github.com/aaberg/sql2o` (this checkout is a fork); README/wiki links and the coding guide point there. `.editorconfig`: 4-space Java indent, LF, UTF-8, final newline. No lint/format/checkstyle plugin exists — don't invent one.
+Upstream is `github.com/aaberg/sql2o` (this checkout is a fork); README/wiki links point there. `.editorconfig`: 4-space Java indent, LF, UTF-8, final newline — keep it in sync with the wiki coding guidelines, which are the project's style source of truth. No lint/format/checkstyle plugin exists — don't invent one.
+
+The current version line (1.9.0-SNAPSHOT) is the Java 17+ line, because it added record support; 1.8.x targets Java 11 and 1.6.x Java 8. Lowering `maven.compiler.source/target` is therefore an API break for users, not a local tweak.
 
 ## Commands
 
@@ -29,7 +31,7 @@ Upstream is `github.com/aaberg/sql2o` (this checkout is a fork); README/wiki lin
 
 ## Architecture / extension points
 
-- Flow: `Sql2o` -> `Connection` (`AutoCloseable`) -> `Query` -> converters + `reflection2` mapping (`PojoIntrospector` -> `PojoBuilder` / `RecordBuilder`). `Sql2o` itself is **not** `Closeable`, so the try-with-resources snippet in `README.md` does not compile — don't copy it.
+- Flow: `Sql2o` -> `Connection` (`AutoCloseable`) -> `Query` -> converters + `reflection2` mapping (`PojoIntrospector` -> `PojoBuilder` / `RecordBuilder`). `Sql2o` itself is **not** `Closeable`, so the try-with-resources snippet in `README.md` does not compile — the correct shape is `try (Connection con = sql2o.open())` with `sql2o` created outside.
 - `Quirks` (`core/.../quirks/`) is the per-driver hook: `setParameter` overloads, `getRSVal`, column naming, `returnGeneratedKeysByDefault`, and the named-parameter SQL parser (`quirks/parameterparsing`). `NoQuirks` is the default; Oracle/Postgres/DB2/H2 implementations live in `extensions/*` and `core/src/test`.
 - Driver behavior and extra converters are discovered with `ServiceLoader`. Adding a quirks or converter provider requires a `META-INF/services/org.sql2o.quirks.QuirksProvider` (or `...converters.ConvertersProvider`) entry — see `extensions/*/src/main/resources/META-INF/services/` and `core/src/test/resources/META-INF/services/org.sql2o.quirks.QuirksProvider`. Without it the code is dead.
 - Column-to-property matching runs through `NamingConvention.deriveName` (case-insensitive by default, optional snake_case -> camelCase) and honors `javax.persistence.@Column` (that dependency is `provided`, so it must stay optional).
