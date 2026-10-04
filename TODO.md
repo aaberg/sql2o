@@ -43,9 +43,6 @@ scratch test as the regression test.
 - [run] **SQL starting with a named parameter throws.** `ParameterParser.canParse` evaluates
       `charAt(idx - 1)` with `idx == 0` (`ParameterParser.java:21`); `parseSql(":foo", map)` throws
       `StringIndexOutOfBoundsException: Index -1 out of bounds for length 4`.
-- [read] **The `PojoMetadata` cache key ignores `Settings`.** `ObjectBuildableFactory` caches under the
-      class only, so the first `Sql2o` instance in the JVM fixes naming convention, case sensitivity and
-      `throwOnMappingError` for every other instance (`ObjectBuildableFactory.java:10,19`).
 - [read] **Superclass members overwrite subclass members.** `initializeForClassRecursive` walks subclass
       first, then the superclass (`PojoMetadata.java:96-100`), and `computeIfAbsent` only guards creation
       while `withSetter`/`withGetter`/`withField` always assign (`PojoPropertyBuilder.java:22-36`). A
@@ -63,9 +60,10 @@ scratch test as the regression test.
       where `PojoBuilder` throws `Sql2oException`.
 - [read] **`PojoBuilder` rebuilds nested metadata on every row.** For a dotted column name it creates
       `new PojoMetadata<>(subObj.getClass(), settings)` per row, bypassing the cache
-      (`PojoBuilder.java:47`). Performance only, no functional symptom, and not covered by a test. The
-      NPE that used to happen for an unmapped prefix in the same branch is fixed and covered by
-      `PojoNestedColumnTest`.
+      (`PojoBuilder.java:47`). Performance only, no functional symptom, and not covered by a test. It can now
+      be routed through `ObjectBuildableFactory.pojoMetadata` safely: the cache key carries the naming
+      convention and nothing else that varies per instance. The NPE that used to happen for an unmapped
+      prefix in the same branch is fixed and covered by `PojoNestedColumnTest`.
 
 ## P2 — converters
 
@@ -172,3 +170,19 @@ normal operation. They are contract violations with a narrow window.
 - After that, remove `junit:junit` and `junit-vintage-engine` from the root pom.
 
 Both came out of the JUnit migration; `core` is already fully on JUnit 5.
+
+## Fixed
+
+Kept here as a reminder of what was already dealt with, and of what the tests cover.
+
+- A `Query` reused after `executeScalar()` failed with "The object is already closed".
+- A dotted column name whose prefix has no matching property threw a `NullPointerException` instead of a
+  mapping error; both branches of `PojoBuilder` now share `handleMissingProperty`, so `throwOnMappingError`
+  is honoured either way. Covered by `PojoNestedColumnTest`.
+- `PojoMetadata` was cached under the class only, while the metadata derives property names from the naming
+  convention and `PojoProperty` resolved converters through the quirks captured at build time. A second
+  `Sql2o` instance in the same JVM therefore inherited the property names and the converters of the first
+  one. The cache key is now the class plus the `NamingConvention`, converters are passed in from the
+  builder, and the two argument `PojoProperty.SetProperty` is deprecated. Covered by
+  `PojoMetadataCacheSettingsTest`. Note that `throwOnMappingError` was never affected: the builder reads it
+  from its own settings.
