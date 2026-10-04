@@ -2,7 +2,6 @@ package org.sql2o;
 
 import org.sql2o.tools.SnakeToCamelCase;
 
-import java.util.Map;
 import java.util.Objects;
 
 public class NamingConvention {

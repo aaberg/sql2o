@@ -10,7 +10,6 @@
 
 package org.sql2o.issues;
 
-import org.junit.Ignore;
 import org.junit.Test;
 import org.sql2o.Connection;
 import org.sql2o.Query;

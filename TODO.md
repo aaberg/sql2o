@@ -153,10 +153,6 @@ normal operation. They are contract violations with a narrow window.
 
 ## Low priority — cleanups
 
-- [run] Remove the unused imports left in `core/src/main`: `java.util.Map` in `NamingConvention`,
-      `java.time.OffsetDateTime` and `java.time.OffsetTime` in `AbstractDateConverter`,
-      `org.sql2o.NamingConvention` and `org.sql2o.quirks.Quirks` in `RecordBuilder`.
-- Check the same in `extensions/*` (not covered by the scan that found the ones above).
 - `MANIFEST.MF` files only carry `Library-Name`/`Library-Description`; the OSGi metadata is inert and the
   split packages (`org.sql2o.quirks`, `org.sql2o.converters`) would break under OSGi.
 - `README.md` quick start does not compile: `Sql2o` is not `Closeable`. Already noted in `AGENTS.md`.
@@ -186,3 +182,6 @@ Kept here as a reminder of what was already dealt with, and of what the tests co
   builder, and the two argument `PojoProperty.SetProperty` is deprecated. Covered by
   `PojoMetadataCacheSettingsTest`. Note that `throwOnMappingError` was never affected: the builder reads it
   from its own settings.
+- Thirteen unused imports left over from earlier changes were removed, five in `core/src/main` and eight in
+  the extension tests. Kept as a commit of its own because the coding guidelines ask for drive-by cleanups to
+  be kept out of unrelated changes. Nothing in the build enforces this, so it can happen again.

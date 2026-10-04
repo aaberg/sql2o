@@ -1,10 +1,8 @@
 package org.sql2o.reflection2;
 
-import org.sql2o.NamingConvention;
 import org.sql2o.Settings;
 import org.sql2o.Sql2oException;
 import org.sql2o.converters.ConverterException;
-import org.sql2o.quirks.Quirks;
 
 import java.lang.reflect.Constructor;
 import java.util.LinkedHashMap;
