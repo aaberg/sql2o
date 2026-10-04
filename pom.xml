@@ -28,7 +28,6 @@
 
     <properties>
         <commons-dbutils.version>1.8.1</commons-dbutils.version>
-        <embedded-db-junit.version>2.1.1</embedded-db-junit.version>
         <guava.version>33.0.0-jre</guava.version>
         <h2.version>2.2.224</h2.version>
         <hibernate-core.version>4.3.1.Final</hibernate-core.version>

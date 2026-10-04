@@ -56,14 +56,6 @@
             <artifactId>hsqldb</artifactId>
             <version>${hsqldb.version}</version>
         </dependency>
-        <!-- Makes it a lot easier to run embedded H2 for tests -->
-        <dependency>
-            <groupId>org.zapodot</groupId>
-            <artifactId>embedded-db-junit</artifactId>
-            <version>${embedded-db-junit.version}</version>
-            <scope>test</scope>
-        </dependency>
-
         <dependency>
             <groupId>org.mockito</groupId>
             <artifactId>mockito-core</artifactId>
