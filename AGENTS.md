@@ -15,15 +15,16 @@ Upstream is `github.com/aaberg/sql2o` (this checkout is a fork); README/wiki lin
 - `docker compose up -d` starts Postgres on host port **15432** (`testuser`/`testpassword`, db `postgres`) and Oracle XE 21c on **1521** (`system`/`testpassword`) — these match the JDBC URLs hardcoded in the extension tests.
 - Release is CI-driven only: a GitHub *release* event makes the pipeline run `mvn versions:set` + `mvn -P release deploy -DskipTests` and push to Maven Central. Don't bump versions by hand and don't run the `release` profile locally.
 - Compiler source/target `17` is duplicated in the root pom and `core/pom.xml` — change both.
+- `maven-surefire-plugin` is pinned in the root pom; without it the version comes from the Maven super POM and the selected test provider can change with the Maven version.
 - Maven builds drop Eclipse `.project`/`.classpath`/`.settings/` files that are **not** in `.gitignore`. Run `git clean -fd` before committing so they don't get staged.
 
 ## Testing traps
 
-- **JUnit 4 tests silently do not run.** Surefire selects the JUnit Platform provider (junit-jupiter is on the test classpath) and `junit-vintage-engine` is not declared, so all 16 JUnit 4 classes (`QueryTest`, `ConnectionTest`, `Sql2oTest`, `IssuesTest`, `PostgresTest`, `OracleTest`, ...) are skipped with no warning: `mvn -pl core test` reports **47** tests; with the vintage engine added it reports **207**. `mvn -pl core test -Dtest=QueryTest` prints `Tests run: 0` and still succeeds.
-  - Write new tests with **JUnit 5** (`org.junit.jupiter`). Don't treat "ran an existing test and it passed" as verification if that test is JUnit 4 — it executed nothing.
-  - The fix, if legacy tests must run, is a test-scoped `org.junit.jupiter:junit-vintage-engine:5.11.4` in the root pom (verified: makes the JUnit 4 classes execute and pass).
-- Two parameterized styles coexist: JUnit 4 `@RunWith(Parameterized.class)` over `BaseMemDbTest` / `PostgresTestSupport`, and JUnit 5 `@ParameterizedTest` + `@ArgumentsSource` over `TestDatabasesArgumentSourceProvider` / `H2ArgumentsSourceProvider`. Prefer the JUnit 5 one.
-- Legacy tests use `org.zapodot:embedded-db-junit`'s `EmbeddedDatabaseRule`; newer tests just call `new Sql2o(url, user, pass)` against the in-memory URLs. Prefer the latter.
+- **Core is on JUnit 5, extensions are still on JUnit 4.** `junit:junit` + `junit-vintage-engine` exist in the root pom solely for `extensions/{postgres,oracle,oracle-joda-time}`; drop both once those are migrated. Hamcrest comes from the explicit `org.hamcrest:hamcrest` dependency (junit's transitive `hamcrest-core` is excluded) — use `org.hamcrest.MatcherAssert.assertThat`, since `org.junit.Assert.assertThat` does not exist in JUnit 5.
+- `mvn -pl core test` must report **207** tests. That number is the regression guard for the test sources: if it changes, a test was lost, renamed or silently not discovered.
+- In-memory H2/HSQLDB databases use `DB_CLOSE_DELAY=-1`, so they **survive between test methods in the same JVM** — a `create table` in a second test fails with "table already exists". Drop the table first (see `QueryArrayTest`) or use a distinct database name per test.
+- Per-database parameterization: use `TestDatabase` + the composed `@DatabaseTest` annotation (both in `core/src/test/java/org/sql2o/`). A test class needs `static Stream<TestDatabase> databases()` and a `@DatabaseTest` method taking a single `TestDatabase`. `IssuesTest` keeps its own local holder because it needs extra HSQLDB setup.
+- In-memory databases are also shared with other test classes (`jdbc:h2:mem:test` is used by several), so table names must be unique across the whole suite.
 - Extension tests hardcode external DB URLs and, for Oracle, expect `extensions/oracle/src/test/resources/setup/test.sql` to have been applied. Only run them with docker-compose up.
 
 ## Architecture / extension points
