@@ -5,9 +5,19 @@ Java 17 library (no SQL generation; maps `ResultSet` -> POJO/record). Maven mult
 - `core` — artifactId `sql2o`, groupId `org.sql2o`. Everything lives under `org.sql2o.*`.
 - `extensions/{postgres,oracle,oracle-joda-time,db2}` — groupId `org.sql2o.extensions`, each depends on core.
 
-Upstream is `github.com/aaberg/sql2o` (this checkout is a fork); README/wiki links point there. `.editorconfig`: 4-space Java indent, LF, UTF-8, final newline — keep it in sync with the wiki coding guidelines, which are the project's style source of truth. No lint/format/checkstyle plugin exists — don't invent one.
+Upstream is `github.com/aaberg/sql2o` (this checkout is a fork); README/wiki links point there. `.editorconfig`: 4-space Java indent, LF, UTF-8, final newline — keep it in sync with the wiki coding guidelines below. No lint/format/checkstyle plugin exists — don't invent one.
 
 The current version line (1.9.0-SNAPSHOT) is the Java 17+ line, because it added record support; 1.8.x targets Java 11 and 1.6.x Java 8. Lowering `maven.compiler.source/target` is therefore an API break for users, not a local tweak.
+
+## Coding style
+
+Source of truth is the wiki: https://github.com/aaberg/sql2o/wiki/Coding-guidelines — spaces never tabs, 4-space indent, no trailing whitespace, US English names, no leading underscore on private fields (`myVariable`, not `_myVariable`), no unused imports. Existing files do contain trailing whitespace and (rarely) tabs; don't propagate that into code you touch, but don't reformat files you aren't changing either.
+
+Nothing in the build enforces any of this (no checkstyle/lint plugin), so it is on you to check:
+
+- `git diff --check` before committing — reports trailing whitespace.
+- Review `git diff` for unrelated hunks: whitespace-only or drive-by changes get a PR rejected, and drive-by fixes belong in their own PR.
+- New behaviour needs tests; `mvn -pl core test` must stay at 207.
 
 ## Commands
 
