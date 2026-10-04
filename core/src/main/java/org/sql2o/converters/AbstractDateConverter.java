@@ -1,8 +1,6 @@
 package org.sql2o.converters;
 
 import java.sql.Timestamp;
-import java.time.OffsetDateTime;
-import java.time.OffsetTime;
 import java.util.Date;
 
 /**
