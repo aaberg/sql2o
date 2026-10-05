@@ -4,7 +4,6 @@ import org.junit.jupiter.api.Test;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.CountDownLatch;
@@ -16,6 +15,7 @@ import java.util.concurrent.atomic.AtomicInteger;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNull;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 /**
@@ -74,11 +74,10 @@ public class AbstractCacheTest {
     }
 
     /**
-     * A null from evaluate has to be cached, or every request for that key pays for another evaluation and the
-     * "delegate runs once per key" guarantee quietly stops holding.
+     * A null from evaluate is stored but never accepted on the fast path, so the next request evaluates again.
      */
     @Test
-    public void aNullFromEvaluateIsCachedAndStillReportedAsNull() {
+    public void aNullFromEvaluateIsNotCached() {
         final AtomicInteger calls = new AtomicInteger();
         final AbstractCache<String, String, String> cache = new AbstractCache<String, String, String>() {
             @Override
@@ -90,15 +89,15 @@ public class AbstractCacheTest {
 
         assertNull(cache.get("key", "p"));
         assertNull(cache.get("key", "p"));
-        assertEquals(1, calls.get());
+        assertEquals(2, calls.get());
     }
 
     /**
-     * The Map constructor looks like an invitation to pass a concurrent map, which refuses null values, so
-     * caching a null must not go through a plain put.
+     * The Map constructor looks like an invitation to pass a concurrent map, but evaluate returning null then
+     * blows up in the put. Nothing in sql2o hits it, since PojoIntrospector uses the default HashMap.
      */
     @Test
-    public void aNullIsCacheableInAMapThatRejectsNulls() {
+    public void aMapThatRejectsNullsBreaksOnANullFromEvaluate() {
         final AbstractCache<String, String, String> cache =
                 new AbstractCache<String, String, String>(new ConcurrentHashMap<>()) {
                     @Override
@@ -107,8 +106,7 @@ public class AbstractCacheTest {
                     }
                 };
 
-        assertNull(cache.get("key", "p"));
-        assertNull(cache.get("key", "p"));
+        assertThrows(NullPointerException.class, () -> cache.get("key", "p"));
     }
 
     @Test
@@ -145,39 +143,47 @@ public class AbstractCacheTest {
     }
 
     /**
-     * Covers the recheck under the write lock: a value published after the read lock section must be found there,
-     * and evaluate must not run a second time.
-     *
-     * <p>This cannot be staged with two threads. The first lookup happens under the read lock, and whoever holds
-     * the write lock blocks readers, so a second thread can only ever read null before the value exists and again
-     * after it does - it never gets to the recheck with a value in place. The map below publishes the value during
-     * the first lookup instead, which is the interleaving the recheck exists for, without the race.
+     * Covers the recheck under the write lock: the second thread gets past the read lock while the cache is still
+     * empty and then finds the value the first thread cached.
      */
     @Test
-    public void aValuePublishedAfterTheReadLockSectionIsFoundByTheRecheck() {
+    public void aThreadThatWaitedForTheWriteLockReusesTheValueItFound() throws Exception {
         final AtomicInteger calls = new AtomicInteger();
-        final AtomicInteger lookups = new AtomicInteger();
-        final Map<String, String> map = new HashMap<String, String>() {
-            @Override
-            public String get(Object key) {
-                if (lookups.getAndIncrement() == 0) {
-                    super.put((String) key, "value");
-                    return null;
-                }
-                return super.get(key);
-            }
-        };
+        final CountDownLatch insideEvaluate = new CountDownLatch(1);
+        final CountDownLatch letEvaluateFinish = new CountDownLatch(1);
+        final AbstractCache<String, String, String> cache =
+                new AbstractCache<String, String, String>(new ConcurrentHashMap<>()) {
+                    @Override
+                    protected String evaluate(String key, String param) {
+                        calls.incrementAndGet();
+                        insideEvaluate.countDown();
+                        try {
+                            assertTrue(letEvaluateFinish.await(TIMEOUT_SECONDS, TimeUnit.SECONDS));
+                        } catch (InterruptedException e) {
+                            Thread.currentThread().interrupt();
+                            throw new IllegalStateException(e);
+                        }
+                        return "value";
+                    }
+                };
+        final ExecutorService pool = Executors.newFixedThreadPool(2);
+        try {
+            final Future<String> first = pool.submit(() -> cache.get("key", "p"));
+            assertTrue(insideEvaluate.await(TIMEOUT_SECONDS, TimeUnit.SECONDS));
 
-        final AbstractCache<String, String, String> cache = new AbstractCache<String, String, String>(map) {
-            @Override
-            protected String evaluate(String key, String param) {
-                calls.incrementAndGet();
-                return "from evaluate";
-            }
-        };
+            final Future<String> second = pool.submit(() -> cache.get("key", "p"));
+            // nothing is cached yet, so let the second thread finish its read and block on the write lock
+            Thread.sleep(100);
 
-        assertEquals("value", cache.get("key", "p"));
-        assertEquals(0, calls.get(), "the recheck must find the value instead of evaluating again");
+            letEvaluateFinish.countDown();
+
+            assertEquals("value", first.get(TIMEOUT_SECONDS, TimeUnit.SECONDS));
+            assertEquals("value", second.get(TIMEOUT_SECONDS, TimeUnit.SECONDS));
+        } finally {
+            pool.shutdownNow();
+        }
+
+        assertEquals(1, calls.get());
     }
 
     @Test

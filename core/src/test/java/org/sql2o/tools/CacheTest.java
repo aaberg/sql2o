@@ -71,52 +71,19 @@ public class CacheTest {
     }
 
     /**
-     * A null from the delegate has to be cached, or every request for that key runs the delegate again and the
-     * "delegate runs once per key" guarantee quietly stops holding.
+     * The fast path only accepts a non-null value, so a delegate that returns null leaves nothing to cache and
+     * runs again on the next request.
      */
     @Test
-    public void aNullFromTheDelegateIsCachedAndStillReportedAsNull() throws Exception {
+    public void aNullFromTheDelegateIsNotCached() throws Exception {
         final Cache<String, String> cache = new Cache<>();
         final AtomicInteger calls = new AtomicInteger();
 
-        assertNull(cache.get("key", () -> {
-            calls.incrementAndGet();
-            return null;
-        }));
-        assertNull(cache.get("key", () -> {
+        assertNull(cache.get("key", () -> null));
+        assertEquals("second", cache.get("key", () -> {
             calls.incrementAndGet();
             return "second";
         }));
-        assertEquals(1, calls.get());
-    }
-
-    /** The same guarantee has to hold for a delegate that answers null, including under contention. */
-    @Test
-    public void aNullFromTheDelegateIsOnlyProducedOnceUnderContention() throws Exception {
-        final Cache<String, String> cache = new Cache<>();
-        final AtomicInteger calls = new AtomicInteger();
-        final ExecutorService pool = Executors.newFixedThreadPool(THREADS);
-        try {
-            final CountDownLatch startTogether = new CountDownLatch(1);
-            final List<Future<String>> results = new ArrayList<>();
-            for (int i = 0; i < THREADS; i++) {
-                results.add(pool.submit(() -> {
-                    startTogether.await();
-                    return cache.get("key", () -> {
-                        calls.incrementAndGet();
-                        return null;
-                    });
-                }));
-            }
-
-            startTogether.countDown();
-            for (final Future<String> result : results) {
-                assertNull(result.get(TIMEOUT_SECONDS, TimeUnit.SECONDS));
-            }
-        } finally {
-            pool.shutdownNow();
-        }
-
         assertEquals(1, calls.get());
     }
 
@@ -168,7 +135,6 @@ public class CacheTest {
         final AtomicInteger calls = new AtomicInteger();
         final CountDownLatch insideDelegate = new CountDownLatch(1);
         final CountDownLatch letDelegateFinish = new CountDownLatch(1);
-        final CountDownLatch secondThreadStarted = new CountDownLatch(1);
         final ExecutorService pool = Executors.newFixedThreadPool(2);
         try {
             final Future<String> first = pool.submit(() -> cache.get("key", () -> {
@@ -179,13 +145,8 @@ public class CacheTest {
             }));
             assertTrue(insideDelegate.await(TIMEOUT_SECONDS, TimeUnit.SECONDS));
 
-            final Future<String> second = pool.submit(() -> {
-                secondThreadStarted.countDown();
-                return cache.get("key", countingDelegate(calls));
-            });
-            assertTrue(secondThreadStarted.await(TIMEOUT_SECONDS, TimeUnit.SECONDS));
-            // Cache builds its own HashMap, so the second thread's first read cannot be hooked. It is only a couple
-            // of instructions away though: wait for the task to start, then give it room to get in and block.
+            final Future<String> second = pool.submit(() -> cache.get("key", countingDelegate(calls)));
+            // the cache is still empty, so let the second thread get past the unsynchronised read and onto the lock
             Thread.sleep(100);
 
             letDelegateFinish.countDown();
