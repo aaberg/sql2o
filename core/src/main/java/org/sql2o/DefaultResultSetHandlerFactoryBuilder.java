@@ -3,13 +3,16 @@ package org.sql2o;
 import org.sql2o.quirks.Quirks;
 import org.sql2o.reflection2.ObjectBuildableFactory;
 
+import java.util.HashMap;
 import java.util.Map;
 
 public class DefaultResultSetHandlerFactoryBuilder implements ResultSetHandlerFactoryBuilder {
     private boolean caseSensitive;
     private boolean autoDeriveColumnNames;
     private boolean throwOnMappingError;
-    private Map<String, String> columnMappings;
+    // column mappings are optional, so the default is an empty map rather than null: the property lookup
+    // dereferences this map, and a caller who never set any should not have to
+    private Map<String, String> columnMappings = new HashMap<>();
     private Quirks quirks;
 
     public boolean isCaseSensitive() {

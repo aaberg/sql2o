@@ -240,9 +240,20 @@ public int getWithArgument(int ignored) {
         assertNotNull(metadata.getPojoProperty("userid", Map.of()));
     }
 
+    /**
+     * Column mappings are optional, so looking a property up without them has to answer the same way as looking it up
+     * with an empty map rather than throwing.
+     */
     @Test
-    public void constructorIsTheNoArgOne() throws Exception {
+    public void aPropertyCanBeLookedUpWithoutAnyColumnMappings() {
         final var metadata = metadataFor(WithSetterAndField.class);
+
+        assertNotNull(metadata.getPojoProperty("value", null));
+        assertNull(metadata.getPojoProperty("nosuchproperty", null));
+    }
+
+    @Test
+    public void constructorIsTheNoArgOne() throws Exception {        final var metadata = metadataFor(WithSetterAndField.class);
 
         assertEquals(WithSetterAndField.class.getDeclaredConstructor(), metadata.getConstructor());
     }

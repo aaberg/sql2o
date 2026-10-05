@@ -142,18 +142,21 @@ public class DefaultResultSetHandlerFactoryTest {
         assertEquals(7, thing.getSize());
     }
 
-    /**
-     * Column mappings default to null in the builder, and the property lookup dereferences the map without a null
-     * check, so a caller who forgets setColumnMappings gets a bare NullPointerException out of the first row instead
-     * of an empty mapping. Query always sets them, which is why this does not show up in normal use.
-     */
-    @Test
-    public void forgettingTheColumnMappingsBlowsUpWithANullPointer() throws Exception {
+/**
+ * Column mappings are optional, so a builder that was never given any has to work: an empty map is the default,
+ * rather than a null the property lookup would trip over.
+ */
+@Test
+    public void aBuilderWithoutColumnMappingsStillFillsAnObject() throws Exception {
         final var builder = new DefaultResultSetHandlerFactoryBuilder();
         builder.setQuirks(new NoQuirks());
+
         final ResultSetHandler<Thing> handler = builder.<Thing>newFactory(Thing.class)
                 .newResultSetHandler(metaWithTwoColumns());
 
-        assertThrows(NullPointerException.class, () -> handler.handle(resultSetWith("widget", 7)));
+        final Thing thing = handler.handle(resultSetWith("widget", 7));
+
+        assertEquals("widget", thing.getName());
+        assertEquals(7, thing.getSize());
     }
 }

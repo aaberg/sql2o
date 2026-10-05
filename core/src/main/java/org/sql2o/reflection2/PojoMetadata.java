@@ -38,7 +38,8 @@ public class PojoMetadata<T> {
     }
 
     public PojoProperty getPojoProperty(String name, Map<String, String> columnMappings) {
-        if (columnMappings.containsKey(name)) {
+        // columnMappings is optional: a caller that maps nothing passes nothing
+        if (columnMappings != null && columnMappings.containsKey(name)) {
             final var columnName = columnMappings.get(name);
             if (pojoProperties.containsKey(columnName))
                 return pojoProperties.get(columnName);
