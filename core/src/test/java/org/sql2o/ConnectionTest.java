@@ -292,6 +292,8 @@ public class ConnectionTest {
 
         // a key list that was never filled is absent rather than empty, which the typed accessor answers as null
         assertNull(connection.getKeys(String.class));
+        assertNull(connection.getKeys());
+        assertNull(connection.getKey());
     }
 
     @Test
