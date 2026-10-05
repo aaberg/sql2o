@@ -110,4 +110,13 @@ public class LocalDateTimeConverterTest {
         // assert
         assertEquals(targetTime, result);
     }
+    @Test
+    public void convert_unsupportedType_throwsException() {
+        // setup
+        final var converter = new LocalDateTimeConverter();
+
+        // test and assert
+        final var ex = assertThrows(ConverterException.class, () -> converter.convert(new Object()));
+        assertEquals("Can't convert type java.lang.Object to LocalDateTime", ex.getMessage());
+    }
 }

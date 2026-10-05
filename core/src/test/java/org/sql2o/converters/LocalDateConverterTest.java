@@ -135,4 +135,13 @@ public class LocalDateConverterTest {
         }
     }
 
+    @Test
+    public void convert_unsupportedType_throwsException() {
+        // setup
+        final var converter = new LocalDateConverter();
+
+        // test and assert
+        final var ex = assertThrows(ConverterException.class, () -> converter.convert(new Object()));
+        assertEquals("Cannot convert type class java.lang.Object to java.time.LocalDate", ex.getMessage());
+    }
 }

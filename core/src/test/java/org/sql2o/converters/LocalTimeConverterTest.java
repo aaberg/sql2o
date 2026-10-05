@@ -141,4 +141,13 @@ public class LocalTimeConverterTest {
             this.time = time;
         }
     }
+    @Test
+    public void convert_unsupportedType_throwsException() {
+        // setup
+        final var converter = new LocalTimeConverter();
+
+        // test and assert
+        final var ex = assertThrows(ConverterException.class, () -> converter.convert(new Object()));
+        assertEquals("Can't convert type java.lang.Object to LocalTime", ex.getMessage());
+    }
 }
