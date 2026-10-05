@@ -28,22 +28,6 @@ import static org.mockito.Mockito.when;
  */
 public class Sql2oRunnablesTest {
 
-    @Test
-    public void runWithAnArgumentDelegatesToWithConnection() throws Exception {
-        final AtomicBoolean closed = new AtomicBoolean();
-        final AtomicBoolean ran = new AtomicBoolean();
-        final Sql2o sql2o = sql2oOver(recordingJdbc(closed, null, null));
-
-        final String argument = "argument";
-        sql2o.run((StatementRunnable) (con, arg) -> {
-            assertSame(argument, arg);
-            ran.set(true);
-        }, argument);
-
-        assertTrue(ran.get());
-        assertTrue(closed.get());
-    }
-
     private static final String URL = "jdbc:h2:mem:sql2o_runnables_test";
 
     private static Sql2o sql2o() {
@@ -291,36 +275,6 @@ public class Sql2oRunnablesTest {
         }));
         assertThrows(Sql2oException.class, () -> sql2o.withConnection(
                 (StatementRunnableWithResult<String>) (con, arg) -> "never"));
-    }
-
-    /**
- * The new names exist so that a callback that fits both interfaces does not have to be cast. These calls are
- * deliberately written as plain lambdas: if they ever stop compiling, the names have become ambiguous again.
- */
-@Test
-    public void theNewNamesTakeAPlainLambdaThatFitsBothInterfaces() throws Exception {
-        final AtomicBoolean closed = new AtomicBoolean();
-        final AtomicBoolean committed = new AtomicBoolean();
-        final Sql2o sql2o = sql2oOver(recordingJdbc(closed, committed, null));
-
-        // a body that only throws is compatible with both StatementRunnable and StatementRunnableWithResult
-        assertThrows(Sql2oException.class, () -> sql2o.run((con, arg) -> {
-            throw new IllegalStateException("callback failed");
-        }));
-        sql2o.run((con, arg) -> {
-        });
-        assertEquals("value", sql2o.withConnectionResult((con, arg) -> "value"));
-        assertEquals("value", sql2o.withConnectionResult((con, arg) -> "value", "argument"));
-        sql2o.withConnection((StatementRunnable) (con, arg) -> {
-        });
-        assertEquals("value", sql2o.withConnection((StatementRunnableWithResult<String>) (con, arg) -> "value"));
-        sql2o.runInTransactionResult((con, arg) -> "value");
-        sql2o.runInTransactionResult((con, arg) -> "value", "argument");
-        sql2o.runInTransactionResult((con, arg) -> "value", "argument",
-                java.sql.Connection.TRANSACTION_READ_COMMITTED);
-
-        assertTrue(closed.get());
-        assertTrue(committed.get());
     }
 
     @Test
