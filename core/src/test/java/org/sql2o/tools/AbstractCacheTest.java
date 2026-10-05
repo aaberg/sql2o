@@ -15,7 +15,6 @@ import java.util.concurrent.atomic.AtomicInteger;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNull;
-import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 /**
@@ -74,10 +73,11 @@ public class AbstractCacheTest {
     }
 
     /**
-     * A null from evaluate is stored but never accepted on the fast path, so the next request evaluates again.
+     * A null from evaluate has to be cached, or every request for that key pays for another evaluation and the
+     * "delegate runs once per key" guarantee quietly stops holding.
      */
     @Test
-    public void aNullFromEvaluateIsNotCached() {
+    public void aNullFromEvaluateIsCachedAndStillReportedAsNull() {
         final AtomicInteger calls = new AtomicInteger();
         final AbstractCache<String, String, String> cache = new AbstractCache<String, String, String>() {
             @Override
@@ -89,15 +89,15 @@ public class AbstractCacheTest {
 
         assertNull(cache.get("key", "p"));
         assertNull(cache.get("key", "p"));
-        assertEquals(2, calls.get());
+        assertEquals(1, calls.get());
     }
 
     /**
-     * The Map constructor looks like an invitation to pass a concurrent map, but evaluate returning null then
-     * blows up in the put. Nothing in sql2o hits it, since PojoIntrospector uses the default HashMap.
+     * The Map constructor looks like an invitation to pass a concurrent map, which refuses null values, so
+     * caching a null must not go through a plain put.
      */
     @Test
-    public void aMapThatRejectsNullsBreaksOnANullFromEvaluate() {
+    public void aNullIsCacheableInAMapThatRejectsNulls() {
         final AbstractCache<String, String, String> cache =
                 new AbstractCache<String, String, String>(new ConcurrentHashMap<>()) {
                     @Override
@@ -106,7 +106,8 @@ public class AbstractCacheTest {
                     }
                 };
 
-        assertThrows(NullPointerException.class, () -> cache.get("key", "p"));
+        assertNull(cache.get("key", "p"));
+        assertNull(cache.get("key", "p"));
     }
 
     @Test
