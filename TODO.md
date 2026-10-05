@@ -169,11 +169,14 @@ normal operation. They are contract violations with a narrow window.
 
 ## Test tooling
 
-- Migrate the extensions to JUnit 5: `PostgresTest`, `UUIDTest`, `PostgresTestSupport`, `OracleTest` and
-  `OracleConverterTest` in both oracle modules. Needs `docker compose up -d`.
+- Migrate the extensions to JUnit 5: `OracleTest` and `OracleConverterTest` in both oracle modules. Needs
+  `docker compose up -d`.
 - After that, remove `junit:junit` and `junit-vintage-engine` from the root pom.
 
-Both came out of the JUnit migration; `core` is already fully on JUnit 5.
+The postgres module is done: `PostgresTest`, `UUIDTest` and `PostgresTestSupport` are on JUnit 5, with
+`PostgresTestDatabase` taking the place of the constructor injection. All 8 tests of the module are discovered and
+run by the Jupiter engine, but they have never actually passed here, because they need the docker postgres. Only
+`core` is verified end to end.
 
 ## Fixed
 
