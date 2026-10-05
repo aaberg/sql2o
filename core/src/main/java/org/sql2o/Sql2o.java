@@ -35,7 +35,16 @@ public class Sql2o {
 
     private final static Logger logger = LocalLoggerFactory.getLogger(Sql2o.class);
 
-    public Sql2o(String jndiLookup) {
+    /**
+     * Creates a new instance of the Sql2o class which looks its {@link DataSource} up in JNDI.
+     *
+     * <p>Note that this argument is a JNDI name and <em>not</em> a JDBC url. Passing a url here makes the lookup fail
+     * with a {@link javax.naming.NoInitialContextException}, which reads like a missing driver rather than a wrong
+     * overload. To connect by url, use {@link #Sql2o(String, String, String)} instead.
+     *
+     * @param jndiLookup the name to look up in JNDI, for example {@code java:comp/env/jdbc/myDS}
+     */
+public Sql2o(String jndiLookup) {
         this(JndiDataSource.getJndiDatasource(jndiLookup));
     }
 
@@ -240,8 +249,64 @@ public class Sql2o {
         return withConnection(runnable, null);
     }
 
+/**
+     * Invokes the run method on the {@link StatementRunnable} instance. This method guarantees that
+     * the connection is closed properly, when either the run method completes or if an exception occurs.
+     *
+     * <p>Same as {@link #withConnection(StatementRunnable)}, under a name that no overload with
+     * {@link StatementRunnableWithResult} shares, so a lambda does not have to be cast to pick this one.
+     * @param runnable
+     */
+    public void run(StatementRunnable runnable) {
+        withConnection(runnable, null);
+    }
+
     /**
-     * Invokes the run method on the {@link org.sql2o.StatementRunnableWithResult} instance. This method guarantees that
+     * Invokes the run method on the {@link StatementRunnable} instance, passing it the given argument. This method
+     * guarantees that the connection is closed properly, when either the run method completes or if an exception
+     * occurs.
+     *
+     * <p>Same as {@link #withConnection(StatementRunnable, Object)}, under a name that no overload with
+     * {@link StatementRunnableWithResult} shares.
+     * @param runnable
+     * @param argument
+     */
+    public void run(StatementRunnable runnable, Object argument) {
+        withConnection(runnable, argument);
+    }
+
+    /**
+     * Invokes the run method on the {@link StatementRunnableWithResult} instance. This method guarantees that
+     * the connection is closed properly, when either the run method completes or if an exception occurs.
+     *
+     * <p>Same as {@link #withConnection(StatementRunnableWithResult)}, under a name that no overload with
+     * {@link StatementRunnable} shares, so a lambda does not have to be cast to pick this one.
+     * @param runnableWithResult
+     * @param <V>
+     * @return
+     */
+    public <V> V withConnectionResult(StatementRunnableWithResult<V> runnableWithResult) {
+        return withConnection(runnableWithResult, null);
+    }
+
+    /**
+     * Invokes the run method on the {@link StatementRunnableWithResult} instance, passing it the given argument.
+     * This method guarantees that the connection is closed properly, when either the run method completes or if an
+     * exception occurs.
+     *
+     * <p>Same as {@link #withConnection(StatementRunnableWithResult, Object)}, under a name that no overload with
+     * {@link StatementRunnable} shares.
+     * @param runnableWithResult
+     * @param argument
+     * @param <V>
+     * @return
+     */
+    public <V> V withConnectionResult(StatementRunnableWithResult<V> runnableWithResult, Object argument) {
+        return withConnection(runnableWithResult, argument);
+    }
+
+    /**
+     * Invokes the run method on the {@link org.sql2o.StatementRunnable} instance. This method guarantees that
      * the connection is closed properly, when either the run method completes or if an exception occurs.
      * @param runnable
      */
@@ -382,6 +447,53 @@ public class Sql2o {
             throw new Sql2oException("An error occurred while executing StatementRunnable. Transaction is rolled back.", throwable);
         }
         connection.commit();
+    }
+
+    /**
+     * Runs the callback in a transaction and hands back its result, using the default isolation level.
+     *
+     * <p>Same as {@link #runInTransaction(StatementRunnableWithResult)}, under a name that no overload with
+     * {@link StatementRunnable} shares, so a lambda does not have to be cast to pick this one.
+     *
+     * @param runnableWithResult the callback to run
+     * @param <V> the type the callback returns
+     * @return whatever the callback returned
+     */
+    public <V> V runInTransactionResult(StatementRunnableWithResult<V> runnableWithResult){
+        return runInTransaction(runnableWithResult, null);
+    }
+
+    /**
+     * Runs the callback in a transaction, hands it the given argument and returns its result, using the default
+     * isolation level.
+     *
+     * <p>Same as {@link #runInTransaction(StatementRunnableWithResult, Object)}, under a name that no overload with
+     * {@link StatementRunnable} shares.
+     *
+     * @param runnableWithResult the callback to run
+     * @param argument handed to the callback as its second parameter
+     * @param <V> the type the callback returns
+     * @return whatever the callback returned
+     */
+    public <V> V runInTransactionResult(StatementRunnableWithResult<V> runnableWithResult, Object argument){
+        return runInTransaction(runnableWithResult, argument, java.sql.Connection.TRANSACTION_READ_COMMITTED);
+    }
+
+    /**
+     * Runs the callback in a transaction at the given isolation level and returns its result.
+     *
+     * <p>Same as {@link #runInTransaction(StatementRunnableWithResult, Object, int)}, under a name that no overload
+     * with {@link StatementRunnable} shares.
+     *
+     * @param runnableWithResult the callback to run
+     * @param argument handed to the callback as its second parameter
+     * @param isolationLevel the {@link java.sql.Connection} transaction isolation to use
+     * @param <V> the type the callback returns
+     * @return whatever the callback returned
+     */
+    public <V> V runInTransactionResult(StatementRunnableWithResult<V> runnableWithResult, Object argument,
+            int isolationLevel){
+        return runInTransaction(runnableWithResult, argument, isolationLevel);
     }
 
     public <V> V runInTransaction(StatementRunnableWithResult<V> runnableWithResult){

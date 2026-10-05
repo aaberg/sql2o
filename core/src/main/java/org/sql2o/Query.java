@@ -211,6 +211,17 @@ public class Query implements AutoCloseable {
         return this;
     }
 
+    /**
+     * Adds parameters positionally, naming them after the position they were given in: the first value is bound to
+     * {@code p1}, the second to {@code p2}, and so on. The statement therefore has to name them that way, for
+     * example {@code select * from t where a = :p1 and b = :p2}.
+     *
+     * <p>Adding a value whose generated name is not declared in the statement fails with a
+     * {@link Sql2oException}, so the count has to line up with the named placeholders.
+     *
+     * @param paramValues the values to bind, in the order they appear
+     * @return this query, for chaining
+     */
     public Query withParams(Object... paramValues){
         int i=0;
         for (Object paramValue : paramValues) {
