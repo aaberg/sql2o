@@ -10,45 +10,16 @@
 
 package org.sql2o.extensions.postgres;
 
-import org.junit.runners.Parameterized;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.sql2o.Sql2o;
-import org.sql2o.converters.UUIDConverter;
-import org.sql2o.quirks.PostgresQuirks;
-
-import java.util.Arrays;
-import java.util.Collection;
-import java.util.UUID;
 
 /**
  * Created by lars on 22.01.15.
+ *
+ * <p>Used to build the {@link org.sql2o.Sql2o} of a single test class. It no longer holds one, because JUnit 5 does
+ * not inject through the constructor: a test method receives its {@link PostgresTestDatabase} as an argument instead.
  */
 public class PostgresTestSupport {
 
-    protected Sql2o sql2o;
-
-    @Parameterized.Parameters(name = "{index} - {4}")
-    public static Collection<Object[]> getData(){
-        return Arrays.asList(new Object[][]{
-                {"jdbc:postgresql://localhost:15432/postgres", "testuser", "testpassword", "Official postgres driver"},
-//                {"jdbc:pgsql://localhost/testdb", "test", "testtest", "Impossibl postgres driver"}
-        });
-    }
-
     protected Logger logger = LoggerFactory.getLogger(PostgresTest.class);
-
-
-    public PostgresTestSupport(String url, String user, String pass, String testName) {
-
-        logger.info(testName);
-
-        sql2o = new Sql2o(url, user, pass, new PostgresQuirks(){
-            {
-                // make sure we use default UUID converter.
-                converters.put(UUID.class, new UUIDConverter());
-            }
-        });
-    }
-
 }
