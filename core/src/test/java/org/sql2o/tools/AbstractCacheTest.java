@@ -4,6 +4,7 @@ import org.junit.jupiter.api.Test;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.CountDownLatch;
@@ -144,47 +145,39 @@ public class AbstractCacheTest {
     }
 
     /**
-     * Covers the recheck under the write lock: the second thread gets past the read lock while the cache is still
-     * empty and then finds the value the first thread cached.
+     * Covers the recheck under the write lock: a value published after the read lock section must be found there,
+     * and evaluate must not run a second time.
+     *
+     * <p>This cannot be staged with two threads. The first lookup happens under the read lock, and whoever holds
+     * the write lock blocks readers, so a second thread can only ever read null before the value exists and again
+     * after it does - it never gets to the recheck with a value in place. The map below publishes the value during
+     * the first lookup instead, which is the interleaving the recheck exists for, without the race.
      */
     @Test
-    public void aThreadThatWaitedForTheWriteLockReusesTheValueItFound() throws Exception {
+    public void aValuePublishedAfterTheReadLockSectionIsFoundByTheRecheck() {
         final AtomicInteger calls = new AtomicInteger();
-        final CountDownLatch insideEvaluate = new CountDownLatch(1);
-        final CountDownLatch letEvaluateFinish = new CountDownLatch(1);
-        final AbstractCache<String, String, String> cache =
-                new AbstractCache<String, String, String>(new ConcurrentHashMap<>()) {
-                    @Override
-                    protected String evaluate(String key, String param) {
-                        calls.incrementAndGet();
-                        insideEvaluate.countDown();
-                        try {
-                            assertTrue(letEvaluateFinish.await(TIMEOUT_SECONDS, TimeUnit.SECONDS));
-                        } catch (InterruptedException e) {
-                            Thread.currentThread().interrupt();
-                            throw new IllegalStateException(e);
-                        }
-                        return "value";
-                    }
-                };
-        final ExecutorService pool = Executors.newFixedThreadPool(2);
-        try {
-            final Future<String> first = pool.submit(() -> cache.get("key", "p"));
-            assertTrue(insideEvaluate.await(TIMEOUT_SECONDS, TimeUnit.SECONDS));
+        final AtomicInteger lookups = new AtomicInteger();
+        final Map<String, String> map = new HashMap<String, String>() {
+            @Override
+            public String get(Object key) {
+                if (lookups.getAndIncrement() == 0) {
+                    super.put((String) key, "value");
+                    return null;
+                }
+                return super.get(key);
+            }
+        };
 
-            final Future<String> second = pool.submit(() -> cache.get("key", "p"));
-            // nothing is cached yet, so let the second thread finish its read and block on the write lock
-            Thread.sleep(100);
+        final AbstractCache<String, String, String> cache = new AbstractCache<String, String, String>(map) {
+            @Override
+            protected String evaluate(String key, String param) {
+                calls.incrementAndGet();
+                return "from evaluate";
+            }
+        };
 
-            letEvaluateFinish.countDown();
-
-            assertEquals("value", first.get(TIMEOUT_SECONDS, TimeUnit.SECONDS));
-            assertEquals("value", second.get(TIMEOUT_SECONDS, TimeUnit.SECONDS));
-        } finally {
-            pool.shutdownNow();
-        }
-
-        assertEquals(1, calls.get());
+        assertEquals("value", cache.get("key", "p"));
+        assertEquals(0, calls.get(), "the recheck must find the value instead of evaluating again");
     }
 
     @Test
