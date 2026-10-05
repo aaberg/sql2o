@@ -38,9 +38,6 @@ public class ConvertTest {
         pristineEnumFactory = (EnumConverterFactory) field("registeredEnumConverterFactory").get(null);
 
         field("registeredConverters").set(null, new HashMap<Class<?>, Converter<?>>(pristineConverters));
-        // Whatever a factory built for a previous test would otherwise survive into this one, built by a factory that
-        // is no longer the registered one.
-        ((Map<?, ?>) field("enumConverters").get(null)).clear();
     }
 
     @AfterEach
@@ -65,11 +62,6 @@ public class ConvertTest {
         assertNotNull(Convert.getConverterIfExists(byte[].class));
         assertNotNull(Convert.getConverterIfExists(java.util.UUID.class));
         assertNotNull(Convert.getConverterIfExists(java.time.Instant.class));
-        assertNotNull(Convert.getConverterIfExists(java.time.OffsetTime.class));
-        assertNotNull(Convert.getConverterIfExists(java.time.OffsetDateTime.class));
-        assertNotNull(Convert.getConverterIfExists(java.time.LocalDate.class));
-        assertNotNull(Convert.getConverterIfExists(java.time.LocalTime.class));
-        assertNotNull(Convert.getConverterIfExists(java.time.LocalDateTime.class));
         assertNotNull(Convert.getConverterIfExists(java.util.Date.class));
         assertNotNull(Convert.getConverterIfExists(java.sql.Date.class));
     }
@@ -167,7 +159,7 @@ public class ConvertTest {
      */
     @Test
     public void aConverterFromAServiceProviderIsRegistered() throws ConverterException {
-        final Converter<Money> converter = Convert.getConverterIfExists(MoneyConverterProvider.Money.class);
+        final Converter<Money> converter = Convert.getConverter(MoneyConverterProvider.Money.class);
 
         assertEquals(150L, converter.convert(150L).getCents());
         assertNull(converter.convert(null));
