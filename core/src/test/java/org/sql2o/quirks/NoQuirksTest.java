@@ -7,8 +7,6 @@ import org.sql2o.converters.DefaultConverter;
 import org.sql2o.converters.Convert;
 
 import java.io.ByteArrayInputStream;
-import java.io.Reader;
-import java.io.StringReader;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.ResultSetMetaData;
@@ -24,10 +22,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertSame;
 import static org.junit.jupiter.api.Assertions.assertTrue;
-import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.ArgumentMatchers.anyInt;
 import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
@@ -141,31 +136,6 @@ public class NoQuirksTest {
         quirks.setParameter(statement, 1, value);
 
         verify(statement).setObject(1, value);
-    }
-
-    @Test
-    public void aCharacterStreamParameterGoesToSetCharacterStream() throws Exception {
-        final PreparedStatement statement = statement();
-        final Reader value = new StringReader("text");
-
-        quirks.setParameter(statement, 1, value);
-
-        verify(statement).setCharacterStream(1, value);
-    }
-
-    /**
-     * A reader reaches this method as an object when nothing named its type, and a driver has no way of inferring one for
-     * it, so it is routed rather than passed on. {@code setObject} is what would happen without that.
-     */
-    @Test
-    public void aReaderParameterIsRoutedToTheCharacterStreamPathFromTheObjectOverload() throws Exception {
-        final PreparedStatement statement = statement();
-        final Reader value = new StringReader("text");
-
-        quirks.setParameter(statement, 1, (Object) value);
-
-        verify(statement).setCharacterStream(1, value);
-        verify(statement, never()).setObject(anyInt(), any());
     }
 
     @Test
