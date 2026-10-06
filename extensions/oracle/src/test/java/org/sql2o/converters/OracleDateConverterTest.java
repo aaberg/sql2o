@@ -2,10 +2,12 @@ package org.sql2o.converters;
 
 import oracle.sql.DATE;
 import oracle.sql.TIMESTAMP;
+import oracle.sql.TIMESTAMPTZ;
 import org.junit.jupiter.api.Test;
 
 import java.sql.SQLException;
 import java.sql.Timestamp;
+import java.time.OffsetDateTime;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
@@ -36,6 +38,20 @@ public class OracleDateConverterTest {
     public void itReadsAnOracleDateAndTimestamp() throws ConverterException, SQLException {
         assertEquals(JANUARY_FIRST, converter.convert(new TIMESTAMP(JANUARY_FIRST)));
         assertEquals(new DATE(JANUARY_FIRST).timestampValue(), converter.convert(new DATE(JANUARY_FIRST)));
+    }
+
+    /**
+     * The offset travels inside the value, so a TIMESTAMPTZ can be read wherever it came from. Only the instant is
+     * asserted, since a java.util.Date cannot remember which offset it was read at and rendering it in the zone of the
+     * jvm is the whole point of keeping the instant rather than a wall clock.
+     */
+    @Test
+    public void itReadsAZoneAwareTimestampByItsOffset() throws ConverterException, SQLException {
+        OffsetDateTime inUtc = OffsetDateTime.parse("2020-06-01T12:30:15+02:00");
+
+        Date converted = converter.convert(new TIMESTAMPTZ(inUtc));
+
+        assertEquals(inUtc.toInstant(), converted.toInstant());
     }
 
     @Test
@@ -71,6 +87,16 @@ public class OracleDateConverterTest {
         assertInstanceOf(OracleDateConverter.class, Convert.getConverterIfExists(Date.class));
     }
 
+    @Test
+    public void itReportsAFailingZoneAwareTimestampAsAConverterException() {
+        ConverterException thrown =
+                assertThrows(ConverterException.class, () -> converter.convert(new ExplodingZoneAwareTimestamp()));
+
+        assertEquals("Error trying to convert " + ExplodingZoneAwareTimestamp.class.getName() + " to java.util.Date",
+                thrown.getMessage());
+        assertEquals("boom", thrown.getCause().getMessage());
+    }
+
     /**
      * A datum that fails on the way out is the only way to reach the catch block: oracle hands out timestamps that do
      * convert, so the happy path alone would leave it dark.
@@ -83,6 +109,19 @@ public class OracleDateConverterTest {
 
         @Override
         public Timestamp timestampValue() throws SQLException {
+            throw new SQLException("boom");
+        }
+    }
+
+    /** Same trick for the zone aware type, which is read through a different accessor. */
+    private static class ExplodingZoneAwareTimestamp extends TIMESTAMPTZ {
+
+        ExplodingZoneAwareTimestamp() throws SQLException {
+            super(OffsetDateTime.parse("2020-01-01T00:00:00Z"));
+        }
+
+        @Override
+        public OffsetDateTime offsetDateTimeValue() throws SQLException {
             throw new SQLException("boom");
         }
     }
