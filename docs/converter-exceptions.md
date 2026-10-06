@@ -1,8 +1,8 @@
-# Converter exception handling: two proposals for discussion
+# Converter exception handling: four proposals for discussion
 
-Raised while covering `org.sql2o.converters` with tests. Both items are behaviour that callers can observe today,
-so changing either is an API decision rather than a cleanup. Nothing has been changed; this document exists to get
-a decision from the community first.
+Raised while covering `org.sql2o.converters`, `org.sql2o.data` and the postgres extension with tests. All four items
+are behaviour that callers can observe today, so changing any of them is an API decision rather than a cleanup.
+Nothing has been changed; this document exists to get a decision from the community first.
 
 ## The problem in one sentence
 
@@ -135,6 +135,36 @@ So the behaviour is not changed silently, the following tests describe what happ
 
 Whichever way the decision goes, those tests are the ones to update.
 
+## A fourth one: a converter in the postgres extension lets gson throw its own exception
+
+Found while covering `extensions/postgres`. `JSONConverter.convert` declares `throws ConverterException`, but the only
+way it can fail is inside gson, so a column holding text that is not json surfaces as gson's unchecked
+`JsonSyntaxException`:
+
+```java
+if (val == null) return null;
+if (val instanceof JsonElement) return (JsonElement) val;
+// ... pick the text to parse ...
+return parserHolder.parser.parse(jsonString);   // gson throws JsonSyntaxException
+```
+
+`ConverterException` is never thrown here, so the signature promises something the method cannot deliver.
+
+This matters more than the other three, because it is the only one of the four where the caller has no sql2o type to
+catch: there is no `Sql2oException` wrapping it, and `JsonSyntaxException` is a third-party type. An application that
+wants to report "bad json in column foo" has to import gson to do it.
+
+Proposed, if the community wants a single behaviour:
+
+- wrap the parse in `try/catch` and rethrow as `ConverterException`, which `Row` already converts into
+  `Sql2oException("Error converting value")`, giving this case the same shape as the first item above; or
+- declare that converters may throw whatever their underlying library throws, and leave the signature alone.
+
+The first keeps the promise the signature already makes. The second is the honest description of what three of the
+four items already do.
+
+Pinned today by `JSONConverterTest.malformedJsonEscapesUnwrapped`.
+
 ## Summary of what a caller can be handed today
 
 For one call that reads a value out of a row, depending on the converter and the value:
@@ -142,6 +172,7 @@ For one call that reads a value out of a row, depending on the converter and the
 - `Sql2oException("Error converting value")` when a converter refused the value,
 - `NumberFormatException` when a JDK parser inside a numeric converter failed,
 - `ConverterException` from `Row`'s own "no converter registered" guard, re-wrapped as `Sql2oException`,
-- `RuntimeException` from `ByteArrayConverter` for an unsupported type, when the target is `byte[]` or `InputStream`.
+- `RuntimeException` from `ByteArrayConverter` for an unsupported type, when the target is `byte[]` or `InputStream`,
+- `JsonSyntaxException` from the postgres `JSONConverter` when the column holds text that is not json.
 
 Everything above is worth reducing to one type, but which type is the community's call.
