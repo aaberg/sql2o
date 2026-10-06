@@ -125,6 +125,35 @@ scratch test as the regression test.
       with `ORA-18716`, so the driver declines to invent a zone rather than guessing the one of the jvm.
 
       All of it is pinned by `OracleDriverTypeTest`, which fails if ojdbc changes any of it.
+- [run] **A postgres `timetz` lost its offset** — fixed. The driver hands a time with a zone over as
+      `java.sql.Time` with the offset already folded into the zone of the session, so nothing downstream could recover
+      it. `PostgresQuirks.getRSVal` now asks the result set for an `OffsetTime` instead. Two things had to be in place
+      for that to be any use: the driver reports `time` and `timetz` as the **same** type code
+      (`getColumnType() == Types.TIME`, never `TIME_WITH_TIMEZONE`), so the name is the only thing that tells them
+      apart; and core had no converter for `OffsetTime` at all, so there was nothing to place the value with. Both
+      spellings of the name are accepted, `timetz` as the driver writes it and `time with time zone` as the standard
+      spells it, and the metadata is only consulted once the value has turned out to be a time.
+- [run] **`java.sql.Timestamp` could not be read as a `LocalDate`**, and a `java.sql.Date` could not be read as a
+      `LocalDateTime` or an `OffsetDateTime` — fixed. A postgres `timestamp` column arrives as a `java.sql.Timestamp`,
+      so the first of those is what a plain mapping onto a `LocalDate` field runs into. A date has no time of day, so
+      midnight is the only reading of it that does not invent anything. Deliberately **not** fixed: a `time` column read
+      as an `Instant`, `LocalDateTime` or `OffsetDateTime` still fails, since each of those needs a date the column does
+      not carry and any answer would be an invention.
+- [run] **`java.sql.Time` silently lost its milliseconds**, because its `toLocalTime()` throws the fraction of a second
+      away even though the epoch value keeps it — fixed by reading the epoch instead. A postgres `time` column of
+      `12:34:56.789` used to come back as `12:34:56`.
+- [read] **`ZoneOffset.systemDefault()` does not exist.** `ZoneOffset` inherits the static `systemDefault()` from
+      `ZoneId`, so the call compiles and hands back a `ZoneId` rather than a `ZoneOffset`. `OffsetDateTimeConverter`
+      gets away with it only because it feeds the result to `Instant.atZone(ZoneId)`.
+- [read] **Postgres arrays are not mapped at all.** `timestamp[]`, `date[]` and `timestamptz[]` arrive as
+      `org.postgresql.jdbc.PgArray`, and every target type sql2o can name leaves the value as that object, so
+      `executeScalar(Timestamp[].class)` hands back a `PgArray` and fails later at the call site with a
+      `ClassCastException`. `PgArray.getArray()` does produce a proper `Timestamp[]`, so the driver is not the obstacle;
+      there is simply no converter, and unwrapping one is a larger piece of work than a converter.
+- [read] **An `interval` column only reads as `PGInterval` or as a string**, since the driver hands over
+      `org.postgresql.util.PGInterval`. Anything else falls through `DefaultConverter`, which returns the value as it
+      is, so `executeScalar(Duration.class)` also returns a `PGInterval` rather than failing. Mapping an interval onto a
+      `java.time.Duration` would be wrong in general, because an interval can hold months and years.
 - [read] **`OracleLocalTimeConverter` builds a Joda `LocalTime` from a `Timestamp`** in the JVM default
       zone (`OracleLocalTimeConverter.java:22`), so the wall-clock value depends on the JVM time zone.
 - [read] **`gson` is a hard non-optional dependency** of the postgres extension and appears in a published
