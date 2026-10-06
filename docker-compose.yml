@@ -9,6 +9,20 @@ services:
         networks:
             sql2o-network:
 
+    mariadb-db:
+        # Pinned to the 11.4 LTS, not latest: a major bump changes defaults (authentication, utc handling)
+        # that the tests below measure rather than assume.
+        image: 'mariadb:11.4'
+        ports:
+            - 13306:3306
+        environment:
+            - MARIADB_ROOT_PASSWORD=testpassword
+            - MARIADB_DATABASE=testdb
+            - MARIADB_USER=testuser
+            - MARIADB_PASSWORD=testpassword
+        networks:
+            sql2o-network:
+
     oracle-xe-21c:
         image: 'container-registry.oracle.com/database/express:latest'
         volumes:

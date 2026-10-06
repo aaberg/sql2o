@@ -29,6 +29,7 @@
         <module>bytecode</module>
         <module>hsqldb</module>
         <module>derby</module>
+        <module>mysql</module>
     </modules>
 
     <dependencies>

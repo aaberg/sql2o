@@ -8,6 +8,8 @@ import org.sql2o.Sql2o;
 
 import java.io.ByteArrayInputStream;
 import java.io.InputStream;
+import java.io.Reader;
+import java.io.StringReader;
 import java.math.BigDecimal;
 import java.sql.Timestamp;
 import java.time.Instant;
@@ -81,6 +83,19 @@ GREEN, BLUE
     /** A name of its own, so that the table of one database is not the table of another. */
     protected String tableName() {
         return "TYPEDPARAMS";
+    }
+
+    /**
+     * The name of the wide byte column in the statements below, which a database may reserve: {@code blob} is a
+     * reserved word in MySQL and MariaDB, which quote it, while everywhere else it stands as it is.
+     */
+    protected String blobColumn() {
+        return "blob";
+    }
+
+    /** The name of the wide text column; see {@link #blobColumn()}. */
+    protected String clobColumn() {
+        return "clob";
     }
 
     /**
@@ -163,8 +178,8 @@ GREEN, BLUE
             ddl.append(column).append(' ').append(columnType(testCase.columnKind()));
             ddl.append(", ");
         }
-        ddl.append("blob ").append(columnType(BLOB)).append(", ");
-        ddl.append("clob ").append(columnType(CLOB)).append(')');
+        ddl.append(blobColumn()).append(' ').append(columnType(BLOB)).append(", ");
+        ddl.append(clobColumn()).append(' ').append(columnType(CLOB)).append(')');
 
         try (Connection connection = sql2o().open()) {
             connection.createQuery(ddl.toString()).executeUpdate();
@@ -254,12 +269,20 @@ GREEN, BLUE
                 () -> assertNullRoundTrip(testCase)));
     }
 
-    /** A clob, which is text too large to sit inline, written and read through the ordinary calls. */
+    /**
+     * A clob, which is text too large to sit inline, written and read through the ordinary calls.
+     *
+     * <p>Written three ways, which is the counterpart of the two a blob has: as a String with the type named, as a String
+     * without, and as a stream of characters. The stream is the one worth having, since text of a size worth a clob is
+     * rarely text a caller already has in memory.
+     */
     @TestFactory
     public Stream<DynamicTest> aClobIsWrittenAndReadBack() {
         return Stream.of(
                 DynamicTest.dynamicTest("a clob bound with its type named", this::assertClobBoundWithItsType),
-                DynamicTest.dynamicTest("a clob bound without naming its type", this::assertClobBoundWithoutItsType));
+                DynamicTest.dynamicTest("a clob bound without naming its type", this::assertClobBoundWithoutItsType),
+                DynamicTest.dynamicTest("a clob bound as a reader", this::assertClobBoundAsReader),
+                DynamicTest.dynamicTest("a clob bound as an untyped reader", this::assertClobBoundAsAnUntypedReader));
     }
 
     /**
@@ -380,7 +403,7 @@ GREEN, BLUE
         freshTable();
 
         try (Connection connection = sql2o().open()) {
-            Query query = connection.createQuery("insert into " + tableName() + " (clob) values (:v)");
+            Query query = connection.createQuery("insert into " + tableName() + " (" + clobColumn() + ") values (:v)");
             bindWithItsType(query, "v", String.class, clobValue());
             query.executeUpdate();
         }
@@ -392,8 +415,33 @@ GREEN, BLUE
         freshTable();
 
         try (Connection connection = sql2o().open()) {
-            connection.createQuery("insert into " + tableName() + " (clob) values (:v)")
+            connection.createQuery("insert into " + tableName() + " (" + clobColumn() + ") values (:v)")
                     .addParameter("v", clobValue())
+                    .executeUpdate();
+        }
+
+        assertClobReadsBackWhole();
+    }
+
+    private void assertClobBoundAsReader() {
+        freshTable();
+
+        try (Connection connection = sql2o().open()) {
+            Query query = connection.createQuery("insert into " + tableName() + " (" + clobColumn() + ") values (:v)");
+            bindWithItsType(query, "v", Reader.class, new StringReader(clobValue()));
+            query.executeUpdate();
+        }
+
+        assertClobReadsBackWhole();
+    }
+
+    /** The untyped call as well, since that one arrives at the driver without its type having been named at all. */
+    private void assertClobBoundAsAnUntypedReader() {
+        freshTable();
+
+        try (Connection connection = sql2o().open()) {
+            connection.createQuery("insert into " + tableName() + " (" + clobColumn() + ") values (:v)")
+                    .addParameter("v", new StringReader(clobValue()))
                     .executeUpdate();
         }
 
@@ -403,7 +451,7 @@ GREEN, BLUE
     private void assertClobReadsBackWhole() {
         String read;
         try (Connection connection = sql2o().open()) {
-            read = connection.createQuery("select clob from " + tableName()).executeScalar(String.class);
+            read = connection.createQuery("select " + clobColumn() + " from " + tableName()).executeScalar(String.class);
         }
 
         assertEqualsWithAReadableMessage(clobValue().length(), read == null ? -1 : read.length(), "the clob length");
@@ -433,7 +481,7 @@ GREEN, BLUE
     private void writeTheBigColumns() {
         try (Connection connection = sql2o().open()) {
             Query query = connection.createQuery(
-                    "insert into " + tableName() + " (clob, blob) values (:clob, :blob)");
+                    "insert into " + tableName() + " (" + clobColumn() + ", " + blobColumn() + ") values (:clob, :blob)");
             bindWithItsType(query, "clob", String.class, clobValue());
             bindWithItsType(query, "blob", byte[].class, blobValue());
             query.executeUpdate();
@@ -442,7 +490,7 @@ GREEN, BLUE
 
     private BigColumns readTheBigColumns() {
         try (Connection connection = sql2o().open()) {
-            return connection.createQuery("select clob, blob from " + tableName())
+            return connection.createQuery("select " + clobColumn() + ", " + blobColumn() + " from " + tableName())
                     .executeAndFetchUnique(BigColumns.class);
         }
     }
@@ -522,13 +570,13 @@ GREEN, BLUE
         freshTable();
 
         try (Connection connection = sql2o().open()) {
-            connection.createQuery("insert into " + tableName() + " (blob) values (:v)")
+            connection.createQuery("insert into " + tableName() + " (" + blobColumn() + ") values (:v)")
                     .addParameter("v", byte[].class, blobValue())
                     .executeUpdate();
         }
 
         try (Connection connection = sql2o().open()) {
-            byte[] read = connection.createQuery("select blob from " + tableName()).executeScalar(byte[].class);
+            byte[] read = connection.createQuery("select " + blobColumn() + " from " + tableName()).executeScalar(byte[].class);
 
             assertEqualsWithAReadableMessage(blobValue().length, read == null ? -1 : read.length, "the blob length");
             for (int i = 0; read != null && i < read.length; i++) {
@@ -541,13 +589,13 @@ GREEN, BLUE
         freshTable();
 
         try (Connection connection = sql2o().open()) {
-            connection.createQuery("insert into " + tableName() + " (blob) values (:v)")
+            connection.createQuery("insert into " + tableName() + " (" + blobColumn() + ") values (:v)")
                     .addParameter("v", InputStream.class, new ByteArrayInputStream(blobValue()))
                     .executeUpdate();
         }
 
         try (Connection connection = sql2o().open()) {
-            byte[] read = connection.createQuery("select blob from " + tableName()).executeScalar(byte[].class);
+            byte[] read = connection.createQuery("select " + blobColumn() + " from " + tableName()).executeScalar(byte[].class);
 
             assertEqualsWithAReadableMessage(blobValue().length, read == null ? -1 : read.length, "the blob length");
             for (int i = 0; read != null && i < read.length; i++) {
