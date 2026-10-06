@@ -91,14 +91,27 @@ scratch test as the regression test.
       (`Convert.java:106-112`), so adding `sql2o-oracle` changes `Date` handling for every database, and
       the winner depends on classpath order.
 - [read] **`Quirks.getRSVal` is not used on the POJO/record path** — `DefaultResultSetHandlerFactory`
-      reads `resultSet.getObject(i)` directly (`:26`). Verified with `javap` against ojdbc11 23.3:
-      `oracle.sql.TIMESTAMPTZ`, `TIMESTAMPLTZ` and `DATE` extend `Datum` directly and are **not**
-      subclasses of `oracle.sql.TIMESTAMP`, which is the only type `OracleDateConverter` handles
-      (`OracleDateConverter.java:16`). So mapping such a column to a `java.util.Date` property should
-      fail with "Cannot convert type class oracle.sql.TIMESTAMPTZ/DATE to java.util.Date" — confirm
-      against the Docker Oracle before fixing, the existing Oracle tests only cover UUID conversion.
-      Note `OracleQuirks.getRSVal` does match `TIMESTAMPTZ`/`TIMESTAMPLTZ`, because it compares the
-      `oracle.sql.TIMESTAMP` name prefix, but not `oracle.sql.DATE`.
+      reads `resultSet.getObject(i)` directly (`:26`). Verified with `javap` against ojdbc11 23.3 and
+      then confirmed against Oracle XE 21c: `oracle.sql.TIMESTAMPTZ` and `TIMESTAMPLTZ` extend `Datum`
+      directly and are **not** subclasses of `oracle.sql.TIMESTAMP`, which is the only type
+      `OracleDateConverter` handles (`OracleDateConverter.java:16`), so mapping such a column to a
+      `java.util.Date` property fails with
+      `ConverterException: Cannot convert type class oracle.sql.TIMESTAMPTZ to java.util.Date`.
+      Measured per column type, reading a literal of each kind with the shipped quirks:
+
+      | sql2o source type          | `ResultSet.getObject(i)` | `OracleQuirks.getRSVal` | `OracleDateConverter` |
+      |----------------------------|--------------------------|-------------------------|------------------------|
+      | `timestamp`                | `oracle.sql.TIMESTAMP`   | `java.sql.Timestamp`   | ok                     |
+      | `timestamp with time zone` | `oracle.sql.TIMESTAMPTZ` | `java.sql.Timestamp`   | **throws**             |
+      | `timestamp with local time zone` | `oracle.sql.TIMESTAMPLTZ` | `java.sql.Timestamp` | **throws**        |
+      | `date`                     | `java.sql.Timestamp`     | `java.sql.Timestamp`   | ok                     |
+
+      Two things worth noting. The quirks hook *does* cope with the zone types, because it compares the
+      `oracle.sql.TIMESTAMP` name prefix, so a mapper that went through `getRSVal` would have been fine —
+      the breakage is specific to the path that reads `getObject` directly. And `date` columns never
+      produce an `oracle.sql.DATE` here, so that part of the class hierarchy argument is moot in
+      practice; only the two zone types are actually reachable. Fixing means matching on `Datum` in
+      `OracleDateConverter`, at which point the joda converters already do the right thing.
 - [read] **`OracleLocalTimeConverter` builds a Joda `LocalTime` from a `Timestamp`** in the JVM default
       zone (`OracleLocalTimeConverter.java:22`), so the wall-clock value depends on the JVM time zone.
 - [read] **`gson` is a hard non-optional dependency** of the postgres extension and appears in a published
