@@ -11,3 +11,11 @@ settings-orig.xml
 
 # OSX
 .DS_Store
+
+# Eclipse. The jdt language server the editor runs writes these into every module as it indexes them, so ignoring
+# them is easier than deleting them before each commit.
+.classpath
+.project
+.settings/
+.factorypath
+*.launch
