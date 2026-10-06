@@ -7,6 +7,7 @@ import org.sql2o.quirks.OracleQuirks;
 import java.util.UUID;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNull;
 
 /**
  * Created by lars on 01.05.14.
@@ -37,6 +38,16 @@ public class OracleConverterTest {
 
 
         assertEquals(uuid.toString(), hexUuid);
+    }
+
+    /** Oracle stores a uuid as raw(16), but anything that is not a byte array still has to go through the base. */
+    @Test
+    public void testUUIDConverterFallsBackToTheBaseConverter() throws ConverterException {
+        UUID uuid = UUID.randomUUID();
+        OracleUUIDConverter converter = new OracleUUIDConverter();
+
+        assertEquals(uuid, converter.convert(uuid.toString()));
+        assertNull(converter.convert(null));
     }
 
 }
