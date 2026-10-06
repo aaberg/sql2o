@@ -28,6 +28,7 @@
 
     <properties>
         <commons-dbutils.version>1.8.1</commons-dbutils.version>
+        <derby.version>10.14.2.0</derby.version>
         <guava.version>33.0.0-jre</guava.version>
         <h2.version>2.2.224</h2.version>
         <hamcrest.version>2.2</hamcrest.version>

@@ -19,3 +19,7 @@ settings-orig.xml
 .settings/
 .factorypath
 *.launch
+
+# Derby writes a derby.log into the working directory of whoever ran the tests, and every module of it that uses
+# the database gets one.
+derby.log

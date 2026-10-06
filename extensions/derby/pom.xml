@@ -1,5 +1,5 @@
 <!--
-  ~ Copyright (c) 2014 Lars Aaberg
+  ~ Copyright (c) 2026 Dmitry Alexandrov
   ~
   ~ Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation files (the "Software"), to deal in the Software without restriction, including without limitation the rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to permit persons to whom the Software is furnished to do so, subject to the following conditions:
   ~
@@ -8,49 +8,38 @@
   ~ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
   -->
 
-<project xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns="http://maven.apache.org/POM/4.0.0" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
     <modelVersion>4.0.0</modelVersion>
-    <groupId>org.sql2o.extensions</groupId>
-    <artifactId>extensions-parent</artifactId>
-    <name>Sql2o - Extensions</name>
-    <packaging>pom</packaging>
-
+    <artifactId>sql2o-derby</artifactId>
+    <packaging>jar</packaging>
+    <name>sql2o-derby</name>
+    <description>Apache Derby extension for sql2o</description>
+    <url>http://www.sql2o.org</url>
     <parent>
-        <groupId>org.sql2o</groupId>
-        <artifactId>sql2o-parent</artifactId>
+        <groupId>org.sql2o.extensions</groupId>
+        <artifactId>extensions-parent</artifactId>
         <version>1.9.0-SNAPSHOT</version>
     </parent>
 
-    <modules>
-        <module>postgres</module>
-        <module>oracle</module>
-        <module>oracle-joda-time</module>
-        <module>db2</module>
-        <module>hsqldb</module>
-        <module>derby</module>
-    </modules>
-
     <dependencies>
-        <!-- All dependencies depends on sql2o core project -->
+
+        <!-- The driver is only needed to talk to a real derby, so it never ships with the extension. -->
+        <dependency>
+            <groupId>org.apache.derby</groupId>
+            <artifactId>derby</artifactId>
+            <version>${derby.version}</version>
+            <scope>test</scope>
+        </dependency>
+
+        <!-- The test support of core, so that the tests here can extend the same base class the core tests use. -->
         <dependency>
             <groupId>org.sql2o</groupId>
             <artifactId>sql2o</artifactId>
             <version>${project.version}</version>
+            <type>test-jar</type>
+            <scope>test</scope>
         </dependency>
+
     </dependencies>
 
-    <build>
-        <plugins>
-            <plugin>
-                <groupId>org.apache.maven.plugins</groupId>
-                <artifactId>maven-jar-plugin</artifactId>
-                <version>2.4</version>
-                <configuration>
-                    <archive>
-                        <manifestFile>src/main/resources/META-INF/MANIFEST.MF</manifestFile>
-                    </archive>
-                </configuration>
-            </plugin>
-        </plugins>
-    </build>
 </project>
