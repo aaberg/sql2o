@@ -12,13 +12,20 @@ package org.sql2o.quirks;
 
 import org.sql2o.converters.Converter;
 
-import java.sql.ResultSetMetaData;
-import java.sql.SQLException;
 import java.util.Map;
 
 /**
  * @author aldenquimby@gmail.com
  * @since 4/6/14
+ *
+ * Db2 hands out DATE, TIME and TIMESTAMP columns as java.sql.Date, java.sql.Time and java.sql.Timestamp, which the
+ * converters of core already read, so nothing has to be done about them here. That is measured by
+ * {@code Db2DateReadingTest} against a real database rather than asserted in a comment.
+ *
+ * <p>Column naming is deliberately left to {@link NoQuirks}, which returns the label of a column and therefore the
+ * alias a query gave it. This used to ask the metadata for the name of the column instead, which meant a query such
+ * as {@code select id as my_id} would be mapped by {@code ID} and the value would silently never reach the property it
+ * was written for.
  */
 public class Db2Quirks extends NoQuirks {
     public Db2Quirks() {
@@ -27,12 +34,5 @@ public class Db2Quirks extends NoQuirks {
 
     public Db2Quirks(Map<Class, Converter> converters) {
         super(converters);
-    }
-    // Db2 works perfect with java.sql.Timestamp
-    // checked on DATE|TIME|TIMESTAMP column types
-
-    @Override
-    public String getColumnName(ResultSetMetaData meta, int colIdx) throws SQLException {
-        return meta.getColumnName(colIdx);
     }
 }
