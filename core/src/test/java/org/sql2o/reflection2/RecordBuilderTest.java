@@ -13,7 +13,6 @@ import java.util.Map;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
-import static org.junit.jupiter.api.Assertions.assertTrue;
 
 /**
  * Unit tests for {@link RecordBuilder}, the mapping path for Java records.
@@ -64,19 +63,17 @@ public class RecordBuilderTest {
 
 /**
      * Documents current behaviour: RecordBuilder hands every component to the canonical constructor, so a
-     * component no column was mapped for is passed as null. For a primitive component the JDK reports that as
-     * an IllegalArgumentException whose message is the text of an internal NullPointerException, so what the
-     * caller sees is reflection internals rather than the column that was never mapped.
+     * component no column was mapped for is passed as null. For a primitive component the JDK refuses that with
+     * an IllegalArgumentException. The message is reflection internals and differs between JDK releases — it names
+     * ValueConversions on newer ones and is null on 17 — so only the type is pinned here, never the wording.
      */
     @Test
-    public void aComponentLeftOutFailsWithAReflectionInternalMessage() {
+    public void aComponentLeftOutFails() {
         final var builder = builder(plainSettings());
 
         builder.withValue("x", 1);
 
-        final var ex = assertThrows(IllegalArgumentException.class, builder::build);
-
-        assertTrue(ex.getMessage().contains("ValueConversions"));
+        assertThrows(IllegalArgumentException.class, builder::build);
     }
 
     @Test
