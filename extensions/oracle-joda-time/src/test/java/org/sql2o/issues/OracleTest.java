@@ -12,7 +12,8 @@ package org.sql2o.issues;
 
 import org.joda.time.DateTime;
 import org.joda.time.LocalDate;
-import org.junit.Test;
+import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.Test;
 import org.sql2o.Sql2o;
 import org.sql2o.quirks.OracleQuirks;
 
@@ -20,9 +21,9 @@ import java.sql.Driver;
 import java.sql.DriverManager;
 import java.util.Date;
 
-import static org.hamcrest.CoreMatchers.equalTo;
-import static org.hamcrest.CoreMatchers.is;
-import static org.junit.Assert.assertThat;
+import static org.hamcrest.MatcherAssert.assertThat;
+import static org.hamcrest.Matchers.equalTo;
+import static org.hamcrest.Matchers.is;
 
 /**
  * Created with IntelliJ IDEA.
@@ -33,17 +34,23 @@ import static org.junit.Assert.assertThat;
  */
 public class OracleTest {
 
-    private Sql2o sql2o;
+    private static Sql2o sql2o;
 
-    public OracleTest() {
+    /**
+     * The driver is registered by hand because the url carries the legacy {@code @host:port:SID} form, which the
+     * service loader cannot resolve on its own.
+     */
+    @BeforeAll
+    public static void registerTheDriverAndOpenSql2o() {
         try {
-            Class oracleDriverClass = this.getClass().getClassLoader().loadClass("oracle.jdbc.driver.OracleDriver");
-            DriverManager.registerDriver((Driver)oracleDriverClass.newInstance());
+            Class<?> oracleDriverClass =
+                    OracleTest.class.getClassLoader().loadClass("oracle.jdbc.driver.OracleDriver");
+            DriverManager.registerDriver((Driver) oracleDriverClass.getDeclaredConstructor().newInstance());
         } catch (Throwable t) {
             throw new RuntimeException(t);
         }
 
-        this.sql2o = new Sql2o("jdbc:oracle:thin:@//localhost:1521/XE", "system", "testpassword", new OracleQuirks());
+        sql2o = new Sql2o("jdbc:oracle:thin:@//localhost:1521/XE", "system", "testpassword", new OracleQuirks());
     }
 
     /**
