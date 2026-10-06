@@ -81,8 +81,47 @@ scratch test as the regression test.
 
 ## P2 — dialects and extensions
 
-- [read] **The db2 extension ships no `META-INF/services/org.sql2o.quirks.QuirksProvider`**, so
-      `Db2Quirks`/`Db2QuirksProvider` are dead code and `QuirksDetector` always falls back to `NoQuirks`.
+- [run] **The db2 extension shipped no `META-INF/services/org.sql2o.quirks.QuirksProvider`**, so
+      `Db2Quirks` was dead code and `QuirksDetector` always fell back on `NoQuirks` — fixed, the file is there and
+      `QuirksDetector.forURL("jdbc:db2:…")` now returns it.
+- [run] **`Db2Quirks.getColumnName` returned the name of a column rather than its label**, so a query written with
+      an alias was mapped by the underlying name and the value silently never reached the property. Fixed by leaving
+      the naming to `NoQuirks`, and `Db2QuirksTest` pins it with a stub that answers both differently.
+- [run] **Reading a date from db2, measured against a real `ibmcom/db2:11.5.8.0`.** Db2 hands out DATE, TIME and
+      TIMESTAMP as `java.sql.Date`, `java.sql.Time` and `java.sql.Timestamp`, as its documentation says, and the
+      converters of core read all of them. `Db2DateReadingApiTest` pins the whole matrix. What the measurements
+      showed that was worth knowing:
+
+      | target                    | DATE column    | TIME column     | TIMESTAMP column      |
+      |---------------------------|----------------|-----------------|-----------------------|
+      | `java.util.Date`          | the date       | the time        | full timestamp        |
+      | `java.sql.Date`           | the date       | epoch date      | date part             |
+      | `java.sql.Time`           | midnight       | the time        | time part             |
+      | `java.sql.Timestamp`      | midnight       | epoch and time  | full timestamp        |
+      | `LocalDate`               | ok             | refused         | date part             |
+      | `LocalTime`               | refused        | ok              | time part, with fraction |
+      | `LocalDateTime`           | midnight       | refused         | ok                    |
+      | `Instant`                 | refused        | refused         | ok                    |
+      | `OffsetDateTime`          | midnight at the zone of the jvm | refused | ok      |
+      | `OffsetTime`              | refused        | ok at the zone of the jvm | ok at that zone |
+      | `String`                  | ok             | ok              | ok                    |
+
+      - **The fraction of a second survives.** A `timestamp` written as `…56.789123` arrives whole, down to
+        `789_123_000` nanoseconds, because a `java.sql.Timestamp` holds nanoseconds. A column declared
+        `timestamp(3)` keeps the three digits it was declared with rather than the six that were written.
+      - **The refusals are the ones core makes for every driver**, not something db2 adds: a time carries no date and
+        a date carries no time of day, so the shapes needing the missing half are refused rather than answered with
+        an invented value. The test pins each refusal message, so closing a gap will fail it.
+      - **A date before the 1582 cutover is not adjusted.** Ibm documents a page of date and time values that cause
+        problems in jdbc applications, among them the calendar before the cutover; `date '1500-01-01'` written and
+        read back comes back unchanged, so that one does not reproduce on ojdbc-less plain `db2 11.5.8`.
+      - **A null cannot be selected.** `select cast(null as date)` is answered with `SQLCODE=-4472` by a plain
+        statement as well, so a null has to be read out of a real column rather than produced by the query.
+      - **Aliases must be written without underscores.** Db2 folds an alias to upper case, and with no derivation of
+        names on by default `as the_day` arrives as `THE_DAY`, which matches no property; `as theDay` arrives as
+        `THEDAY` and matches case insensitively.
+      - Jcc 11.5.8.0 on jdk 25 is not a combination ibm documents, and it works: the driver connected, executed and
+        returned every type above without complaint.
 - [read] **`PostgresQuirks` does not override the parsing strategy**, so `$$...$$` bodies and the
       `?`/`?|`/`?&` JSON operators are corrupted.
 - [read] **`JSONConverter.toDatabaseParam` returns a bare `String`**, so writes to a `json`/`jsonb` column
