@@ -79,7 +79,7 @@ it lands in the same place and needs the same routing.
 
 `new HsqlQuirks(myConverters)` uses `myConverters` and nothing else, so a uuid stops working unless the map has a
 `UUID.class` entry of your own. The same is true of `OracleQuirks` and `Db2Quirks`. Register `new HsqlUUIDConverter()`
-in the map if you pass one.
+in the map if you pass one. This extension adds nothing else, since HSQLDB takes every type in the matrix as it is.
 
 ## Time zones: there is nowhere to put one
 

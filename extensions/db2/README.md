@@ -80,9 +80,10 @@ their own below.
 
 ### A caveat about your own converter map
 
-`new Db2Quirks(myConverters)` uses `myConverters` and nothing else, so a uuid stops working unless the map has a
-`UUID.class` entry of your own. The same is true of `OracleQuirks`. Register `new Db2UUIDConverter()` in the map if you
-pass one.
+`new Db2Quirks(myConverters)` uses `myConverters` and nothing else, so everything this extension adds stops
+working unless the map carries it: a uuid needs a `UUID.class` entry, and the times need `Instant.class`,
+`OffsetDateTime.class` and `OffsetTime.class`. The same is true of `OracleQuirks`. Register `new Db2UUIDConverter()` and
+the three converters from core in the map if you pass one.
 
 ## Dates and times
 
@@ -143,6 +144,23 @@ already used, so every read path in the table below works:
 `docs/converter-exceptions.md` in the root of the repository covers the other half of the blob story, which is what
 `ByteArrayConverter` does when it is handed something it cannot read.
 
+## Times with an offset in them
+
+DB2 refuses a `java.time` value offered as the object itself, with `ERRORCODE=-4461`, and it has no column type with a
+zone in it to keep the offset of one that has it — `sysibm.sysdatatypes` lists `TIMESTAMP` and nothing beside it.
+So `Db2Quirks` registers three converters from core and those values go as the `java.sql` ones DB2 does take:
+
+| value | written as | offset |
+| --- | --- | --- |
+| `Instant` | `Timestamp.from(value)` | an instant has none to keep |
+| `OffsetDateTime` | `Timestamp.from(value.toInstant())` | **dropped**, reading it back gives the offset of the jvm doing the reading |
+| `OffsetTime` | `Time.valueOf(value.toLocalTime())` | **dropped**, the same |
+
+Asking the driver for an explicit type instead of converting does not help: `setObject(index, value, Types.TIMESTAMP)`
+fails with `-4461` on DB2 as well. What is kept is the point on the timeline, which is all a timestamp column holds, and
+what is lost is the label of the offset. A caller who needs the offset kept as written has no column to keep it in on this
+database.
+
 ## Other DB2 specifics
 
 - **Column naming is left to `NoQuirks`**, which returns the label of a column and therefore the alias a query gave it.
@@ -155,13 +173,10 @@ already used, so every read path in the table below works:
 
 ## Known gaps
 
-`Db2TypedParameterTest` runs 89 tests and **9 fail** against DB2 11.5.8, all of them the same defect in sql2o rather
-than something DB2 declines:
+`Db2TypedParameterTest` runs 90 tests and **all of them pass** against DB2 11.5.8: `String`, the integral types,
+`Boolean`, `BigDecimal`, `java.sql.Date`, `java.sql.Time`, `Timestamp`, `java.util.Date`, `LocalDate`, `LocalTime`,
+`LocalDateTime`, `OffsetDateTime`, `OffsetTime`, `UUID` and enums, a null going in and coming back out for every one of
+them, both big columns through a scalar and through a field, and an instant read back into a field of its own type.
 
-| cases | failure |
-| --- | --- |
-| `Instant`, `OffsetDateTime`, `OffsetTime` — bound, filtered and nulled | `ERRORCODE=-4461`, the value reaches the driver as a `java.time` object it cannot place in a `TIMESTAMP` column. The same gap shows up on Oracle and Postgres |
-
-Everything else passes: `String`, the integral types, `Boolean`, `BigDecimal`, `java.sql.Date`, `java.sql.Time`,
-`Timestamp`, `java.util.Date`, `LocalDate`, `LocalTime`, `LocalDateTime`, `UUID` and enums, a null going in and coming
-back out for every one of them, and both big columns through a scalar and through a field.
+What is not covered is stated above rather than left out: the offset of a value written with one is not stored, and a
+with-zone column cannot be written at all.

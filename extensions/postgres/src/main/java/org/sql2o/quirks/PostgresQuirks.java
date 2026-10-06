@@ -1,11 +1,14 @@
 package org.sql2o.quirks;
 
 import org.sql2o.converters.Converter;
+import org.sql2o.converters.InstantToTimestampConverter;
 
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Types;
+import java.time.Instant;
 import java.time.OffsetTime;
+import java.util.HashMap;
 import java.util.Map;
 
 /**
@@ -14,7 +17,13 @@ import java.util.Map;
  */
 public class PostgresQuirks extends NoQuirks {
     public PostgresQuirks() {
-        super();
+        super(new HashMap<Class, Converter>() {{
+            // Postgres takes a LocalDateTime or an OffsetDateTime as it is and has a timestamptz to keep the latter in,
+            // so those are left alone. It has no way of placing an Instant at all and says so: Can't infer the SQL type
+            // to use for an instance of java.time.Instant. An Instant carries no offset, so writing it as a Timestamp is
+            // not a loss, and asking the driver for an explicit type instead is refused as well.
+            put(Instant.class, new InstantToTimestampConverter());
+        }});
     }
 
     public PostgresQuirks(Map<Class, Converter> converters) {

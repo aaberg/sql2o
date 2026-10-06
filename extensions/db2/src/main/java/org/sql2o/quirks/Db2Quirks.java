@@ -12,9 +12,15 @@ package org.sql2o.quirks;
 
 import org.sql2o.converters.Converter;
 import org.sql2o.converters.Db2UUIDConverter;
+import org.sql2o.converters.InstantToTimestampConverter;
+import org.sql2o.converters.OffsetDateTimeToTimestampConverter;
+import org.sql2o.converters.OffsetTimeToTimeConverter;
 
 import java.sql.PreparedStatement;
 import java.sql.SQLException;
+import java.time.Instant;
+import java.time.OffsetDateTime;
+import java.time.OffsetTime;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.UUID;
@@ -44,6 +50,12 @@ public class Db2Quirks extends NoQuirks {
     public Db2Quirks() {
         super(new HashMap<Class, Converter>() {{
             put(UUID.class, db2UUIDConverter);
+            // Db2 has no column type carrying a time zone at all, so there is nowhere to keep the offset of a value
+            // that has one, and the driver refuses the object outright with ERRORCODE=-4461. An Instant carries no
+            // offset, so it is only the driver's reluctance to see java.time at all that stands in the way there.
+            put(Instant.class, new InstantToTimestampConverter());
+            put(OffsetDateTime.class, new OffsetDateTimeToTimestampConverter());
+            put(OffsetTime.class, new OffsetTimeToTimeConverter());
         }});
     }
 
