@@ -14,6 +14,7 @@ import org.joda.time.DateTime;
 import org.joda.time.LocalDate;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
+import org.sql2o.Connection;
 import org.sql2o.Sql2o;
 import org.sql2o.quirks.OracleQuirks;
 
@@ -69,11 +70,13 @@ public class OracleTest {
     public void testForIssue8OracleTimestamps() {
         String sql = "select CURRENT_TIMESTAMP from dual";
 
-        Date dateVal = sql2o.createQuery(sql).executeScalar(Date.class);
-        DateTime dateTimeVal = sql2o.createQuery(sql).executeScalar(DateTime.class);
+        try (Connection con = sql2o.open()) {
+            Date dateVal = con.createQuery(sql).executeScalar(Date.class);
+            DateTime dateTimeVal = con.createQuery(sql).executeScalar(DateTime.class);
 
-        assertThat(new DateTime(dateVal.getTime()).toLocalDate(), is(equalTo(new LocalDate())));
-        assertThat(dateTimeVal.toLocalDate(), is(equalTo(new LocalDate())));
+            assertThat(new DateTime(dateVal.getTime()).toLocalDate(), is(equalTo(new LocalDate())));
+            assertThat(dateTimeVal.toLocalDate(), is(equalTo(new LocalDate())));
+        }
     }
 
 }
