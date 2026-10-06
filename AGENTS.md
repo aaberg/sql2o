@@ -25,7 +25,7 @@ Nothing in the build enforces any of this (no checkstyle/lint plugin), so it is 
 - `mvn -pl core test` — core suite only, embedded H2 + HSQLDB, no external services. Fast; the default verification step.
 - Single class/method: `mvn -pl core test -Dtest=RecordsTest` (add `-DfailIfNoSpecifiedTests=false` when running from the root reactor).
 - Root `mvn test` / `mvn package` **fails without a database**: `extensions/postgres`'s `DataSourceTest` is JUnit 5 and needs a live server.
-- `docker compose up -d` starts Postgres on host port **15432** (`testuser`/`testpassword`, db `postgres`) and Oracle XE 21c on **1521** (`system`/`testpassword`) — these match the JDBC URLs hardcoded in the extension tests.
+- `docker compose up -d` starts Postgres on host port **15432** (`testuser`/`testpassword`, db `postgres`), Oracle XE 21c on **1521** (`system`/`testpassword`) and Db2 Community Edition on **50000** (`db2inst1`/`testpassword`, db `testdb`) — these match the JDBC URLs hardcoded in the extension tests.
 - Release is CI-driven only: a GitHub *release* event makes the pipeline run `mvn versions:set` + `mvn -P release deploy -DskipTests` and push to Maven Central. Don't bump versions by hand and don't run the `release` profile locally.
 - Compiler source/target `17` is duplicated in the root pom and `core/pom.xml` — change both.
 - `maven-surefire-plugin` is pinned in the root pom; without it the version comes from the Maven super POM and the selected test provider can change with the Maven version.
@@ -40,6 +40,7 @@ Nothing in the build enforces any of this (no checkstyle/lint plugin), so it is 
 - Per-database parameterization: use `TestDatabase` + the composed `@DatabaseTest` annotation (both in `core/src/test/java/org/sql2o/`). A test class needs `static Stream<TestDatabase> databases()` and a `@DatabaseTest` method taking a single `TestDatabase`. `IssuesTest` keeps its own local holder because it needs extra HSQLDB setup.
 - In-memory databases are also shared with other test classes (`jdbc:h2:mem:test` is used by several), so table names must be unique across the whole suite.
 - Extension tests hardcode external DB URLs and, for Oracle, expect `extensions/oracle/src/test/resources/setup/test.sql` to have been applied. Only run them with docker-compose up.
+- `extensions/db2` talks to `ibmcom/db2:11.5.8.0` (Community Edition, port 50000, user `db2inst1`). It needs `--privileged` and `shm_size`, and it takes several minutes to initialise the first time, so readiness is the `Setup has completed` line in the logs rather than the container being up. `icr.io/db2_ce/db2` is the same image but the registry wants an ibm cloud entitlement; the docker hub path is the anonymous one. Three db2 notes: a null cannot be selected (`SQLCODE=-4472`), so it has to be read from a column; an alias is folded to upper case, so write `as theDay` rather than `as the_day` unless name derivation is on; and there is no `drop table if exists`, so the drop in `Db2DateReadingApiTest` swallows the error on purpose.
 
 ## Architecture / extension points
 
