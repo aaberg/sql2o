@@ -668,7 +668,10 @@ GREEN, BLUE
             return java.sql.Time.valueOf("23:59:59");
         }
         if (testCase.value() instanceof Date) {
-            return new Date(0);
+            // 1999 like every other temporal case below, and not the epoch: a timestamp column on MySQL starts at
+            // 1970-01-01 00:00:01, so the epoch itself is not storable there, and an "other" value has to be storable
+            // everywhere to tell anything apart.
+            return new Date(Timestamp.valueOf("1999-12-31 23:59:59").getTime());
         }
         if (testCase.value() instanceof LocalDate) {
             return LocalDate.of(1999, 12, 31);
@@ -680,7 +683,8 @@ GREEN, BLUE
             return LocalDateTime.of(1999, 12, 31, 23, 59, 59);
         }
         if (testCase.value() instanceof Instant) {
-            return Instant.EPOCH;
+            // 1999 for the same reason as the Date above.
+            return Instant.parse("1999-12-31T23:59:59Z");
         }
 if (testCase.value() instanceof OffsetDateTime) {
             return LocalDateTime.of(1999, 12, 31, 23, 59, 59).atOffset(OffsetTime.now().getOffset());
