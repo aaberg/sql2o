@@ -72,7 +72,7 @@ public class OracleTest {
         Date dateVal = sql2o.createQuery(sql).executeScalar(Date.class);
         DateTime dateTimeVal = sql2o.createQuery(sql).executeScalar(DateTime.class);
 
-        assertThat(new DateTime(dateVal).toLocalDate(), is(equalTo(new LocalDate())));
+        assertThat(new DateTime(dateVal.getTime()).toLocalDate(), is(equalTo(new LocalDate())));
         assertThat(dateTimeVal.toLocalDate(), is(equalTo(new LocalDate())));
     }
 
