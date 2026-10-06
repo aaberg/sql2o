@@ -15,6 +15,8 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.times;
+import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 /**
@@ -125,6 +127,33 @@ public class DefaultResultSetHandlerFactoryTest {
 
         assertEquals("Error occurred while creating object from ResultSet", ex.getMessage());
         assertTrue(ex.getCause() instanceof ReflectiveOperationException);
+    }
+
+    /**
+ * The names of the columns are a property of the result set and not of the row, so they are read once when the
+ * handler is built. This used to be a metadata call per column per row, which for a thousand rows of two columns was
+ * two thousand calls where two would do.
+ */
+@Test
+    public void theColumnNamesAreReadOnceWhenTheHandlerIsBuilt() throws Exception {
+        final ResultSetMetaData meta = mock(ResultSetMetaData.class);
+        when(meta.getColumnCount()).thenReturn(2);
+        when(meta.getColumnLabel(1)).thenReturn("name");
+        when(meta.getColumnLabel(2)).thenReturn("size");
+
+        final RecordingBuildable buildable = new RecordingBuildable(false, false);
+        final ResultSetHandler<Thing> handler = new DefaultResultSetHandlerFactory<Thing>(
+                (ObjectBuildableFactoryDelegate<Thing>) () -> buildable, new NoQuirks())
+                .newResultSetHandler(meta);
+
+        handler.handle(resultSetWith("widget", 7));
+        handler.handle(resultSetWith("gadget", 9));
+
+        verify(meta, times(1)).getColumnLabel(1);
+        verify(meta, times(1)).getColumnLabel(2);
+        verify(meta, times(1)).getColumnCount();
+        // Both rows still arrived, so reading the names early did not skip anything.
+        assertEquals(Map.of("name", "gadget", "size", 9), buildable.received);
     }
 
     /** The happy path, using the real reflection machinery rather than a stand-in. */

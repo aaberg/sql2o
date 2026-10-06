@@ -15,6 +15,7 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.ServiceLoader;
 import java.util.UUID;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
 
 /**
@@ -29,6 +30,7 @@ public class Convert {
     private static final ReentrantReadWriteLock.WriteLock wl = rrwl.writeLock();
     private static volatile EnumConverterFactory registeredEnumConverterFactory = new DefaultEnumConverterFactory();
     private static Map<Class<?>, Converter<?>> registeredConverters = new HashMap<Class<?>, Converter<?>>();
+    private static final Map<Class<?>, Converter<?>> enumConverters = new ConcurrentHashMap<>();
 
     private static void processProvider(ConvertersProvider convertersProvider) {
         convertersProvider.fill(registeredConverters);
@@ -125,15 +127,35 @@ public class Convert {
         return converter;
     }
 
-    public static <E> Converter<E> getConverterIfExists(Class<E> clazz) {
+public static <E> Converter<E> getConverterIfExists(Class<E> clazz) {
         final var c = (Converter<E>)registeredConverters.get(clazz);
 
         if (c != null) return c;
 
         if (clazz.isEnum()) {
-            return registeredEnumConverterFactory.newConverter((Class)clazz);
+            return enumConverterFor(clazz);
         }
         return null;
+    }
+
+    /**
+     * The factory hands out a new converter every time it is asked, and the mapping path asks once per column of every
+     * row, so what it built is kept. Registering another factory throws the lot away, since it is the one that decides
+     * what a converter looks like.
+     *
+     * <p>The cast is safe because a converter is only ever put here for the enum class it was asked for, and the
+     * factory is generic in exactly that class.
+     */
+    @SuppressWarnings("unchecked")
+    private static <E> Converter<E> enumConverterFor(Class<E> clazz) {
+        Converter<?> cached = enumConverters.get(clazz);
+
+        if (cached == null) {
+            cached = registeredEnumConverterFactory.newConverter((Class) clazz);
+            enumConverters.put(clazz, cached);
+        }
+
+        return (Converter<E>) cached;
     }
 
     @SuppressWarnings("UnusedDeclaration")
@@ -155,6 +177,7 @@ public class Convert {
     @SuppressWarnings("UnusedDeclaration")
     public static void registerEnumConverter(EnumConverterFactory enumConverterFactory) {
         if (enumConverterFactory == null) throw new IllegalArgumentException();
+        enumConverters.clear();
         registeredEnumConverterFactory = enumConverterFactory;
     }
 }
