@@ -102,6 +102,10 @@ milliseconds the test expects back.
 `java.sql.Timestamp`; either converts. There is no column type carrying a time zone, so an `OffsetDateTime` is stored
 without its offset and read back with the offset of the jvm, and the matrix uses the jvm offset on both ends.
 
+A `timestamp` starts at `1970-01-01 00:00:01`: anything earlier, the epoch included, is not storable and the server
+refuses it. The shared matrix therefore takes its "other" date and instant values from 1999, like every other
+temporal case there, rather than from the epoch.
+
 No connection properties are needed: the driver connects with a bare url and raises no complaint about the server
 time zone.
 
