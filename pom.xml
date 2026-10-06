@@ -27,6 +27,7 @@
     </modules>
 
     <properties>
+        <asm.version>9.10.1</asm.version>
         <commons-dbutils.version>1.8.1</commons-dbutils.version>
         <derby.version>10.14.2.0</derby.version>
         <guava.version>33.0.0-jre</guava.version>
