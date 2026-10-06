@@ -29,7 +29,7 @@ Nothing in the build enforces any of this (no checkstyle/lint plugin), so it is 
 - Release is CI-driven only: a GitHub *release* event makes the pipeline run `mvn versions:set` + `mvn -P release deploy -DskipTests` and push to Maven Central. Don't bump versions by hand and don't run the `release` profile locally.
 - Compiler source/target `17` is duplicated in the root pom and `core/pom.xml` — change both.
 - `maven-surefire-plugin` is pinned in the root pom; without it the version comes from the Maven super POM and the selected test provider can change with the Maven version.
-- JaCoCo is wired into the root pom: `mvn -pl core test` writes `core/target/site/jacoco/index.html` (plus `jacoco.csv`) as part of the `test` phase, so coverage needs no separate command. Reports land under `target/`, which is git-ignored. Locally only `core` is measurable — extension coverage needs the docker services. Baseline as of the JaCoCo introduction: 76% instructions / 76% lines / 74% branches in `core`.
+- JaCoCo is wired into the root pom: `mvn -pl core test` writes `core/target/site/jacoco/index.html` (plus `jacoco.csv`) as part of the `test` phase, so coverage needs no separate command. Reports land under `target/`, which is git-ignored. `mvn -pl extensions/postgres -am test` measures the postgres module the same way, once `docker compose up -d postgres-db` is running; the oracle and db2 modules need their own service up.
 - Maven builds drop Eclipse `.project`/`.classpath`/`.settings/` files that are **not** in `.gitignore`. Run `git clean -fd` before committing so they don't get staged.
 
 ## Testing traps
