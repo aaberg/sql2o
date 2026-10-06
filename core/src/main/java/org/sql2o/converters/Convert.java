@@ -89,6 +89,7 @@ public class Convert {
 
         mapToFill.put(java.time.Instant.class, new InstantConverter());
         mapToFill.put(java.time.OffsetDateTime.class, new OffsetDateTimeConverter());
+        mapToFill.put(java.time.OffsetTime.class, new OffsetTimeConverter());
 
         mapToFill.put(java.time.LocalDate.class, new LocalDateConverter());
         mapToFill.put(java.time.LocalTime.class, new LocalTimeConverter());

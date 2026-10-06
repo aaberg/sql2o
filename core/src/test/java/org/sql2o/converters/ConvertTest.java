@@ -62,6 +62,11 @@ public class ConvertTest {
         assertNotNull(Convert.getConverterIfExists(byte[].class));
         assertNotNull(Convert.getConverterIfExists(java.util.UUID.class));
         assertNotNull(Convert.getConverterIfExists(java.time.Instant.class));
+        assertNotNull(Convert.getConverterIfExists(java.time.OffsetTime.class));
+        assertNotNull(Convert.getConverterIfExists(java.time.OffsetDateTime.class));
+        assertNotNull(Convert.getConverterIfExists(java.time.LocalDate.class));
+        assertNotNull(Convert.getConverterIfExists(java.time.LocalTime.class));
+        assertNotNull(Convert.getConverterIfExists(java.time.LocalDateTime.class));
         assertNotNull(Convert.getConverterIfExists(java.util.Date.class));
         assertNotNull(Convert.getConverterIfExists(java.sql.Date.class));
     }
