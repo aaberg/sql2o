@@ -4,6 +4,7 @@ import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.provider.MethodSource;
+import org.sql2o.Connection;
 import org.sql2o.Sql2o;
 import org.sql2o.converters.Convert;
 import org.sql2o.converters.Converter;
@@ -161,11 +162,13 @@ public class OracleDriverTypeTest {
     @ParameterizedTest(name = "a {0} column maps onto a java.util.Date property")
     @MethodSource("dateLikeColumns")
     public void everyDateLikeColumnMapsOntoADateProperty(String columnType, String expression) throws SQLException {
-        Date mapped =
-                sql2o.createQuery("select " + expression + " val from dual").executeAndFetchFirst(Row.class).val;
+        try (Connection connection = sql2o.open()) {
+            Date mapped = connection.createQuery("select " + expression + " val from dual")
+                    .executeAndFetchFirst(Row.class).val;
 
-        assertNotNull(mapped);
-        assertEquals(readThroughTheQuirks(expression), mapped);
+            assertNotNull(mapped);
+            assertEquals(readThroughTheQuirks(expression), mapped);
+        }
     }
 
     private static Object readRawObject(String expression) throws SQLException {
