@@ -8,6 +8,8 @@ import org.sql2o.Sql2o;
 
 import java.io.ByteArrayInputStream;
 import java.io.InputStream;
+import java.io.Reader;
+import java.io.StringReader;
 import java.math.BigDecimal;
 import java.sql.Timestamp;
 import java.time.Instant;
@@ -254,12 +256,20 @@ GREEN, BLUE
                 () -> assertNullRoundTrip(testCase)));
     }
 
-    /** A clob, which is text too large to sit inline, written and read through the ordinary calls. */
+    /**
+     * A clob, which is text too large to sit inline, written and read through the ordinary calls.
+     *
+     * <p>Written three ways, which is the counterpart of the two a blob has: as a String with the type named, as a String
+     * without, and as a stream of characters. The stream is the one worth having, since text of a size worth a clob is
+     * rarely text a caller already has in memory.
+     */
     @TestFactory
     public Stream<DynamicTest> aClobIsWrittenAndReadBack() {
         return Stream.of(
                 DynamicTest.dynamicTest("a clob bound with its type named", this::assertClobBoundWithItsType),
-                DynamicTest.dynamicTest("a clob bound without naming its type", this::assertClobBoundWithoutItsType));
+                DynamicTest.dynamicTest("a clob bound without naming its type", this::assertClobBoundWithoutItsType),
+                DynamicTest.dynamicTest("a clob bound as a reader", this::assertClobBoundAsReader),
+                DynamicTest.dynamicTest("a clob bound as an untyped reader", this::assertClobBoundAsAnUntypedReader));
     }
 
     /**
@@ -394,6 +404,31 @@ GREEN, BLUE
         try (Connection connection = sql2o().open()) {
             connection.createQuery("insert into " + tableName() + " (clob) values (:v)")
                     .addParameter("v", clobValue())
+                    .executeUpdate();
+        }
+
+        assertClobReadsBackWhole();
+    }
+
+    private void assertClobBoundAsReader() {
+        freshTable();
+
+        try (Connection connection = sql2o().open()) {
+            Query query = connection.createQuery("insert into " + tableName() + " (clob) values (:v)");
+            bindWithItsType(query, "v", Reader.class, new StringReader(clobValue()));
+            query.executeUpdate();
+        }
+
+        assertClobReadsBackWhole();
+    }
+
+    /** The untyped call as well, since that one arrives at the driver without its type having been named at all. */
+    private void assertClobBoundAsAnUntypedReader() {
+        freshTable();
+
+        try (Connection connection = sql2o().open()) {
+            connection.createQuery("insert into " + tableName() + " (clob) values (:v)")
+                    .addParameter("v", new StringReader(clobValue()))
                     .executeUpdate();
         }
 
