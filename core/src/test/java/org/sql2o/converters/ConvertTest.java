@@ -159,7 +159,7 @@ public class ConvertTest {
      */
     @Test
     public void aConverterFromAServiceProviderIsRegistered() throws ConverterException {
-        final Converter<Money> converter = Convert.getConverter(MoneyConverterProvider.Money.class);
+        final Converter<Money> converter = Convert.getConverterIfExists(MoneyConverterProvider.Money.class);
 
         assertEquals(150L, converter.convert(150L).getCents());
         assertNull(converter.convert(null));
