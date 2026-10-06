@@ -92,6 +92,32 @@ public class PojoProperty {
         throw new Sql2oException("Unexpected error. Could not get type of property " + getName());
     }
 
+    /**
+     * The field this property writes to, or null when there is none.
+     *
+     * <p>Public so that a mapping implementation can assign through the field itself rather than reflectively, which
+     * is what the bytecode extension does with it. A caller that reproduces the choice
+     * {@link #SetProperty(Object, Object, Quirks)} makes has to prefer the setter, and to fall back to this field when
+     * there is no setter, or its mapping will not agree with the reflective one on which member gets written.
+     *
+     * @return the field behind this property, or null if it was built without one
+     */
+    public Field getField() {
+        return field;
+    }
+
+    /**
+     * The setter this property writes through, or null when there is none.
+     *
+     * <p>The counterpart of {@link #getField()}, and preferred over it for the same reason: it is what
+     * {@link #SetProperty(Object, Object, Quirks)} calls first.
+     *
+     * @return the setter behind this property, or null if it was built without one
+     */
+    public Method getSetter() {
+        return setter;
+    }
+
     // only used when setting complex types
     public Object getValue(Object obj) throws ReflectiveOperationException {
         if (getter != null) {
