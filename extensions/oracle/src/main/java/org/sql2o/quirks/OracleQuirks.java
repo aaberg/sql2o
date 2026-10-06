@@ -21,9 +21,10 @@ import java.util.Map;
 import java.util.UUID;
 
 public class OracleQuirks extends NoQuirks {
+    private static final OracleUUIDConverter oracleUUIDConverter = new OracleUUIDConverter();
     public OracleQuirks() {
         super(new HashMap<Class, Converter>() {{
-            put(UUID.class, new OracleUUIDConverter());
+            put(UUID.class, oracleUUIDConverter);
         }});
     }
 
@@ -48,8 +49,22 @@ public class OracleQuirks extends NoQuirks {
         return false;
     }
 
+    /**
+     * A uuid is routed to the overload that has one for it, so that naming the type reaches the sixteen bytes rather
+     * than the object itself. {@code null} is not a uuid and falls through, and the branch before it is redundant:
+     * {@code null instanceof UUID} is false.
+     */
+    @Override
+    public void setParameter(PreparedStatement statement, int paramIdx, Object value) throws SQLException {
+        if (value instanceof UUID) {
+            setParameter(statement, paramIdx, (UUID) value);
+        } else {
+            statement.setObject(paramIdx, value);
+        }
+    }
+
     @Override
     public void setParameter(PreparedStatement statement, int paramIdx, UUID value) throws SQLException {
-        statement.setBytes(paramIdx, (byte[])new OracleUUIDConverter().toDatabaseParam(value));
+        statement.setBytes(paramIdx, (byte[]) oracleUUIDConverter.toDatabaseParam(value));
     }
 }
