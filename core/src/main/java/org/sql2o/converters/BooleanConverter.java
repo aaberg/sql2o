@@ -22,9 +22,9 @@ public class BooleanConverter extends ConverterBase<Boolean> {
 
         if (val instanceof Character) {
             // cast to char is required to compile with java 8
-            return (char)val =='Y'
-                    || (char)val =='T'
-                    || (char)val =='J';
+            return Character.toUpperCase((char)val) =='Y'
+                    || Character.toUpperCase((char)val) =='T'
+                    || Character.toUpperCase((char)val) =='J';
         }
 
         if (val instanceof String) {
