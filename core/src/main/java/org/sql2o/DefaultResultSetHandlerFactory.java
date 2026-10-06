@@ -23,7 +23,7 @@ public class DefaultResultSetHandlerFactory<T> implements ResultSetHandlerFactor
             for (int i = 1; i <= meta.getColumnCount(); i++) {
                 final var colName = quirks.getColumnName(meta, i);
                 try {
-                    objectBuilder.withValue(colName, resultSet.getObject(i));
+                    objectBuilder.withValue(colName, quirks.getRSVal(resultSet, i));
                 } catch (ReflectiveOperationException e) {
                     throw new Sql2oException("Error when trying to set value for column [" + colName + "]", e);
                 }
