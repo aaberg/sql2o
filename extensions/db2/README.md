@@ -102,13 +102,26 @@ Three DB2 specifics that will otherwise cost you an afternoon:
 
 ## Clobs and blobs
 
-A clob bound as a `String` and a blob bound as a `byte[]` are both stored and read back correctly, through a scalar or
-through a field.
+A clob and a blob are both stored and read back correctly, through a scalar or through a field. Each is written more
+than one way, as is what the two have in common:
+
+| | written as |
+| --- | --- |
+| clob | a `String`, named or not, and a `Reader` |
+| blob | a `byte[]` and an `InputStream` |
+
+The `Reader` is the counterpart of the `InputStream`: `Query.addParameter` takes one and hands it to the driver's
+character stream. Handing a reader to `setObject` instead is what happens with no named overload to reach for, and DB2
+along with at least one other database here refuses it — so the named path is the difference between working and not.
+
+Reading is the other half, and a clob is not read as a `java.sql.Clob` any more than a blob is read as a
+`java.sql.Blob`: both are materialised, into a `String` and into a `byte[]`. That is the design rather than a gap, and it
+is why the matrix reads them through a field of that type instead of through a handle.
 
 Reading them used to fail, and the reason was in core rather than here, so it is worth writing down. DB2 hands a clob
-and a blob back as a **locator**, which is only valid as long as the statement that produced it. `Query.executeScalar()`
-fetches the value and closes the `ResultSet` and the `PreparedStatement` in a try-with-resources block, and
-`executeScalar(Class)` used to convert afterwards:
+and a blob back as a **locator**, which is only valid as long as the statement that produced it.
+`Query.executeScalar()` fetches the value and closes the `ResultSet` and the `PreparedStatement` in a try-with-resources
+block, and `executeScalar(Class)` used to convert afterwards:
 
 ```
 try (final PreparedStatement ps = buildPreparedStatement();

@@ -64,9 +64,10 @@ their own below.
 
 ### A caveat about your own converter map
 
-`new OracleQuirks(myConverters)` uses `myConverters` and nothing else, so a uuid stops working unless the map has a
-`UUID.class` entry of your own. The same is true of `Db2Quirks`. Register `new OracleUUIDConverter()` in the map if you
-pass one.
+`new OracleQuirks(myConverters)` uses `myConverters` and nothing else, so everything this extension adds stops
+working unless the map carries it: a uuid needs a `UUID.class` entry, and an `Instant` needs an `Instant.class` one. The
+same is true of `Db2Quirks`. Register `new OracleUUIDConverter()` and `InstantToTimestampConverter` in the map if you pass
+one.
 
 ## Column types worth knowing
 
@@ -88,18 +89,17 @@ time and nothing else — and reading one out of a `DATE` would hand it a date a
 test rather than left to a reader. If you need a time of day, store it in a `NUMBER` as seconds or minutes of the day,
 or in a `VARCHAR2` in a format you control.
 
-### Instant is not accepted
+### Instant has to be written as a Timestamp
 
-`addParameter("v", Instant.class, instant)` fails with
+Oracle cannot place a `java.time.Instant` in a `TIMESTAMP` column and says so twice over — `ORA-17004` for the object,
+`ORA-17132` when an explicit type is asked for instead — so `OracleQuirks` registers `InstantToTimestampConverter` from
+core and the value goes as a `java.sql.Timestamp`. An instant carries no offset, so that is not a loss: the same point on
+the timeline comes back out, and `TIMESTAMP WITH TIME ZONE` would have normalised it to the instant anyway.
 
-```
-org.sql2o.Sql2oException: Error adding parameter 'v' - ORA-17004: Invalid column type
-```
-
-and so does the untyped `addParameter("v", instant)`, since it reaches the same place. The value arrives at the driver
-as a `java.time.Instant`, which it cannot place in a `TIMESTAMP` column. This is not an Oracle quirk but a gap in sql2o:
-nothing converts an `Instant` to a `Timestamp` on the way in, and the same is true on Postgres and DB2. Pass a
-`java.sql.Timestamp`, or convert it yourself.
+`OffsetDateTime` is left alone. Oracle takes it as it is and has a column type with a zone in it to keep the offset, which
+a `Timestamp` would have thrown away. It is not covered here that a value written as an `OffsetDateTime` into a
+`TIMESTAMP WITH TIME ZONE` round trips; what is covered is that it goes into a plain `TIMESTAMP`, where the offset is not
+stored and reading it back gives the offset of the jvm doing the reading.
 
 ## Other Oracle specifics
 
@@ -109,14 +109,19 @@ nothing converts an `Instant` to a `Timestamp` on the way in, and the same is tr
   `timestamp '2020-01-01 12:34:56'` instead, or give `to_timestamp_tz` an explicit format.
 - **`returnGeneratedKeys` is off** by default, since Oracle needs the key names rather than a flag.
 - **Oracle timestamps** may come back as `oracle.sql.TIMESTAMP`, which is not convertible to a `java.util.Date`;
-  `OracleQuirks.getRSVal` reads those as a `java.sql.Timestamp` instead.
+  `OracleQuirks.getRSVal` reads those as a `java.sql.Timestamp` instead. That is also the path an `Instant` field is read
+  through, which is why reading one is not a special case anywhere.
 - **The test database.** The tests connect as `system`/`testpassword`. `src/test/resources/setup/test.sql` is not
   applied by `docker compose` and nothing uses the `test` user it creates.
 
 ## Known gaps
 
-`OracleTypedParameterTest` runs 80 tests and **3 fail** against Oracle XE 21c, all three of them `Instant`, described
-above. Everything else in the matrix passes: `String`, the integral types, `Boolean`, `BigDecimal`, `java.sql.Date`,
-`java.sql.Time` is absent, `Timestamp`, `java.util.Date`, `LocalDate`, `LocalDateTime`, `OffsetDateTime`, `UUID`, enums
-and blobs bound both as a byte array and as a stream; a null going in and coming back out for every type that has a
-column here; and a clob written and read back whole, in both a field and a scalar.
+`OracleTypedParameterTest` runs 81 tests and **all of them pass** against Oracle XE 21c: `String`, the integral types,
+`Boolean`, `BigDecimal`, `java.sql.Date`, `java.sql.Time` is absent, `Timestamp`, `java.util.Date`, `LocalDate`,
+`LocalDateTime`, `OffsetDateTime`, `UUID`, enums and blobs bound both as a byte array and as a stream; a null going in and
+coming back out for every type that has a column here; a clob of twenty thousand characters written three ways — as a String with its
+type named, without, and as a reader — and read back whole, in both a field and a scalar;
+and an instant read back into a field of its own type.
+
+What is not covered is stated above rather than left out: a time of day has no column here at all, and a with-zone
+column is not exercised.

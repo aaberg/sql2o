@@ -12,6 +12,7 @@ import org.sql2o.quirks.Quirks;
 import org.sql2o.reflection2.PojoIntrospector;
 
 import java.io.InputStream;
+import java.io.Reader;
 import java.lang.reflect.InvocationTargetException;
 import java.sql.*;
 import java.util.*;
@@ -177,6 +178,8 @@ public class Query implements AutoCloseable {
         //TODO: must cover most of types: BigDecimal,Boolean,SmallInt,Double,Float,byte[]
         if(InputStream.class.isAssignableFrom(parameterClass))
             return addParameter(name, (InputStream)value);
+        if(Reader.class.isAssignableFrom(parameterClass))
+            return addParameter(name, (Reader)value);
         if(Integer.class==parameterClass)
             return addParameter(name, (Integer)value);
         if(Long.class==parameterClass)
@@ -226,6 +229,23 @@ public class Query implements AutoCloseable {
     }
 
     public Query addParameter(String name, final InputStream value){
+        addParameterInternal(name, new ParameterSetter() {
+            public void setParameter(int paramIdx, PreparedStatement statement) throws SQLException {
+                getConnection().getSql2o().getQuirks().setParameter(statement, paramIdx, value);
+            }
+        });
+
+        return this;
+    }
+
+    /**
+     * Binds a stream of characters, which is how a clob is written when the text does not already sit in a String. This is
+     * the counterpart of the {@link InputStream} overload for a blob, and it goes to the driver's character stream
+     * rather than to {@code setObject}, which at least one of the databases here refuses for a reader.
+     *
+     * <p>The reader is not closed: whoever opened it owns it, the same as for an {@link InputStream}.
+     */
+    public Query addParameter(String name, final Reader value){
         addParameterInternal(name, new ParameterSetter() {
             public void setParameter(int paramIdx, PreparedStatement statement) throws SQLException {
                 getConnection().getSql2o().getQuirks().setParameter(statement, paramIdx, value);
