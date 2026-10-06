@@ -74,7 +74,7 @@ public void anyDateIsReturnedAsItIs() throws ConverterException {
 
     @Test
     public void theSqlDateConverterRebuildsFromMilliseconds() throws ConverterException {
-        final Converter<java.sql.Date> sqlDateConverter = Convert.getConverter(java.sql.Date.class);
+        final Converter<java.sql.Date> sqlDateConverter = Convert.getConverterIfExists(java.sql.Date.class);
 
         assertEquals(new java.sql.Date(MILLIS), sqlDateConverter.convert(new Date(MILLIS)));
         assertEquals(new java.sql.Date(MILLIS), sqlDateConverter.convert(MILLIS));
@@ -83,7 +83,7 @@ public void anyDateIsReturnedAsItIs() throws ConverterException {
 
     @Test
     public void theTimestampConverterRebuildsFromMilliseconds() throws ConverterException {
-        final Converter<Timestamp> timestampConverter = Convert.getConverter(Timestamp.class);
+        final Converter<Timestamp> timestampConverter = Convert.getConverterIfExists(Timestamp.class);
 
         assertEquals(new Timestamp(MILLIS), timestampConverter.convert(new Date(MILLIS)));
         assertEquals(new Timestamp(MILLIS), timestampConverter.convert(MILLIS));
@@ -112,7 +112,7 @@ public void anyDateIsReturnedAsItIs() throws ConverterException {
 
     @Test
     public void theSqlTimeConverterUsesItsOwnShape() throws ConverterException {
-        final Converter<Time> timeConverter = Convert.getConverter(Time.class);
+        final Converter<Time> timeConverter = Convert.getConverterIfExists(Time.class);
 
         assertEquals(new Time(MILLIS), timeConverter.convert(new Date(MILLIS)));
     }
