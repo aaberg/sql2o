@@ -102,6 +102,9 @@ public class LocalTimeConverterTest {
      * LocalTime as a local time without time zone, while HSQLDB converts the LocalTime to UTC before storing it. For
      * this reason I haven't been able to make one test that works for both HSQLDB and H2.
      * Read more here https://hsqldb.org/doc/2.0/guide/guide.html#sgc_datetime_types
+     *
+     * <p>HSQLDB is no longer part of the core test classpath at all; its own round trip over the typed parameters lives in
+     * {@code HsqlTypedParameterTest} of the hsqldb extension, which leaves a LocalTime out for this same reason.
      * @param dbName
      * @param url
      * @param user
