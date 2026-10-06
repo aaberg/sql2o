@@ -18,7 +18,7 @@ Nothing in the build enforces any of this (no checkstyle/lint plugin), so it is 
 - `git diff --check` before committing — reports trailing whitespace.
 - Review `git diff` for unrelated hunks: whitespace-only or drive-by changes get a PR rejected, and drive-by fixes belong in their own PR.
 - The compiler runs with `-Xlint:unchecked`, and the build is expected to produce **zero** unchecked warnings. A new one either gets rewritten, or gets a local `@SuppressWarnings("unchecked")` with a comment proving why that specific spot is safe. `rawtypes` is deliberately not enabled: it would add a lot of noise and mostly covers published API.
-- New behaviour needs tests; `mvn -pl core test` must stay at 720. It was 715 before the java.time converters derby needs were covered directly, 684 before the joda converters were covered directly, and 642 before the typed parameter matrix arrived and HSQLDB left core.
+- New behaviour needs tests; `mvn -pl core test` must stay at 729. It was 720 before the metadata access the bytecode extension needs was published, 715 before the java.time converters derby needs were covered directly, 684 before the joda converters were covered directly, and 642 before the typed parameter matrix arrived and HSQLDB left core.
 
 ## Commands
 
@@ -36,7 +36,7 @@ Nothing in the build enforces any of this (no checkstyle/lint plugin), so it is 
 ## Testing traps
 
 - **Everything is on JUnit 5.** `junit:junit` and `junit-vintage-engine` are gone from the root pom, along with the `junit.version` property; `junit-jupiter.version` is all that is left. Hamcrest comes from the explicit `org.hamcrest:hamcrest` dependency — use `org.hamcrest.MatcherAssert.assertThat`, since `org.junit.Assert.assertThat` does not exist in JUnit 5.
-- `mvn -pl core test` must report **720** tests. That number is the regression guard for the test sources: if it changes, a test was lost, renamed or silently not discovered.
+- `mvn -pl core test` must report **729** tests. That number is the regression guard for the test sources: if it changes, a test was lost, renamed or silently not discovered.
 - In-memory H2 databases use `DB_CLOSE_DELAY=-1`, so they **survive between test methods in the same JVM** — a `create table` in a second test fails with "table already exists". Drop the table first (see `QueryArrayTest`) or use a distinct database name per test. HSQLDB does not: its in memory databases go with their last connection.
 - Per-database parameterization: use `TestDatabase` + the composed `@DatabaseTest` annotation (both in `core/src/test/java/org/sql2o/`). A test class needs `static Stream<TestDatabase> databases()` returning `TestDatabase.databases()` and a `@DatabaseTest` method taking a single `TestDatabase`. That list is H2 only; a database with quirks of its own carries its own tests in its own extension, which is where `IssuesTest`'s HSQLDB case and the generated key assertions went.
 - In-memory databases are also shared with other test classes (`jdbc:h2:mem:test` is used by several), so table names must be unique across the whole suite.

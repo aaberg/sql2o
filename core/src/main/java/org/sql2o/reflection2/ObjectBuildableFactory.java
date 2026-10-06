@@ -15,6 +15,12 @@ public class ObjectBuildableFactory {
     /**
      * Returns the metadata for the given class, building it the first time it is asked for.
      *
+     * <p>Public so that a mapping implementation living outside this package can reach the same metadata rather than
+     * introspecting the class again: building it walks the declared methods and fields of the class and its
+     * superclasses and reads the annotations off them, which is work worth doing once per class rather than once per
+     * row. The bytecode extension in {@code extensions/bytecode} is the reason this is part of the api rather than an
+     * implementation detail of {@link PojoBuilder}.
+     *
      * <p>The naming convention is part of the key because the metadata derives its property names from it, so
      * metadata built for one convention must not be handed out for another one. The quirks are not part of
      * the key, because nothing in the metadata uses them: they are passed to
@@ -29,7 +35,7 @@ public class ObjectBuildableFactory {
      * PojoMetadata of the requested type.
      */
     @SuppressWarnings("unchecked")
-    static <T> PojoMetadata<T> pojoMetadata(Class<T> targetClass, Settings settings) {
+    public static <T> PojoMetadata<T> pojoMetadata(Class<T> targetClass, Settings settings) {
         final var key = new MetadataKey(targetClass, settings.getNamingConvention());
 
         return (PojoMetadata<T>) pojoMetadataCache.get(key, () -> new PojoMetadata<>(targetClass, settings));

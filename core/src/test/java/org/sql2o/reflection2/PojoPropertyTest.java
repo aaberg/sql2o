@@ -307,4 +307,49 @@ final var instance = property.initializeWithNewInstance(pojo);
 
         assertEquals("Could not initialize property lonely no setter or field found.", ex.getMessage());
     }
+
+    // ---------------------------------------------------------------- the members behind the property
+
+    /** Both are handed out as they were built, which is all a caller writing through them needs to know. */
+    @Test
+    public void theFieldAndTheSetterBehindThePropertyAreTheOnesItWasBuiltWith() throws Exception {
+        final var property = propertyFor(SetterAndField.class, plainSettings(), "value", "setValue", "getValue");
+
+        assertEquals("value", property.getField().getName());
+        assertEquals("setValue", property.getSetter().getName());
+    }
+
+    /**
+     * A property with a setter as well as a field offers both, and the one {@code SetProperty} writes through is the
+     * setter. A caller that picks differently maps the same column onto a different member, which on a setter with a side
+     * effect in it is not a difference anybody wants to debug.
+     */
+    @Test
+    public void aSetterIsOfferedEvenWhereAFieldWouldAlsoDo() throws Exception {
+        final var pojo = new SetterAndField();
+        final var property = propertyFor(SetterAndField.class, plainSettings(), "value", "setValue", "getValue");
+
+        property.SetProperty(pojo, "written", plainSettings().getQuirks());
+
+        assertEquals(1, pojo.setterCalls);
+        assertNotNull(property.getSetter());
+    }
+
+    /** Null rather than an exception, so that a caller can tell "nothing to write through" from "write through this". */
+    @Test
+    public void thereIsNoFieldAndNoSetterToOfferWhenThereIsNeither() {
+        final PojoProperty property = lonelyProperty(plainSettings());
+
+        assertNull(property.getField());
+        assertNull(property.getSetter());
+    }
+
+    /** A property built from a field alone still offers its field, which is what a field-only POJO has to write through. */
+    @Test
+    public void aFieldOnlyPropertyOffersItsFieldAndNoSetter() throws Exception {
+        final var property = propertyFor(FieldOnly.class, plainSettings(), "number", null, null);
+
+        assertEquals("number", property.getField().getName());
+        assertNull(property.getSetter());
+    }
 }
