@@ -90,28 +90,28 @@ scratch test as the regression test.
 - [read] **Extension converters register into the global `Convert` registry** through `ServiceLoader`
       (`Convert.java:106-112`), so adding `sql2o-oracle` changes `Date` handling for every database, and
       the winner depends on classpath order.
-- [read] **`Quirks.getRSVal` is not used on the POJO/record path** — `DefaultResultSetHandlerFactory`
-      reads `resultSet.getObject(i)` directly (`:26`). Verified with `javap` against ojdbc11 23.3 and
-      then confirmed against Oracle XE 21c: `oracle.sql.TIMESTAMPTZ` and `TIMESTAMPLTZ` extend `Datum`
-      directly and are **not** subclasses of `oracle.sql.TIMESTAMP`, which is the only type
-      `OracleDateConverter` handles (`OracleDateConverter.java:16`), so mapping such a column to a
-      `java.util.Date` property fails with
-      `ConverterException: Cannot convert type class oracle.sql.TIMESTAMPTZ to java.util.Date`.
-      Measured per column type, reading a literal of each kind with the shipped quirks:
+- [run] **`Quirks.getRSVal` was not used on the POJO/record path** — fixed. `DefaultResultSetHandlerFactory`
+      read `resultSet.getObject(i)` directly, so a driver had no way to normalize the values it handed out.
+      Oracle needed that for the time zone aware timestamp columns: `oracle.sql.TIMESTAMPTZ` and
+      `TIMESTAMPLTZ` extend `Datum` rather than `oracle.sql.TIMESTAMP`, and the objects a result set produces
+      for them **cannot convert themselves at all** — `timestampValue()`, `dateValue()` and even `toString()`
+      all fail, the first two with `SQLException: Conversion to Timestamp failed` and the last one returning
+      `oracle.sql.TIMESTAMPTZ@7c1c0892`. So no converter can rescue them; only the result set can convert
+      them. `DefaultResultSetHandlerFactory` now goes through `quirks.getRSVal(resultSet, i)` like
+      `executeScalar` and `TableResultSetIterator` already did, and `OracleDateConverter` accepts any `Datum`
+      for the paths where a raw object still reaches a converter. Behaviour is unchanged for every driver
+      that does not override `getRSVal`, since the default implementation is `getObject`.
+      Measured per column type against Oracle XE 21c, where the middle column is what the quirks produces:
 
       | sql2o source type          | `ResultSet.getObject(i)` | `OracleQuirks.getRSVal` | `OracleDateConverter` |
       |----------------------------|--------------------------|-------------------------|------------------------|
       | `timestamp`                | `oracle.sql.TIMESTAMP`   | `java.sql.Timestamp`   | ok                     |
-      | `timestamp with time zone` | `oracle.sql.TIMESTAMPTZ` | `java.sql.Timestamp`   | **throws**             |
-      | `timestamp with local time zone` | `oracle.sql.TIMESTAMPLTZ` | `java.sql.Timestamp` | **throws**        |
+      | `timestamp with time zone` | `oracle.sql.TIMESTAMPTZ` | `java.sql.Timestamp`   | refuses, cannot convert |
+      | `timestamp with local time zone` | `oracle.sql.TIMESTAMPLTZ` | `java.sql.Timestamp` | refuses, cannot convert |
       | `date`                     | `java.sql.Timestamp`     | `java.sql.Timestamp`   | ok                     |
 
-      Two things worth noting. The quirks hook *does* cope with the zone types, because it compares the
-      `oracle.sql.TIMESTAMP` name prefix, so a mapper that went through `getRSVal` would have been fine —
-      the breakage is specific to the path that reads `getObject` directly. And `date` columns never
-      produce an `oracle.sql.DATE` here, so that part of the class hierarchy argument is moot in
-      practice; only the two zone types are actually reachable. Fixing means matching on `Datum` in
-      `OracleDateConverter`, at which point the joda converters already do the right thing.
+      A `date` column never produces an `oracle.sql.DATE` here, so only the two zone types were ever
+      reachable. All of this is pinned by `OracleDriverTypeTest`, which fails if ojdbc changes any of it.
 - [read] **`OracleLocalTimeConverter` builds a Joda `LocalTime` from a `Timestamp`** in the JVM default
       zone (`OracleLocalTimeConverter.java:22`), so the wall-clock value depends on the JVM time zone.
 - [read] **`gson` is a hard non-optional dependency** of the postgres extension and appears in a published
