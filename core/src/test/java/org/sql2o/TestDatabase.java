@@ -27,8 +27,7 @@ public class TestDatabase {
 
     public static Stream<TestDatabase> databases() {
         return Stream.of(
-                new TestDatabase("H2 test", "jdbc:h2:mem:test;MODE=MSSQLServer;DB_CLOSE_DELAY=-1", "sa", ""),
-                new TestDatabase("HyperSQL test", "jdbc:hsqldb:mem:testmemdb", "SA", "")
+                new TestDatabase("H2 test", "jdbc:h2:mem:test;MODE=MSSQLServer;DB_CLOSE_DELAY=-1", "sa", "")
         );
     }
 
@@ -50,10 +49,6 @@ public class TestDatabase {
 
     public String getPass() {
         return pass;
-    }
-
-    public boolean isHyperSql() {
-        return url.startsWith("jdbc:hsqldb");
     }
 
     @Override

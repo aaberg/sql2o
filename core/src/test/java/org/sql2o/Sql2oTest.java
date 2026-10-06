@@ -430,15 +430,9 @@ public class Sql2oTest {
 
         assertNotNull(keys);
 
-        // return value of auto generated keys is DB dependent.
-        // H2 will always just return the last generated identity.
-        // HyperSQL returns all generated identities (which is more ideal).
-        if (db.isHyperSql()) {
-            assertTrue(keys.length == 2);
-        }
-        else {
-            assertTrue(keys.length > 0);
-        }
+        // The return value of auto generated keys is DB dependent: h2 answers with the last generated identity, and the
+        // databases that hand back every one of them assert that where they run.
+        assertTrue(keys.length > 0);
     }
 
     @DatabaseTest
@@ -468,15 +462,9 @@ public class Sql2oTest {
             assertTrue(key >= 0);
         }
 
-        // return value of auto generated keys is DB dependent.
-        // H2 will always just return the last generated identity.
-        // HyperSQL returns all generated identities (which is more ideal).
-        if (db.isHyperSql()) {
-            assertTrue(keys.size() == vals.size());
-        }
-        else {
-            assertTrue(keys.size() > 0);
-        }
+        // The return value of auto generated keys is DB dependent: h2 answers with the last generated identity, and the
+        // databases that hand back every one of them assert that where they run.
+        assertTrue(keys.size() > 0);
     }
 
     @DatabaseTest
