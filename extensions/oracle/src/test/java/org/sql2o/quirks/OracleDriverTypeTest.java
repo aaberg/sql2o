@@ -16,6 +16,9 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
 import java.sql.Timestamp;
+import java.time.LocalDateTime;
+import java.time.OffsetDateTime;
+import java.time.ZonedDateTime;
 import java.util.Date;
 import java.util.stream.Stream;
 
@@ -78,20 +81,17 @@ public class OracleDriverTypeTest {
         );
     }
 
-    /** The subset whose objects can convert themselves, which is what a converter alone can cope with. */
-    static Stream<Arguments> selfConvertingColumns() {
+    /**
+     * The columns that carry no zone. The driver refuses to invent one for them, which the typed reads below rely on.
+     */
+    static Stream<Arguments> zonelessColumns() {
         return Stream.of(
                 Arguments.of("timestamp", "timestamp '2020-01-01 00:00:00'", "oracle.sql.TIMESTAMP"),
                 Arguments.of("date", "date '2020-01-01'", "java.sql.Timestamp")
         );
     }
 
-    /**
-     * The zone aware types come back as datums that refuse to convert themselves, with
-     * "SQLException: Conversion to Timestamp failed", even though the result set converts them without trouble. A
-     * converter holding nothing but the object cannot get a value out of them at all, which is the whole reason the
-     * mapping path goes through the quirks now.
-     */
+    /** The columns that do carry a zone, either as an offset or as a named region. */
     static Stream<Arguments> zoneAwareColumns() {
         return Stream.of(
                 Arguments.of("timestamp with time zone",
@@ -101,6 +101,27 @@ public class OracleDriverTypeTest {
                         "cast(timestamp '2020-01-01 00:00:00' as timestamp with local time zone)",
                         "oracle.sql.TIMESTAMPLTZ")
         );
+    }
+
+    /** The subset whose objects can convert themselves, which is what a converter alone can cope with. */
+    static Stream<Arguments> selfConvertingColumns() {
+        return Stream.of(
+                Arguments.of("timestamp", "timestamp '2020-01-01 00:00:00'", "oracle.sql.TIMESTAMP"),
+                // TIMESTAMPTZ carries its offset in the value, so it can be read without a connection at all.
+                Arguments.of("timestamp with time zone",
+                        "to_timestamp_tz('2020-01-01 00:00:00 +00:00', 'YYYY-MM-DD HH24:MI:SS TZH:TZM')",
+                        "oracle.sql.TIMESTAMPTZ"),
+                Arguments.of("date", "date '2020-01-01'", "java.sql.Timestamp")
+        );
+    }
+
+    /**
+     * TIMESTAMPLTZ keeps its zone as an index into the database time zone table rather than as an offset, so it cannot
+     * be read without the connection that owns that table, and a converter is never handed one. Only the result set can
+     * convert it, which is what the mapping path relies on now.
+     */
+    static Stream<Arguments> connectionBoundColumns() {
+        return zoneAwareColumns().filter(a -> ((String) a.get()[0]).contains("local"));
     }
 
     @ParameterizedTest(name = "a {0} column reads back as {2}")
@@ -129,11 +150,12 @@ public class OracleDriverTypeTest {
     }
 
     /**
-     * And the limitation, pinned so that it is noticed if a driver ever changes: these objects cannot convert
-     * themselves, so the converter reports the refusal instead of inventing a value.
+     * And the limitation, pinned so that it is noticed if a driver ever changes: this object refuses to convert itself,
+     * so the converter reports the refusal instead of inventing a value. Nothing is lost by it, because the quirks reads
+     * the column through the result set, which can convert it.
      */
     @ParameterizedTest(name = "the date converter reports what a {0} object cannot do")
-    @MethodSource("zoneAwareColumns")
+    @MethodSource("connectionBoundColumns")
     public void theDateConverterReportsTheDriverRefusal(String columnType, String expression) throws SQLException {
         Converter<Date> converter = Convert.getConverterIfExists(Date.class);
         assertNotNull(converter);
@@ -145,6 +167,57 @@ public class OracleDriverTypeTest {
                 thrown.getMessage());
         assertInstanceOf(SQLException.class, thrown.getCause());
         assertThat(thrown.getCause().getMessage(), containsString("Conversion to Timestamp failed"));
+    }
+
+    /**
+     * The driver's own typed reads, which are the jdbc sanctioned way of asking for a particular type. Worth pinning,
+     * because if a future driver version drops one of these it would show up here rather than in a user's mapping.
+     */
+    @ParameterizedTest(name = "a {0} column reads as a jdk timestamp")
+    @MethodSource("dateLikeColumns")
+    public void everyDateLikeColumnReadsAsAJdkTimestamp(String columnType, String expression) throws SQLException {
+        try (java.sql.Connection connection = DriverManager.getConnection(URL, "system", "testpassword");
+             Statement statement = connection.createStatement();
+             ResultSet resultSet = statement.executeQuery("select " + expression + " val from dual")) {
+            resultSet.next();
+
+            assertThat(resultSet.getObject(1, Timestamp.class), instanceOf(Timestamp.class));
+            assertNotNull(resultSet.getObject(1, String.class));
+        }
+    }
+
+    /** And the zone aware ones can be read into the java.time types that keep an offset. */
+    @ParameterizedTest(name = "a {0} column keeps its zone")
+    @MethodSource("zoneAwareColumns")
+    public void aZoneAwareColumnKeepsItsZone(String columnType, String expression) throws SQLException {
+        try (java.sql.Connection connection = DriverManager.getConnection(URL, "system", "testpassword");
+             Statement statement = connection.createStatement();
+             ResultSet resultSet = statement.executeQuery("select " + expression + " val from dual")) {
+            resultSet.next();
+
+            assertThat(resultSet.getObject(1, OffsetDateTime.class), instanceOf(OffsetDateTime.class));
+            assertThat(resultSet.getObject(1, ZonedDateTime.class), instanceOf(ZonedDateTime.class));
+            assertThat(resultSet.getObject(1, LocalDateTime.class), instanceOf(LocalDateTime.class));
+        }
+    }
+
+    /**
+     * Whereas a column without a zone cannot be read into one: the driver answers ORA-18716 rather than guessing the
+     * zone of the jvm, which is the honest thing to do and worth having written down.
+     */
+    @ParameterizedTest(name = "a {0} column has no zone to give")
+    @MethodSource("zonelessColumns")
+    public void aZonelessColumnHasNoZoneToGive(String columnType, String expression) throws SQLException {
+        try (java.sql.Connection connection = DriverManager.getConnection(URL, "system", "testpassword");
+             Statement statement = connection.createStatement();
+             ResultSet resultSet = statement.executeQuery("select " + expression + " val from dual")) {
+            resultSet.next();
+
+            SQLException thrown = assertThrows(SQLException.class,
+                    () -> resultSet.getObject(1, OffsetDateTime.class));
+
+            assertThat(thrown.getMessage(), containsString("ORA-18716"));
+        }
     }
 
     private static Date readConverting(Converter<Date> converter, String expression) throws SQLException {
