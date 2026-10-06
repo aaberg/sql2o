@@ -1,6 +1,6 @@
 package org.sql2o.converters;
 
-import oracle.sql.TIMESTAMP;
+import oracle.sql.Datum;
 
 import java.sql.SQLException;
 import java.util.Date;
@@ -13,11 +13,15 @@ public class OracleDateConverter extends DateConverter implements ConvertersProv
     @Override
     public Date convert(Object val) throws ConverterException {
 
-        if (val instanceof TIMESTAMP) {
+        // Every oracle date and timestamp type extends Datum, not just TIMESTAMP: the zone aware ones,
+        // TIMESTAMPTZ and TIMESTAMPLTZ, are siblings of it. Checking for TIMESTAMP alone left them to the
+        // base converter, which cannot read them and fails with "Cannot convert type class ...".
+        if (val instanceof Datum) {
             try {
-                return ((TIMESTAMP)val).timestampValue();
+                return ((Datum)val).timestampValue();
             } catch (SQLException e) {
-                throw new ConverterException("Error trying to convert oracle.sql.TIMESTAMP to DateTime", e);
+                throw new ConverterException(
+                        "Error trying to convert " + val.getClass().getName() + " to java.util.Date", e);
             }
         }
 
