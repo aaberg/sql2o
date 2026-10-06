@@ -23,6 +23,14 @@
 
     <dependencies>
 
+        <!-- The driver is only needed to talk to a real db2, so it never ships with the extension. -->
+        <dependency>
+            <groupId>com.ibm.db2</groupId>
+            <artifactId>jcc</artifactId>
+            <version>11.5.8.0</version>
+            <scope>test</scope>
+        </dependency>
+
         <!-- optional dependencies -->
         <dependency>
             <groupId>joda-time</groupId>
