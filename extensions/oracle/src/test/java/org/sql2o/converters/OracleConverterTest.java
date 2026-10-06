@@ -1,12 +1,12 @@
 package org.sql2o.converters;
 
 import jakarta.xml.bind.annotation.adapters.HexBinaryAdapter;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 import org.sql2o.quirks.OracleQuirks;
 
 import java.util.UUID;
 
-import static org.junit.Assert.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 
 /**
  * Created by lars on 01.05.14.

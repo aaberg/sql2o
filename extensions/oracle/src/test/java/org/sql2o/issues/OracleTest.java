@@ -10,7 +10,8 @@
 
 package org.sql2o.issues;
 
-import org.junit.Test;
+import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.Test;
 import org.sql2o.Connection;
 import org.sql2o.Query;
 import org.sql2o.Sql2o;
@@ -20,8 +21,7 @@ import java.sql.Driver;
 import java.sql.DriverManager;
 import java.util.UUID;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.fail;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 
 /**
  * Created with IntelliJ IDEA.
@@ -32,17 +32,23 @@ import static org.junit.Assert.fail;
  */
 public class OracleTest {
 
-    private Sql2o sql2o;
+    private static Sql2o sql2o;
 
-    public OracleTest() {
+    /**
+     * The driver is registered by hand because the url carries the legacy {@code @host:port:SID} form, which the
+     * service loader cannot resolve on its own.
+     */
+    @BeforeAll
+    public static void registerTheDriverAndOpenSql2o() {
         try {
-            Class oracleDriverClass = this.getClass().getClassLoader().loadClass("oracle.jdbc.driver.OracleDriver");
-            DriverManager.registerDriver((Driver) oracleDriverClass.newInstance());
+            Class<?> oracleDriverClass =
+                    OracleTest.class.getClassLoader().loadClass("oracle.jdbc.driver.OracleDriver");
+            DriverManager.registerDriver((Driver) oracleDriverClass.getDeclaredConstructor().newInstance());
         } catch (Throwable t) {
             throw new RuntimeException(t);
         }
 
-        this.sql2o = new Sql2o("jdbc:oracle:thin:@localhost:1521:XE", "system", "testpassword", new OracleQuirks());
+        sql2o = new Sql2o("jdbc:oracle:thin:@localhost:1521:XE", "system", "testpassword", new OracleQuirks());
     }
 
     @Test
@@ -66,26 +72,18 @@ public class OracleTest {
         final String insertSql = "insert into testUUID(id, uuidval) values (:id, :val)";
         final String selectSql = "select uuidval from testUUID where id = :id";
 
-        try {
+        try (Connection connection = sql2o.open()) {
+            connection.createQuery(ddl).executeUpdate();
 
+            Query insertQuery = connection.createQuery(insertSql);
+            insertQuery.addParameter("id", 1).addParameter("val", uuid1).executeUpdate();
+            insertQuery.addParameter("id", 2).addParameter("val", uuid2).executeUpdate();
 
-            try (Connection connection = sql2o.open()) {
-                connection.createQuery(ddl).executeUpdate();
+            UUID uuid1FromDb = connection.createQuery(selectSql).addParameter("id", 1).executeScalar(UUID.class);
+            UUID uuid2FromDb = connection.createQuery(selectSql).addParameter("id", 2).executeScalar(UUID.class);
 
-                Query insertQuery = connection.createQuery(insertSql);
-                insertQuery.addParameter("id", 1).addParameter("val", uuid1).executeUpdate();
-                insertQuery.addParameter("id", 2).addParameter("val", uuid2).executeUpdate();
-
-                UUID uuid1FromDb = connection.createQuery(selectSql).addParameter("id", 1).executeScalar(UUID.class);
-                UUID uuid2FromDb = connection.createQuery(selectSql).addParameter("id", 2).executeScalar(UUID.class);
-
-                assertEquals(uuid1, uuid1FromDb);
-                assertEquals(uuid2, uuid2FromDb);
-            }
-
-        } catch (Exception e) {
-            e.printStackTrace();
-            fail("test failed. Exception");
+            assertEquals(uuid1, uuid1FromDb);
+            assertEquals(uuid2, uuid2FromDb);
         } finally {
             try (Connection con = sql2o.open()) {
                 con.createQuery("drop table testUUID").executeUpdate();
