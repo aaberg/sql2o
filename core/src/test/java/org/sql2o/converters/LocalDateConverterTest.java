@@ -14,6 +14,17 @@ import java.time.ZoneOffset;
 public class LocalDateConverterTest {
 
     @Test
+    public void convert_sqlTimestamp_returnsLocalDate() throws ConverterException {
+        // A timestamp column arrives as a timestamp on most drivers, and it has a date to give.
+        final var converter = new LocalDateConverter();
+
+        final var inputTimestamp = java.sql.Timestamp.valueOf("2024-01-01 10:20:30.456");
+        final var convertedDate = converter.convert(inputTimestamp);
+
+        assertEquals(LocalDate.of(2024, 1, 1), convertedDate);
+    }
+
+    @Test
     public void convert_sqlDate_returnsLocalDate() throws ConverterException {
         // setup
         final var converter = new LocalDateConverter();

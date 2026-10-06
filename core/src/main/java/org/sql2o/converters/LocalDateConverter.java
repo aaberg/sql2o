@@ -13,6 +13,10 @@ public class LocalDateConverter extends ConverterBase<LocalDate> {
         if (val instanceof java.sql.Date) {
             return ((java.sql.Date) val).toLocalDate();
         }
+        // A timestamp column arrives as a timestamp on most drivers, and it has a date to give.
+        if (val instanceof java.sql.Timestamp) {
+            return ((java.sql.Timestamp) val).toLocalDateTime().toLocalDate();
+        }
         if (val instanceof Long) {
             return Instant.ofEpochMilli((Long) val).atOffset(ZoneOffset.UTC).toLocalDate();
         }
