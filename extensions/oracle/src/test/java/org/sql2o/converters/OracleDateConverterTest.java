@@ -1,5 +1,6 @@
 package org.sql2o.converters;
 
+import oracle.sql.DATE;
 import oracle.sql.TIMESTAMP;
 import org.junit.jupiter.api.Test;
 
@@ -20,6 +21,8 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
  */
 public class OracleDateConverterTest {
 
+    private static final Timestamp JANUARY_FIRST = Timestamp.valueOf("2020-01-01 00:00:00");
+
     private final OracleDateConverter converter = new OracleDateConverter();
 
     @Test
@@ -30,11 +33,18 @@ public class OracleDateConverterTest {
     }
 
     @Test
+    public void itReadsAnOracleDateAndTimestamp() throws ConverterException, SQLException {
+        assertEquals(JANUARY_FIRST, converter.convert(new TIMESTAMP(JANUARY_FIRST)));
+        assertEquals(new DATE(JANUARY_FIRST).timestampValue(), converter.convert(new DATE(JANUARY_FIRST)));
+    }
+
+    @Test
     public void itReportsAFailingTimestampAsAConverterException() {
         ConverterException thrown =
                 assertThrows(ConverterException.class, () -> converter.convert(new ExplodingTimestamp()));
 
-        assertEquals("Error trying to convert oracle.sql.TIMESTAMP to DateTime", thrown.getMessage());
+        assertEquals("Error trying to convert " + ExplodingTimestamp.class.getName() + " to java.util.Date",
+                thrown.getMessage());
         assertEquals("boom", thrown.getCause().getMessage());
     }
 
