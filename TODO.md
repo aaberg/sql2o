@@ -94,24 +94,37 @@ scratch test as the regression test.
       read `resultSet.getObject(i)` directly, so a driver had no way to normalize the values it handed out.
       Oracle needed that for the time zone aware timestamp columns: `oracle.sql.TIMESTAMPTZ` and
       `TIMESTAMPLTZ` extend `Datum` rather than `oracle.sql.TIMESTAMP`, and the objects a result set produces
-      for them **cannot convert themselves at all** — `timestampValue()`, `dateValue()` and even `toString()`
-      all fail, the first two with `SQLException: Conversion to Timestamp failed` and the last one returning
-      `oracle.sql.TIMESTAMPTZ@7c1c0892`. So no converter can rescue them; only the result set can convert
-      them. `DefaultResultSetHandlerFactory` now goes through `quirks.getRSVal(resultSet, i)` like
-      `executeScalar` and `TableResultSetIterator` already did, and `OracleDateConverter` accepts any `Datum`
-      for the paths where a raw object still reaches a converter. Behaviour is unchanged for every driver
+      for them refuse the inherited no argument accessors — `timestampValue()` and `dateValue()` both fail
+      with `SQLException: Conversion to Timestamp failed`, and `toString()` returns
+      `oracle.sql.TIMESTAMPTZ@7c1c0892`. So a mapper reading `getObject` straight handed the converter an object
+      it could not use. `DefaultResultSetHandlerFactory` now goes through `quirks.getRSVal(resultSet, i)` like
+      `executeScalar` and `TableResultSetIterator` already did, and behaviour is unchanged for every driver
       that does not override `getRSVal`, since the default implementation is `getObject`.
-      Measured per column type against Oracle XE 21c, where the middle column is what the quirks produces:
 
-      | sql2o source type          | `ResultSet.getObject(i)` | `OracleQuirks.getRSVal` | `OracleDateConverter` |
-      |----------------------------|--------------------------|-------------------------|------------------------|
-      | `timestamp`                | `oracle.sql.TIMESTAMP`   | `java.sql.Timestamp`   | ok                     |
-      | `timestamp with time zone` | `oracle.sql.TIMESTAMPTZ` | `java.sql.Timestamp`   | refuses, cannot convert |
-      | `timestamp with local time zone` | `oracle.sql.TIMESTAMPLTZ` | `java.sql.Timestamp` | refuses, cannot convert |
-      | `date`                     | `java.sql.Timestamp`     | `java.sql.Timestamp`   | ok                     |
+      What the two types can actually do, measured against ojdbc 23.3 and Oracle XE 21c. Both hand out
+      `toBytes()` without a connection, and both answer `isConvertibleTo(...)`, but the way out differs:
 
-      A `date` column never produces an `oracle.sql.DATE` here, so only the two zone types were ever
-      reachable. All of this is pinned by `OracleDriverTypeTest`, which fails if ojdbc changes any of it.
+      | without a connection                          | `TIMESTAMPTZ`                | `TIMESTAMPLTZ`         |
+      |-----------------------------------------------|------------------------------|------------------------|
+      | `timestampValue()` (inherited)                | fails                        | fails                  |
+      | `dateValue()` (inherited)                     | fails                        | fails                  |
+      | `toString()`                                  | `oracle.sql.TIMESTAMPTZ@..`  | `oracle.sql.TIMESTAMPLTZ@..` |
+      | `offsetDateTimeValue()`                       | **`2020-01-01T00:00Z`**      | needs a connection     |
+      | `toLocalDateTime()`                           | **`2020-01-01T00:00`**       | needs a connection     |
+      | `toBytes()`                                   | 13 bytes, offset inside      | 7 bytes, zone index    |
+      | `timestampValue(connection)`                  | works                        | works                  |
+      | `rs.getObject(i, Timestamp.class)`            | works                        | works                  |
+      | `rs.getObject(i, OffsetDateTime.class)`       | works, keeps the offset      | works, session offset  |
+      | `rs.getObject(i, ZonedDateTime.class)`        | works                        | works, keeps the region |
+
+      `TIMESTAMPTZ` carries its offset inside the value, so `OracleDateConverter` reads it through
+      `offsetDateTimeValue()` and keeps the instant rather than a wall clock. `TIMESTAMPLTZ` keeps its zone as an
+      index into the database time zone table, which only the connection owning that table can resolve, and a
+      converter is never handed one — for that type the result set is the only route, which is what the quirks fix
+      buys. Note also that `getObject(i, OffsetDateTime.class)` on a zoneless `timestamp` or `date` column fails
+      with `ORA-18716`, so the driver declines to invent a zone rather than guessing the one of the jvm.
+
+      All of it is pinned by `OracleDriverTypeTest`, which fails if ojdbc changes any of it.
 - [read] **`OracleLocalTimeConverter` builds a Joda `LocalTime` from a `Timestamp`** in the JVM default
       zone (`OracleLocalTimeConverter.java:22`), so the wall-clock value depends on the JVM time zone.
 - [read] **`gson` is a hard non-optional dependency** of the postgres extension and appears in a published
