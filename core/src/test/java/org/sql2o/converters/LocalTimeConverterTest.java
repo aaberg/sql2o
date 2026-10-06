@@ -54,6 +54,37 @@ public class LocalTimeConverterTest {
     }
 
     @Test
+    void convert_sqlTime_keepsTheMillisecondsThatToLocalTimeWouldDrop() throws ConverterException {
+        // java.sql.Time holds the fraction of a second in its epoch value while toLocalTime() throws it away.
+        final var converter = new LocalTimeConverter();
+        final var targetTime = LocalTime.of(0, 1, 2, 123_000_000);
+        final var sqlTime = new java.sql.Time(
+                targetTime.atDate(LocalDate.of(1970, 1, 1)).atZone(ZoneId.systemDefault()).toInstant().toEpochMilli());
+
+        assertEquals(targetTime, converter.convert(sqlTime));
+    }
+
+    @Test
+    void convert_offsetTime_returnsTheWallClockPartOfIt() throws ConverterException {
+        // A driver that keeps the offset of a time with a zone hands over an OffsetTime, and a plain LocalTime means
+        // the wall clock part of it.
+        final var converter = new LocalTimeConverter();
+        final var targetTime = OffsetTime.of(0, 5, 1, 0, ZoneOffset.ofHours(2));
+
+        final var convertedTime = converter.convert(targetTime);
+
+        assertEquals(targetTime.toLocalTime(), convertedTime);
+    }
+
+    @Test
+    void convert_localTime_returnsItself() throws ConverterException {
+        final var converter = new LocalTimeConverter();
+        final var targetTime = LocalTime.of(1, 2, 3);
+
+        assertSame(targetTime, converter.convert(targetTime));
+    }
+
+    @Test
     void convert_invalidTimeString_throwsConverterException() {
         // setup
         final var converter = new LocalTimeConverter();
