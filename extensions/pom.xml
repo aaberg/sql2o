@@ -26,6 +26,7 @@
         <module>oracle</module>
         <module>oracle-joda-time</module>
         <module>db2</module>
+        <module>bytecode</module>
     </modules>
 
     <dependencies>
