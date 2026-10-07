@@ -13,6 +13,10 @@ public class LocalDateTimeConverter extends ConverterBase<LocalDateTime> {
         if (val instanceof java.sql.Timestamp) {
             return ((java.sql.Timestamp) val).toLocalDateTime();
         }
+        // A date has no time of day, and midnight is the only reading of it that does not invent anything.
+        if (val instanceof java.sql.Date) {
+            return ((java.sql.Date) val).toLocalDate().atStartOfDay();
+        }
         if (val instanceof Long) {
             return Instant.ofEpochMilli((Long)val).atZone(ZoneOffset.UTC).toLocalDateTime();
         }
