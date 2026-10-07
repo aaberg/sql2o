@@ -4,10 +4,10 @@ import java.sql.ResultSetMetaData;
 import java.sql.SQLException;
 
 /**
- * Метаданные фиктивного result set: только число колонок и их имена.
+ * The metadata of the fake result set: the column count and their names, and nothing else.
  *
- * <p>Фабрика читает метаданные один раз, при создании хэндлера, поэтому здесь нечему тормозить —
- * важно лишь, что имена совпадают с теми, что видел бы драйвер.
+ * <p>A factory reads metadata once, when it creates its handler, so there is nothing here to be slow about — what
+ * matters is only that the names are the ones a driver would have reported.
  */
 final class FakeMeta implements ResultSetMetaData {
 
@@ -56,4 +56,3 @@ final class FakeMeta implements ResultSetMetaData {
     public boolean isDefinitelyWritable(int p0) throws java.sql.SQLException { throw new UnsupportedOperationException("fake"); }
     public java.lang.String getColumnClassName(int p0) throws java.sql.SQLException { throw new UnsupportedOperationException("fake"); }
 }
-

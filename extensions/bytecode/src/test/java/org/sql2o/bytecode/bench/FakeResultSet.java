@@ -5,12 +5,12 @@ import java.sql.ResultSetMetaData;
 import java.sql.SQLException;
 
 /**
- * Фиктивный result set поверх готового массива строк: драйвер исключён полностью.
+ * A fake result set over a prebuilt array of rows: the driver is excluded entirely.
  *
- * <p>Строки — те же типы, что отдаёт драйвер (String, java.sql.Date, BigDecimal), поэтому
- * конвертеры делают ту же работу, что и на живой базе. Живых методов пять: next, close,
- * getObject, wasNull и getMetaData — остальное кидает UnsupportedOperationException, и если
- * маппинг туда полезет, это будет видно сразу, а не в виде странной цифры.
+ * <p>The rows hold the value types a driver would have handed back (String, java.sql.Date, BigDecimal), so the
+ * converters do the same work they would do on a live base. Five methods are live: next, close, getObject, wasNull and
+ * getMetaData — everything else throws UnsupportedOperationException, so mapping that strays into one of them fails
+ * here instead of showing up later as an odd number.
  */
 final class FakeResultSet implements ResultSet {
 
@@ -248,4 +248,3 @@ final class FakeResultSet implements ResultSet {
     public void updateObject(int p0, java.lang.Object p1, java.sql.SQLType p2) throws java.sql.SQLException { throw new UnsupportedOperationException("fake"); }
     public void updateObject(java.lang.String p0, java.lang.Object p1, java.sql.SQLType p2) throws java.sql.SQLException { throw new UnsupportedOperationException("fake"); }
 }
-

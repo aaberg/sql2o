@@ -3,7 +3,7 @@ package org.sql2o.bytecode.bench;
 import java.math.BigDecimal;
 import java.time.LocalDate;
 
-/** Тот же сотрудник теми же восемью полями, но record вместо POJO с полями. */
+/** The same employee with the same eight fields, but a record rather than a POJO with fields. */
 public record EmployeeRecord(
         String fullName,
         LocalDate birthDate,

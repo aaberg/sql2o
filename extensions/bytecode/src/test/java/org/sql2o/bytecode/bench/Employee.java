@@ -4,10 +4,10 @@ import java.math.BigDecimal;
 import java.time.LocalDate;
 
 /**
- * Сотрудник: восемь разнотипных полей — строки, дата, число, enum.
+ * An employee: eight fields of different kinds — strings, a date, a number, an enum.
  *
- * <p>Поля публичные сознательно: приватные ридер скомпилировать не может (и это проверено
- * {@code ReaderRefusesTest}), а бенчмарк сравнивает скорость чтения, а не политики отказа.
+ * <p>The fields are public on purpose: a reader cannot be compiled for private ones (which {@code ReaderRefusesTest}
+ * pins), and the benchmark compares read speed rather than refusal policies.
  */
 public class Employee {
 

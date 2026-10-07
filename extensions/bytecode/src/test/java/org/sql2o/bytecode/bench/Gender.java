@@ -1,6 +1,6 @@
 package org.sql2o.bytecode.bench;
 
-/** Пол сотрудника, хранится в базе строкой и конвертируется в enum обеими реализациями одинаково. */
+/** The gender of an employee, stored as text and converted to an enum the same way by both implementations. */
 public enum Gender {
     MALE,
     FEMALE
