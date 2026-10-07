@@ -3,6 +3,7 @@ package org.sql2o.reflection2;
 import org.sql2o.Settings;
 import org.sql2o.Sql2oException;
 import org.sql2o.converters.ConverterException;
+import org.sql2o.quirks.Quirks;
 
 import java.lang.reflect.Field;
 import java.lang.reflect.Method;
@@ -14,6 +15,8 @@ public class PojoProperty {
     private final Method getter;
     private final Method setter;
     private final Field  field;
+    // Only read by the deprecated SetProperty(Object, Object). The metadata is shared between all Sql2o
+    // instances that map the class, so the quirks captured here belong to whichever instance came first.
     private final Settings settings;
 
     public PojoProperty(String name, String annotatedName, Method getter, Method setter, Field field, Settings settings) {
@@ -37,11 +40,11 @@ public class PojoProperty {
         return annotatedName;
     }
 
-    public void SetProperty(Object obj, Object value) throws ReflectiveOperationException {
+    public void SetProperty(Object obj, Object value, Quirks quirks) throws ReflectiveOperationException {
         if (setter != null) {
             try {
                 final var propertyType = getSetterType();
-                final var convertedValue = settings.getQuirks().converterOf(propertyType).convert(value);
+                final var convertedValue = quirks.converterOf(propertyType).convert(value);
                 if (convertedValue == null && propertyType.isPrimitive()) {
                     return; // don't try to set null to a setter to a primitive type.
                 }
@@ -55,7 +58,7 @@ public class PojoProperty {
         if(field != null) {
             try {
                 final var propertyType = field.getType();
-                final var convertedValue = settings.getQuirks().converterOf(propertyType).convert(value);
+                final var convertedValue = quirks.converterOf(propertyType).convert(value);
                 if (convertedValue == null && propertyType.isPrimitive()) {
                     return; // don't try to set null to a field to a primitive type.
                 }
@@ -67,6 +70,16 @@ public class PojoProperty {
         }
 
         throw new Sql2oException("No setter or field found for property " + name);
+    }
+
+    /**
+     * @deprecated the quirks of whichever Sql2o instance happened to build this metadata are used, which is
+     * rarely the ones the caller expects, since the metadata of a class is shared between all instances.
+     * Use {@link #SetProperty(Object, Object, Quirks)} and pass the quirks explicitly.
+     */
+    @Deprecated(since = "1.9.0")
+    public void SetProperty(Object obj, Object value) throws ReflectiveOperationException {
+        SetProperty(obj, value, settings.getQuirks());
     }
 
     public Class<?> getType() {

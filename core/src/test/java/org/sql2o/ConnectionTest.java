@@ -1,12 +1,13 @@
 package org.sql2o;
 
-import junit.framework.TestCase;
+import org.junit.jupiter.api.Test;
 import org.sql2o.quirks.NoQuirks;
 
 import javax.sql.DataSource;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 
+import static org.junit.jupiter.api.Assertions.fail;
 import static org.mockito.Mockito.*;
 
 /**
@@ -14,10 +15,9 @@ import static org.mockito.Mockito.*;
  * Date: 4/29/14
  * Time: 10:05 PM
  */
-public class ConnectionTest extends TestCase {
+public class ConnectionTest {
 
-
-
+    @Test
     public void test_createQueryWithParams() throws Throwable {
         DataSource dataSource = mock(DataSource.class);
         Connection jdbcConnection = mock(Connection.class);
@@ -47,6 +47,7 @@ public class ConnectionTest extends TestCase {
 
     public class MyException extends RuntimeException{}
 
+    @Test
     public void test_createQueryWithParamsThrowingException() throws Throwable {
         DataSource dataSource = mock(DataSource.class);
         Connection jdbcConnection = mock(Connection.class);
