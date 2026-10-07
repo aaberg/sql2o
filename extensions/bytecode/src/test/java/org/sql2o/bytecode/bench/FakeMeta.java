@@ -56,3 +56,4 @@ final class FakeMeta implements ResultSetMetaData {
     public boolean isDefinitelyWritable(int p0) throws java.sql.SQLException { throw new UnsupportedOperationException("fake"); }
     public java.lang.String getColumnClassName(int p0) throws java.sql.SQLException { throw new UnsupportedOperationException("fake"); }
 }
+

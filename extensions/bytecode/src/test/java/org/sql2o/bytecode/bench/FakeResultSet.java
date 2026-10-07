@@ -248,3 +248,4 @@ final class FakeResultSet implements ResultSet {
     public void updateObject(int p0, java.lang.Object p1, java.sql.SQLType p2) throws java.sql.SQLException { throw new UnsupportedOperationException("fake"); }
     public void updateObject(java.lang.String p0, java.lang.Object p1, java.sql.SQLType p2) throws java.sql.SQLException { throw new UnsupportedOperationException("fake"); }
 }
+
