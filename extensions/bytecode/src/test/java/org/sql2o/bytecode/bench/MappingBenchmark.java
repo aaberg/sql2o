@@ -13,21 +13,21 @@ import java.sql.ResultSetMetaData;
 import java.time.LocalDate;
 
 /**
- * Байткод против рефлексии на чтении 20000 сотрудников из фиктивного result set.
+ * Bytecode against reflection, reading 20000 employees out of a fake result set.
  *
- * <p>Драйвера здесь нет вообще: {@link FakeResultSet} отдаёт готовые строки тех же типов, что отдал бы
- * драйвер (String, java.sql.Date, BigDecimal), поэтому конвертеры делают ту же работу, что и на живой
- * базе. Остаётся чистый маппинг: чтение колонки, конверсия, запись в поле.
+ * <p>There is no driver in it at all: {@link FakeResultSet} hands over prebuilt rows of the value types a driver would
+ * have returned (String, java.sql.Date, BigDecimal), so the converters do the same work they do on a live base. What is
+ * left is the mapping itself: reading a column, converting it, putting it somewhere.
  *
- * <p>Методология без претензий на JMH, но без главных подвохов ручных замеров:
+ * <p>No claim to being JMH, but none of the main traps of hand-rolled measurements either:
  * <ul>
- *   <li>прогрев обоих путей до измерения, вперемешку — JIT греет оба, дрейф делится поровну;</li>
- *   <li>результат потребляется контрольной суммой, которую нельзя выкинуть как мёртвый код;</li>
- *   <li>суммы обоих путей сравниваются — заодно проверка, что прочитано одно и то же;</li>
- *   <li>байткод идёт с выключенным fallback: тихо откатившийся замер соврал бы в пользу рефлексии.</li>
+ *   <li>both paths are warmed up before measuring, interleaved, so the JIT heats both and the drift splits evenly;</li>
+ *   <li>the result is consumed into a checksum, which cannot be discarded as dead code;</li>
+ *   <li>the two checksums are compared, which also shows that both paths read the same thing;</li>
+ *   <li>the bytecode side runs with the fallback off, since a quietly fallen-back measurement would flatter reflection.</li>
  * </ul>
  *
- * <p>Запуск после компиляции тестов (имя не {@code *Test}, поэтому surefire его не трогает):
+ * <p>Run after compiling the tests (the name is not {@code *Test}, so surefire leaves it alone):
  * <pre>
  * mvn -B -pl extensions/bytecode -am test-compile
  * java -cp "extensions/bytecode/target/test-classes;extensions/bytecode/target/classes;core/target/classes;..." \
@@ -61,13 +61,13 @@ public class MappingBenchmark {
                 reflectiveFactory(quirks, EmployeeRecord.class);
 
         if (seconds > 0) {
-            // Режим профилирования: один путь крутится заданное число секунд, чтобы семплеру было что собирать.
-            // Прогрев короткий — дальше сплошное установившееся чтение.
+            // Profiling mode: one path spins for the given number of seconds so the sampler has something to
+            // collect. The warmup is short — what follows is one sustained steady-state read.
             profile(mode, seconds, bytecodePojo, reflectivePojo, bytecodeRecord, reflectiveRecord);
             return;
         }
 
-        // Прогрев вперемешку: все пути горячие к началу измерения.
+        // Interleaved warmup: every path is hot by the time measuring starts.
         for (int i = 0; i < WARMUP; i++) {
             fetch(bytecodePojo, MappingBenchmark::checksumOf);
             fetch(reflectivePojo, MappingBenchmark::checksumOf);
@@ -150,13 +150,13 @@ public class MappingBenchmark {
     }
 
     /**
-     * Точная аллокация потока за несколько сканов, байты. В отличие от JFR-сэмплов это не оценка:
-     * счётчик считает каждый байт. Делится на число строк — видно, сколько мусора приходится на строку.
+     * The exact thread allocation over several scans, in bytes. Unlike JFR samples this is not an estimate:
+     * the counter counts every byte. Divided by the row count, so the garbage per row is visible.
      */
     private static <T> long allocatedPerRow(ResultSetHandlerFactory<T> factory, RowCheck<T> check) throws Exception {
         final var mx = (com.sun.management.ThreadMXBean) java.lang.management.ManagementFactory.getThreadMXBean();
         final long id = Thread.currentThread().getId();
-        // Прогрев счётчика: первый замер после GC, чтобы не мерить остатки предыдущего.
+        // Warming the counter up: the first measurement after a GC, so it does not read leftovers.
         System.gc();
         fetch(factory, check);
         final long before = mx.getThreadAllocatedBytes(id);
@@ -166,7 +166,7 @@ public class MappingBenchmark {
         return (mx.getThreadAllocatedBytes(id) - before) / MEASURED;
     }
 
-    /** Среднее время одного полного скана за {@link #MEASURED} проходов, наносекунды. */
+    /** The mean time of one full scan over {@link #MEASURED} passes, in nanoseconds. */
     private static <T> long measure(ResultSetHandlerFactory<T> factory, RowCheck<T> check) throws Exception {
         System.gc();
         long total = 0;
@@ -176,14 +176,14 @@ public class MappingBenchmark {
             sum ^= fetch(factory, check);
             total += System.nanoTime() - started;
         }
-        // Контрольная сумма используется, чтобы чтение нельзя было выкинуть.
+        // The checksum is there so the read cannot be optimized away.
         if (sum == 0x12345678L) {
             System.out.println("unreachable");
         }
         return total / MEASURED;
     }
 
-    /** Один полный скан строк через хэндлер фабрики; возвращает контрольную сумму строк. */
+    /** One full scan of the rows through the factory's handler; returns a checksum over the rows. */
     private static <T> long fetch(ResultSetHandlerFactory<T> factory, RowCheck<T> check) throws Exception {
         final ResultSetHandler<T> handler = factory.newResultSetHandler(meta);
         final ResultSet rs = new FakeResultSet(rows, meta);
@@ -233,11 +233,11 @@ public class MappingBenchmark {
         return builder.newFactory(type);
     }
 
-    /** Те же значения и тех же типов, что отдал бы драйвер: строки, дата, decimal. */
+    /** The same values and the same value types a driver would have returned: strings, a date, a decimal. */
     private static void generateRows() {
         rows = new Object[ROWS][LABELS.length];
         for (int i = 0; i < ROWS; i++) {
-            rows[i][0] = "Сотрудников Сотрудник Сотрудникович " + i;
+            rows[i][0] = "Employee Name Surname " + i;
             rows[i][1] = java.sql.Date.valueOf(LocalDate.of(1970 + i % 50, 1 + i % 12, 1 + i % 28));
             rows[i][2] = new BigDecimal("100000." + i % 100);
             rows[i][3] = (i % 2 == 0 ? Gender.MALE : Gender.FEMALE).name();

@@ -11,9 +11,9 @@ import java.util.List;
 import java.util.Map;
 
 /**
- * Топ методов по CPU-сэмплам и топ аллокаций из JFR-записи. Только JDK, без зависимостей.
+ * The top methods by CPU samples, and the top allocation sites, read out of a JFR recording. JDK only, no dependencies.
  *
- * <p>Использование: сначала прогон под записью, потом разбор:
+ * <p>Used by recording a run first and reading the recording afterwards:
  * <pre>
  * java -XX:StartFlightRecording:filename=bench.jfr,settings=profile,dumponexit=true ... MappingBenchmark bytecode 25
  * java -cp &lt;test-classes&gt; org.sql2o.bytecode.bench.JfrTop bench.jfr
