@@ -70,11 +70,28 @@
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-jar-plugin</artifactId>
                 <version>2.4</version>
-                <configuration>
-                    <archive>
-                        <manifestFile>src/main/resources/META-INF/MANIFEST.MF</manifestFile>
-                    </archive>
-                </configuration>
+                <executions>
+                    <!-- The osgi manifest belongs to the artifact that ships, so it is configured on this one
+                         execution rather than on the plugin, where it would also land in the test jar. -->
+                    <execution>
+                        <id>default-jar</id>
+                        <configuration>
+                            <archive>
+                                <manifestFile>src/main/resources/META-INF/MANIFEST.MF</manifestFile>
+                            </archive>
+                        </configuration>
+                    </execution>
+                    <!-- Published so that the extensions can share the test support of core. Bound to test-compile
+                         and not to package, since the extensions are built with `mvn -pl extensions/x -am test`,
+                         which never reaches package and would not find the test jar at all. -->
+                    <execution>
+                        <id>test-jar</id>
+                        <phase>test-compile</phase>
+                        <goals>
+                            <goal>test-jar</goal>
+                        </goals>
+                    </execution>
+                </executions>
             </plugin>
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
