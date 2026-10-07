@@ -26,6 +26,19 @@ public class Query implements AutoCloseable {
 
     private final static Logger logger = LocalLoggerFactory.getLogger(Query.class);
 
+    /** Hands a value back exactly as it came, for the scalar reads that ask for no particular type. */
+    private final static Converter<Object> identityConverter = new Converter<Object>() {
+        @Override
+        public Object convert(Object val) throws ConverterException {
+            return val;
+        }
+
+        @Override
+        public Object toDatabaseParam(Object val) {
+            return val;
+        }
+    };
+
     private Connection connection;
     private Map<String, String> caseSensitiveColumnMappings;
     private Map<String, String> columnMappings;
@@ -694,30 +707,7 @@ public class Query implements AutoCloseable {
     }
 
     public Object executeScalar() {
-        long start = System.currentTimeMillis();
-
-        logExecution();
-        try (final PreparedStatement ps = buildPreparedStatement();
-             final ResultSet rs = ps.executeQuery()) {
-            if (rs.next()) {
-                Object o = getQuirks().getRSVal(rs, 1);
-                long end = System.currentTimeMillis();
-                logger.debug("total: {} ms; executed scalar [{}]", new Object[]{
-                    end - start,
-                    this.getName() == null ? "No name" : this.getName()
-                });
-                return o;
-            } else {
-                return null;
-            }
-
-        } catch (SQLException e) {
-            this.connection.onException();
-            throw new Sql2oException("Database error occurred while running executeScalar: " + e.getMessage(), e);
-        } finally {
-            closeConnectionIfNecessary();
-        }
-
+        return executeScalar(identityConverter);
     }
 
     private Quirks getQuirks() {
@@ -729,20 +719,49 @@ public class Query implements AutoCloseable {
             Converter<V> converter;
             //noinspection unchecked
             converter = throwIfNull(returnType, getQuirks().converterOf(returnType));
-            //noinspection unchecked
-            logExecution();
+            // executeScalar(Converter) logs the query itself, and logging it here as well logged it twice.
             return executeScalar(converter);
         } catch (ConverterException e) {
             throw new Sql2oException("Error occured while converting value from database to type " + returnType, e);
         }
     }
 
+    /**
+     * Reads the first column of the first row and converts it while the result set is still open.
+     *
+     * <p>That order is what makes a value the driver hands back as a handle readable at all: a clob or a blob is a
+     * locator that is only valid as long as the statement that produced it, so converting after the try-with-resources
+     * below has closed the result set and the statement leaves db2 answering {@code SQLCODE=-4470, Lob object is
+     * closed}. For a value the driver gives over outright the order makes no difference, which is why it went unnoticed.
+     */
     public <V> V executeScalar(Converter<V> converter){
-        try {
-            //noinspection unchecked
-            return converter.convert(executeScalar());
-        } catch (ConverterException e) {
-            throw new Sql2oException("Error occured while converting value from database", e);
+        long start = System.currentTimeMillis();
+
+        logExecution();
+        try (final PreparedStatement ps = buildPreparedStatement();
+             final ResultSet rs = ps.executeQuery()) {
+            try {
+                if (rs.next()) {
+                    Object o = getQuirks().getRSVal(rs, 1);
+                    long end = System.currentTimeMillis();
+                    logger.debug("total: {} ms; executed scalar [{}]", new Object[]{
+                        end - start,
+                        this.getName() == null ? "No name" : this.getName()
+                    });
+
+                    //noinspection unchecked
+                    return converter.convert(o);
+                } else {
+                    return converter.convert(null);
+                }
+            } catch (ConverterException e) {
+                throw new Sql2oException("Error occured while converting value from database", e);
+            }
+        } catch (SQLException e) {
+            this.connection.onException();
+            throw new Sql2oException("Database error occurred while running executeScalar: " + e.getMessage(), e);
+        } finally {
+            closeConnectionIfNecessary();
         }
     }
 

@@ -1,9 +1,8 @@
 package org.sql2o.converters;
 
-import org.junit.After;
-import org.junit.Assert;
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 import org.sql2o.Query;
 import org.sql2o.Sql2o;
 import org.sql2o.Sql2oException;
@@ -14,7 +13,9 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
 
-import static org.junit.Assert.*;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 /**
  * @author aldenquimby@gmail.com
@@ -25,7 +26,7 @@ public class BidirectionalConverterTest {
     private Sql2o sql2o;
     private List<UUIDWrapper> wrappers;
 
-    @Before
+    @BeforeEach
     public void setUp()
     {
         Quirks quirks = new NoQuirks();
@@ -36,7 +37,7 @@ public class BidirectionalConverterTest {
         this.createAndFillTable(this.wrappers);
     }
 
-    @After
+    @AfterEach
     public void tearDown()
     {
         deleteTable();
