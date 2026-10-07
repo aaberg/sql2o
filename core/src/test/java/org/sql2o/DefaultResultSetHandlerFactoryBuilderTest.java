@@ -56,7 +56,6 @@ public class DefaultResultSetHandlerFactoryBuilderTest {
     private static DefaultResultSetHandlerFactoryBuilder builder() {
         final DefaultResultSetHandlerFactoryBuilder builder = new DefaultResultSetHandlerFactoryBuilder();
         builder.setQuirks(new NoQuirks());
-        builder.setColumnMappings(Map.of());
         return builder;
     }
 
@@ -69,7 +68,7 @@ public class DefaultResultSetHandlerFactoryBuilderTest {
         assertFalse(builder.isCaseSensitive());
         assertFalse(builder.isAutoDeriveColumnNames());
         assertFalse(builder.isThrowOnMappingError());
-        assertNull(builder.getColumnMappings());
+        assertEquals(Map.of(), builder.getColumnMappings());
         assertNull(builder.getQuirks());
 
         builder.setCaseSensitive(true);
@@ -115,16 +114,35 @@ public class DefaultResultSetHandlerFactoryBuilderTest {
         assertEquals(9, point.getX());
     }
 
-    /**
- * The builder hands out a lazy delegate, so an unusable class is only noticed when the first row is read, not when
- * the factory is asked for.
- *
- * <p>The message the builder intends to produce never reaches the caller at all. ObjectBuildableFactory builds its
- * metadata through a Cache, and Cache wraps anything its delegate throws, so the NoSuchMethodException gets wrapped
- * first and the builder's own catch (ReflectiveOperationException) never runs. What surfaces is the cache message
- * with the reflection failure as its cause.
+/**
+ * Column mappings are optional. A builder that was never given any used to blow up with a bare
+ * NullPointerException out of the first row, because the property lookup dereferenced the map without a check.
  */
 @Test
+    public void aBuilderWithoutColumnMappingsStillFillsAnObject() throws Exception {
+        final DefaultResultSetHandlerFactoryBuilder builder = new DefaultResultSetHandlerFactoryBuilder();
+        builder.setQuirks(new NoQuirks());
+        assertEquals(Map.of(), builder.getColumnMappings());
+
+        final ResultSet rs = mock(ResultSet.class);
+        when(rs.getObject(1)).thenReturn(5);
+
+        final Point point = builder.<Point>newFactory(Point.class).newResultSetHandler(metaWithOneColumn())
+                .handle(rs);
+
+        assertEquals(5, point.getX());
+    }
+
+    /**
+     * The builder hands out a lazy delegate, so an unusable class is only noticed when the first row is read, not when
+     * the factory is asked for.
+     *
+     * <p>The message the builder intends to produce never reaches the caller at all. ObjectBuildableFactory builds its
+     * metadata through a Cache, and Cache wraps anything its delegate throws, so the NoSuchMethodException gets wrapped
+     * first and the builder's own catch (ReflectiveOperationException) never runs. What surfaces is the cache message
+     * with the reflection failure as its cause.
+     */
+    @Test
     public void aClassThatCannotBeInstantiatedIsReportedWhenTheFirstRowArrives() throws Exception {
         final ResultSetHandler<NoDefaultConstructor> handler =
                 builder().<NoDefaultConstructor>newFactory(NoDefaultConstructor.class)

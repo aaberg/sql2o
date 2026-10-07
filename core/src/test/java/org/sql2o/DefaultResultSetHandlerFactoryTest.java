@@ -15,6 +15,8 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.times;
+import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 /**
@@ -127,6 +129,33 @@ public class DefaultResultSetHandlerFactoryTest {
         assertTrue(ex.getCause() instanceof ReflectiveOperationException);
     }
 
+    /**
+ * The names of the columns are a property of the result set and not of the row, so they are read once when the
+ * handler is built. This used to be a metadata call per column per row, which for a thousand rows of two columns was
+ * two thousand calls where two would do.
+ */
+@Test
+    public void theColumnNamesAreReadOnceWhenTheHandlerIsBuilt() throws Exception {
+        final ResultSetMetaData meta = mock(ResultSetMetaData.class);
+        when(meta.getColumnCount()).thenReturn(2);
+        when(meta.getColumnLabel(1)).thenReturn("name");
+        when(meta.getColumnLabel(2)).thenReturn("size");
+
+        final RecordingBuildable buildable = new RecordingBuildable(false, false);
+        final ResultSetHandler<Thing> handler = new DefaultResultSetHandlerFactory<Thing>(
+                (ObjectBuildableFactoryDelegate<Thing>) () -> buildable, new NoQuirks())
+                .newResultSetHandler(meta);
+
+        handler.handle(resultSetWith("widget", 7));
+        handler.handle(resultSetWith("gadget", 9));
+
+        verify(meta, times(1)).getColumnLabel(1);
+        verify(meta, times(1)).getColumnLabel(2);
+        verify(meta, times(1)).getColumnCount();
+        // Both rows still arrived, so reading the names early did not skip anything.
+        assertEquals(Map.of("name", "gadget", "size", 9), buildable.received);
+    }
+
     /** The happy path, using the real reflection machinery rather than a stand-in. */
     @Test
     public void aRealObjectIsFilledFromTheRow() throws Exception {
@@ -142,18 +171,21 @@ public class DefaultResultSetHandlerFactoryTest {
         assertEquals(7, thing.getSize());
     }
 
-    /**
-     * Column mappings default to null in the builder, and the property lookup dereferences the map without a null
-     * check, so a caller who forgets setColumnMappings gets a bare NullPointerException out of the first row instead
-     * of an empty mapping. Query always sets them, which is why this does not show up in normal use.
-     */
-    @Test
-    public void forgettingTheColumnMappingsBlowsUpWithANullPointer() throws Exception {
+/**
+ * Column mappings are optional, so a builder that was never given any has to work: an empty map is the default,
+ * rather than a null the property lookup would trip over.
+ */
+@Test
+    public void aBuilderWithoutColumnMappingsStillFillsAnObject() throws Exception {
         final var builder = new DefaultResultSetHandlerFactoryBuilder();
         builder.setQuirks(new NoQuirks());
+
         final ResultSetHandler<Thing> handler = builder.<Thing>newFactory(Thing.class)
                 .newResultSetHandler(metaWithTwoColumns());
 
-        assertThrows(NullPointerException.class, () -> handler.handle(resultSetWith("widget", 7)));
+        final Thing thing = handler.handle(resultSetWith("widget", 7));
+
+        assertEquals("widget", thing.getName());
+        assertEquals(7, thing.getSize());
     }
 }

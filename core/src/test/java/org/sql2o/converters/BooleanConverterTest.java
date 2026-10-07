@@ -43,24 +43,24 @@ public class BooleanConverterTest {
         assertFalse(converter.convert(0.5d));
     }
 
-    /** Only the upper case letters mean yes for a character, unlike the strings below. */
-    @ParameterizedTest
-    @ValueSource(chars = {'Y', 'T', 'J'})
-    public void theCharactersThatMeanYesAreTrue(char val) throws ConverterException {
-        assertTrue(converter.convert(val));
-    }
+/** A character is answered the same way as the string of the same content, upper or lower case. */
+@ParameterizedTest
+@ValueSource(chars = {'Y', 'y', 'T', 't', 'J', 'j'})
+public void theCharactersThatMeanYesAreTrue(char val) throws ConverterException {
+    assertTrue(converter.convert(val));
+}
 
-    @ParameterizedTest
-    @ValueSource(chars = {'y', 't', 'j', 'N', 'n', 'F', '0'})
-    public void everyOtherCharacterIsFalse(char val) throws ConverterException {
-        assertFalse(converter.convert(val));
-    }
+@ParameterizedTest
+@ValueSource(chars = {'N', 'n', 'F', '0', ' ', 'q'})
+public void everyOtherCharacterIsFalse(char val) throws ConverterException {
+    assertFalse(converter.convert(val));
+}
 
-    @ParameterizedTest
-    @ValueSource(strings = {"Y", "yes", "TRUE", "t", "J", "  y  "})
-    public void theWordsThatMeanYesAreTrueAndAreTrimmed(String val) throws ConverterException {
-        assertTrue(converter.convert(val));
-    }
+@ParameterizedTest
+@ValueSource(strings = {"Y", "y", "yes", "YES", "TRUE", "true", "t", "T", "J", "j", "  y  "})
+public void theWordsThatMeanYesAreTrueAndAreTrimmed(String val) throws ConverterException {
+    assertTrue(converter.convert(val));
+}
 
     @ParameterizedTest
     @ValueSource(strings = {"N", "no", "false", "0", "", "   ", "anything else"})
