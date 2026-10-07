@@ -22,7 +22,7 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
  * <p>Every extension that has one of these converters runs this against its own, the same way the typed parameter matrix
  * is shared between the databases.
  */
-public abstract class BinaryUuidConverterTest {
+public class BinaryUuidConverterTest {
 
     /** An ordinary one, the shape a uuid out of a database usually has. */
     private static final UUID A_UUID = UUID.fromString("6ba7b810-9dad-11d1-80b4-00c04fd430c8");
@@ -38,8 +38,15 @@ public abstract class BinaryUuidConverterTest {
 
     private static final UUID[] SOME_UUIDS = {A_UUID, ALL_ZEROES, ALL_ONES, TOP_BITS_ONLY};
 
-    /** The converter under test, which is the only thing a subclass has to supply. */
-    protected abstract Converter<UUID> converter();
+    /**
+     * The converter under test, which is the only thing a subclass has to supply.
+     *
+     * <p>The one of core by default, so that the class in core is covered here rather than only through the extensions
+     * that happen to use it.
+     */
+    protected Converter<UUID> converter() {
+        return new BinaryUUIDConverter();
+    }
 
     @Test
     public void aUuidIsWrittenAsSixteenBytes() {

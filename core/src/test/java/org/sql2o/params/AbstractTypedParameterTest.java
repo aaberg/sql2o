@@ -282,17 +282,57 @@ GREEN, BLUE
                 DynamicTest.dynamicTest("a blob bound as a stream", this::assertBlobAsStream));
     }
 
+    /**
+     * An instant read into a field of that type, which is the way a value of that kind actually meets an application.
+     *
+     * <p>Written as a {@link Timestamp} on purpose: what is under test is the read, so the write must not be the thing
+     * that can work or fail, and a {@link Timestamp} goes into a timestamp column on every one of these databases
+     * whatever else it makes of a {@link Instant}. Which is the whole point of asking separately from the round trip: the
+     * read has nothing of sql2o's own in it but the converter, and what the database hands over is worth seeing.
+     */
+    @TestFactory
+    public Stream<DynamicTest> anInstantColumnLandsInAField() {
+        return Stream.of(DynamicTest.dynamicTest("an instant column lands in a field of type Instant",
+                this::assertInstantReadIntoAField));
+    }
+
     private ParameterCase caseOf(Class<?> type, Object value) {
         return new ParameterCase(type.getSimpleName(), type, value, null, null);
     }
 
-    /**
-     * The case whose column is a plain varchar, used where the point is the binding rather than the column type. */
-    private ParameterCase theStringCase() {
+    /** The case of one type, for the tests that are about a single type rather than about the whole matrix. */
+    private ParameterCase theCaseFor(Class<?> type) {
         return cases().stream()
-                .filter(candidate -> STRING.equals(candidate.columnKind()))
+                .filter(candidate -> type.equals(candidate.type()))
                 .findFirst()
-                .orElseThrow(() -> new IllegalStateException("the matrix has to keep a String case"));
+                .orElseThrow(() -> new IllegalStateException("the matrix has to keep a " + type.getSimpleName() + " case"));
+    }
+
+    /** A row with an instant in it, as an application would declare the field. */
+    protected static class RowWithInstant {
+        public Instant theInstant;
+    }
+
+    private void assertInstantReadIntoAField() {
+        ParameterCase testCase = theCaseFor(Instant.class);
+        String column = columnName(testCase);
+
+        freshTable();
+
+        // Written as a java.sql value, so that the write is not what this is testing.
+        try (Connection connection = sql2o().open()) {
+            Query query = connection.createQuery("insert into " + tableName() + " (" + column + ") values (:v)");
+            query.addParameter("v", Timestamp.class, Timestamp.from((Instant) testCase.value()));
+            query.executeUpdate();
+        }
+
+        Instant read;
+        try (Connection connection = sql2o().open()) {
+            read = connection.createQuery("select " + column + " as theInstant from " + tableName())
+                    .executeAndFetchFirst(RowWithInstant.class).theInstant;
+        }
+
+        assertEqualsWithAReadableMessage(testCase.value(), read, "an Instant column read into an Instant field");
     }
 
     private void assertNullRoundTrip(ParameterCase testCase) {
@@ -460,7 +500,7 @@ GREEN, BLUE
     }
 
     private Object readBackBindingWith(ParameterCase testCase, boolean nameTheType) {
-        String column = columnName(theStringCase());
+        String column = columnName(theCaseFor(String.class));
         freshTable();
 
         try (Connection connection = sql2o().open()) {
