@@ -26,11 +26,8 @@
         <module>oracle</module>
         <module>oracle-joda-time</module>
         <module>db2</module>
-<<<<<<< HEAD
         <module>bytecode</module>
-=======
         <module>hsqldb</module>
->>>>>>> ebd7bf9 (Move hsqldb out of the core tests and into an extension of its own)
     </modules>
 
     <dependencies>
