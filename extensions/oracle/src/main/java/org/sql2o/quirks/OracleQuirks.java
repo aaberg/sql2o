@@ -11,11 +11,13 @@
 package org.sql2o.quirks;
 
 import org.sql2o.converters.Converter;
+import org.sql2o.converters.InstantToTimestampConverter;
 import org.sql2o.converters.OracleUUIDConverter;
 
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.time.Instant;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.UUID;
@@ -25,6 +27,11 @@ public class OracleQuirks extends NoQuirks {
     public OracleQuirks() {
         super(new HashMap<Class, Converter>() {{
             put(UUID.class, oracleUUIDConverter);
+            // Oracle takes an OffsetDateTime as it is and has TIMESTAMP WITH TIME ZONE to keep it in, so that is left
+            // alone. It has no way of placing an Instant and says so twice over: ORA-17004 for the object, and
+            // ORA-17132 when an explicit type is asked for instead. An Instant carries no offset, so writing it as a
+            // Timestamp is not a loss.
+            put(Instant.class, new InstantToTimestampConverter());
         }});
     }
 

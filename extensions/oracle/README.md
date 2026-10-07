@@ -119,8 +119,7 @@ stored and reading it back gives the offset of the jvm doing the reading.
 `OracleTypedParameterTest` runs 81 tests and **all of them pass** against Oracle XE 21c: `String`, the integral types,
 `Boolean`, `BigDecimal`, `java.sql.Date`, `java.sql.Time` is absent, `Timestamp`, `java.util.Date`, `LocalDate`,
 `LocalDateTime`, `OffsetDateTime`, `UUID`, enums and blobs bound both as a byte array and as a stream; a null going in and
-coming back out for every type that has a column here; a clob of twenty thousand characters written three ways — as a String with its
-type named, without, and as a reader — and read back whole, in both a field and a scalar;
+coming back out for every type that has a column here; a clob written and read back whole, in both a field and a scalar;
 and an instant read back into a field of its own type.
 
 What is not covered is stated above rather than left out: a time of day has no column here at all, and a with-zone

@@ -6,7 +6,15 @@ import org.sql2o.Sql2o;
  * The typed parameters against PostgreSQL.
  *
  * <p>The quirks come from the service loader rather than being named here, so that this also covers the wiring that
- * ships in the jar. What PostgreSQL can and cannot hold is measured rather than assumed; see {@link #cases()}.
+ * ships in the jar.
+ *
+ * <p>Postgres takes almost all of the matrix as it is, including an {@link java.time.OffsetDateTime}, which it has a
+ * {@code timestamptz} to keep. An {@link java.time.Instant} it cannot place at all — Can&apos;t infer the SQL type to use
+ * for an instance of java.time.Instant — so the quirks register {@code InstantToTimestampConverter} from core for that one
+ * and nothing else is touched.
+ *
+ * <p>This database has no README of its own, so anything measured here that a reader would want written down is written
+ * down here instead.
  */
 public class PostgresTypedParameterTest extends AbstractTypedParameterTest {
 

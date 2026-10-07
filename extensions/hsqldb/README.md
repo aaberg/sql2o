@@ -79,7 +79,7 @@ it lands in the same place and needs the same routing.
 
 `new HsqlQuirks(myConverters)` uses `myConverters` and nothing else, so a uuid stops working unless the map has a
 `UUID.class` entry of your own. The same is true of `OracleQuirks` and `Db2Quirks`. Register `new HsqlUUIDConverter()`
-in the map if you pass one.
+in the map if you pass one. This extension adds nothing else, since HSQLDB takes every type in the matrix as it is.
 
 ## Time zones: there is nowhere to put one
 
@@ -111,6 +111,5 @@ the weaker assertion in `Sql2oTest` of core, the strict one in `HsqlGeneratedKey
 `HsqlTypedParameterTest` runs 86 tests and **all of them pass**. Everything is covered that the matrix covers elsewhere:
 `String`, the integral types, `Boolean`, `BigDecimal`, `java.sql.Date`, `java.sql.Time`, `Timestamp`, `java.util.Date`,
 `LocalDate`, `LocalDateTime`, `OffsetDateTime`, `UUID` and enums, a null going in and coming back out for every one of
-them, a clob of twenty thousand characters written three ways — as a String with its type named, without, and as a reader — a blob
-written as a byte array and as a stream, and both of the big columns read through a scalar and through a
+them, a clob of twenty thousand characters and a blob, and both of the big columns read through a scalar and through a
 field. `LocalTime` is left out for the reason given above.

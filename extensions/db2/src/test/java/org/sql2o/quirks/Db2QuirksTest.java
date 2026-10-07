@@ -4,11 +4,17 @@ import org.junit.jupiter.api.Test;
 import org.sql2o.converters.Converter;
 import org.sql2o.converters.Db2UUIDConverter;
 import org.sql2o.converters.DefaultConverter;
+import org.sql2o.converters.InstantToTimestampConverter;
+import org.sql2o.converters.OffsetDateTimeToTimestampConverter;
+import org.sql2o.converters.OffsetTimeToTimeConverter;
 
 import java.lang.reflect.Proxy;
 import java.sql.PreparedStatement;
 import java.sql.ResultSetMetaData;
 import java.sql.SQLException;
+import java.time.Instant;
+import java.time.OffsetDateTime;
+import java.time.OffsetTime;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.UUID;
@@ -91,6 +97,20 @@ public class Db2QuirksTest {
     @Test
     public void theUuidConverterIsRegisteredForUuid() {
         assertInstanceOf(Db2UUIDConverter.class, new Db2Quirks().converterOf(UUID.class));
+    }
+
+    /**
+     * Db2 refuses a {@code java.time} value as the object itself with SQLCODE -4461, and has no column type with a
+     * zone in it to keep the offset of one that has it. These are the converters that write those values as the
+     * {@code java.sql} ones it does take.
+     */
+    @Test
+    public void theTemporalConvertersThatDb2NeedsAreRegisteredForIt() {
+        final Db2Quirks quirks = new Db2Quirks();
+
+        assertInstanceOf(InstantToTimestampConverter.class, quirks.converterOf(Instant.class));
+        assertInstanceOf(OffsetDateTimeToTimestampConverter.class, quirks.converterOf(OffsetDateTime.class));
+        assertInstanceOf(OffsetTimeToTimeConverter.class, quirks.converterOf(OffsetTime.class));
     }
 
     @Test
