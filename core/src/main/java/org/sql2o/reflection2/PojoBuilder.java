@@ -25,39 +25,52 @@ public class PojoBuilder<T> implements ObjectBuildable<T> {
 
     @Override
     public void withValue(String columnName, Object obj) throws ReflectiveOperationException {
+        setValue(pojoMetadata, this.pojo, columnName, obj);
+    }
+
+    /**
+     * Applies a column name, which may itself be dotted, to the given object, creating and assigning the
+     * intermediate objects it walks through.
+     *
+     * <p>The object is passed along instead of a nested PojoBuilder because the metadata of a nested object
+     * belongs to the runtime class of the value, while the value itself is only known as the declared
+     * property type. There is no type parameter that could tie a builder to that metadata.
+     */
+    private void setValue(PojoMetadata<?> metadata, Object target, String columnName, Object value)
+            throws ReflectiveOperationException {
 
         final var dotIdx = columnName.indexOf('.');
-        String derivedName = null;
-        if (dotIdx > 0) {
-            final var subName = columnName.substring(0, dotIdx);
-            derivedName = settings.getNamingConvention().deriveName(subName);
-            final var subProperty = pojoMetadata.getPojoProperty(derivedName, columnMappings);
-            final var newPath = columnName.substring(dotIdx + 1);
+        final var head = dotIdx > 0 ? columnName.substring(0, dotIdx) : columnName;
 
-            var subObj = subProperty.getValue(this.pojo);
-            if (subObj == null) {
-                subObj = subProperty.initializeWithNewInstance(this.pojo);
-                subProperty.SetProperty(this.pojo, subObj);
-            }
-
-            final var subPojoMetadata = new PojoMetadata<>(subObj.getClass(), settings);
-            final var subObjectBuilder = new PojoBuilder(settings, subPojoMetadata, columnMappings, subObj);
-            subObjectBuilder.withValue(newPath, obj);
-            obj = subObjectBuilder.build();
-        }
-
-        if (derivedName == null) {
-            derivedName = settings.getNamingConvention().deriveName(columnName);
-        }
-        final var pojoProperty = pojoMetadata.getPojoProperty(derivedName, columnMappings);
-
-        if (pojoProperty == null) {
-            if (settings.isThrowOnMappingError()){
-                throw new Sql2oException("Could not map " + columnName + " to any property.");
-            }
+        final var property = metadata.getPojoProperty(settings.getNamingConvention().deriveName(head), columnMappings);
+        if (property == null) {
+            handleMissingProperty(columnName);
             return;
         }
-        pojoProperty.SetProperty(this.pojo, obj);
+
+        if (dotIdx <= 0) {
+            property.SetProperty(target, value, settings.getQuirks());
+            return;
+        }
+
+        Object nested = property.getValue(target);
+        if (nested == null) {
+            // initializeWithNewInstance assigns the new instance to the target itself, calling the setter
+            // or setting the field, so assigning it again here would invoke the setter twice.
+            nested = property.initializeWithNewInstance(target);
+        }
+
+        setValue(ObjectBuildableFactory.pojoMetadata(nested.getClass(), settings), nested, columnName.substring(dotIdx + 1), value);
+    }
+
+    /**
+     * Reports a column that has no matching property, or silently ignores it when mapping errors are
+     * not configured to be thrown.
+     */
+    private void handleMissingProperty(String columnName) {
+        if (settings.isThrowOnMappingError()) {
+            throw new Sql2oException("Could not map " + columnName + " to any property.");
+        }
     }
 
     @Override

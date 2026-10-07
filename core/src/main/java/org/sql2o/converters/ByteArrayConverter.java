@@ -12,6 +12,15 @@ import java.sql.SQLException;
  * Date: 6/13/13
  * Time: 11:36 PM
  */
+/**
+ * Reads a value from the database as a byte array, either from a {@link Blob} or from an array that is already in
+ * the right shape.
+ *
+ * <p>Unlike the rest of this package, an unsupported type is refused with a bare {@link RuntimeException} rather than
+ * a {@link ConverterException}, even though the method declares the checked one. Callers that want to handle every
+ * failure the same way have to catch both, and {@link InputStreamConverter}, which delegates here, lets the runtime
+ * one escape. See docs/converter-exceptions.md.
+ */
 public class ByteArrayConverter extends ConverterBase<byte[]> {
 
     public byte[] convert(Object val) throws ConverterException {

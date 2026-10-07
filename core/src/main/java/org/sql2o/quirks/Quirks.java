@@ -4,6 +4,7 @@ import org.sql2o.converters.Converter;
 import org.sql2o.quirks.parameterparsing.SqlParameterParsingStrategy;
 
 import java.io.InputStream;
+import java.io.Reader;
 import java.sql.*;
 import java.util.UUID;
 
@@ -36,6 +37,7 @@ public interface Quirks {
 
     void setParameter(PreparedStatement statement, int paramIdx, Object value) throws SQLException;
     void setParameter(PreparedStatement statement, int paramIdx, InputStream value) throws SQLException;
+    void setParameter(PreparedStatement statement, int paramIdx, Reader value) throws SQLException;
     void setParameter(PreparedStatement statement, int paramIdx, int value) throws SQLException;
     void setParameter(PreparedStatement statement, int paramIdx, Integer value) throws SQLException;
     void setParameter(PreparedStatement statement, int paramIdx, long value) throws SQLException;

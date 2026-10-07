@@ -1,25 +1,21 @@
 package org.sql2o.extensions.postgres;
 
-import org.junit.Test;
-import org.junit.runner.RunWith;
-import org.junit.runners.Parameterized;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.MethodSource;
 import org.sql2o.Connection;
 import org.sql2o.Query;
-import org.sql2o.Sql2o;
-import org.sql2o.converters.UUIDConverter;
 import org.sql2o.data.Row;
 import org.sql2o.data.Table;
-import org.sql2o.quirks.PostgresQuirks;
 
-import java.util.Arrays;
-import java.util.Collection;
 import java.util.UUID;
+import java.util.stream.Stream;
 
-import static org.hamcrest.CoreMatchers.equalTo;
-import static org.hamcrest.CoreMatchers.is;
-import static org.junit.Assert.*;
+import static org.hamcrest.MatcherAssert.assertThat;
+import static org.hamcrest.Matchers.equalTo;
+import static org.hamcrest.Matchers.is;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 /**
  * Created with IntelliJ IDEA.
@@ -29,23 +25,27 @@ import static org.junit.Assert.*;
  * Test dedicated for postgres issues. Seems like the postgres jdbc driver behaves somewhat different from other jdbc drivers.
  * This test assumes that there is a local PostgreSQL server with a testdb database which can be accessed by user: test, pass: testtest
  */
-@RunWith(Parameterized.class)
 public class PostgresTest extends PostgresTestSupport {
 
-    public PostgresTest(String url, String user, String pass, String testName) {
-        super(url, user, pass, testName);
+    static Stream<PostgresTestDatabase> databases() {
+        return PostgresTestDatabase.databases();
+    }
+
+    @BeforeEach
+    public void announceTheTestClass() {
         logger.info("starting PostgresTest");
     }
 
-    @Test
-    public void testIssue10StatementsOnPostgres_noTransaction(){
+    @ParameterizedTest(name = "{0}")
+    @MethodSource("databases")
+    public void testIssue10StatementsOnPostgres_noTransaction(PostgresTestDatabase db) {
 
         try {
-            try (Connection connection = sql2o.open()) {
+            try (Connection connection = db.getSql2o().open()) {
                 connection.createQuery("create table test_table(id SERIAL, val varchar(20))").executeUpdate();
             }
 
-            try (Connection connection = sql2o.open()) {
+            try (Connection connection = db.getSql2o().open()) {
                 Long key = connection.createQuery("insert into test_table (val) values(:val)", true)
                                      .addParameter("val", "something").executeUpdate().getKey(Long.class);
                 assertNotNull(key);
@@ -62,18 +62,18 @@ public class PostgresTest extends PostgresTestSupport {
             }
 
         } finally {
-            try (final Connection connection = sql2o.open();
+            try (final Connection connection = db.getSql2o().open();
                  final Query query = connection.createQuery("drop table if exists test_table")) {
                 query.executeUpdate();
             }
         }
     }
 
-    @Test
-    public void testIssue10_StatementsOnPostgres_withTransaction() {
+    @ParameterizedTest(name = "{0}")
+    @MethodSource("databases")
+    public void testIssue10_StatementsOnPostgres_withTransaction(PostgresTestDatabase db) {
 
-
-        try(final Connection connection = sql2o.beginTransaction()){
+        try (final Connection connection = db.getSql2o().beginTransaction()) {
 
             String createTableSql = "create table test_table(id SERIAL, val varchar(20))";
             connection.createQuery(createTableSql).executeUpdate();
@@ -97,12 +97,13 @@ public class PostgresTest extends PostgresTestSupport {
 
     }
 
-    @Test
-    public void testGetKeyOnSequence(){
+    @ParameterizedTest(name = "{0}")
+    @MethodSource("databases")
+    public void testGetKeyOnSequence(PostgresTestDatabase db) {
         Connection connection = null;
 
         try {
-            connection = sql2o.beginTransaction();
+            connection = db.getSql2o().beginTransaction();
 
             String createSequenceSql = "create sequence testseq";
             connection.createQuery(createSequenceSql).executeUpdate();
@@ -124,12 +125,13 @@ public class PostgresTest extends PostgresTestSupport {
         }
     }
 
-    @Test
-    public void testKeyKeyOnSerial() {
+    @ParameterizedTest(name = "{0}")
+    @MethodSource("databases")
+    public void testKeyKeyOnSerial(PostgresTestDatabase db) {
         Connection connection = null;
 
         try {
-            connection = sql2o.beginTransaction();
+            connection = db.getSql2o().beginTransaction();
 
             String createTableSql = "create table test_serial_table (id serial primary key, val varchar(20))";
             connection.createQuery(createTableSql).executeUpdate();
@@ -148,12 +150,13 @@ public class PostgresTest extends PostgresTestSupport {
         }
     }
 
-    @Test
-    public void testKeysKeyOnSerial() {
+    @ParameterizedTest(name = "{0}")
+    @MethodSource("databases")
+    public void testKeysKeyOnSerial(PostgresTestDatabase db) {
         Connection connection = null;
 
         try {
-            connection = sql2o.beginTransaction();
+            connection = db.getSql2o().beginTransaction();
 
             String createTableSql = "create table test_serial_table (val varchar(20), id serial primary key)";
             connection.createQuery(createTableSql).executeUpdate();
@@ -174,13 +177,14 @@ public class PostgresTest extends PostgresTestSupport {
         }
     }
 
-    @Test
-    public void testUUID() {
+    @ParameterizedTest(name = "{0}")
+    @MethodSource("databases")
+    public void testUUID(PostgresTestDatabase db) {
 
         Connection connection = null;
 
         try {
-            connection = sql2o.beginTransaction();
+            connection = db.getSql2o().beginTransaction();
 
             String createSql = "create table uuidtable(id serial primary key, data uuid)";
             connection.createQuery(createSql).executeUpdate();

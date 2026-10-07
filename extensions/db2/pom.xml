@@ -23,12 +23,29 @@
 
     <dependencies>
 
+        <!-- The driver is only needed to talk to a real db2, so it never ships with the extension. -->
+        <dependency>
+            <groupId>com.ibm.db2</groupId>
+            <artifactId>jcc</artifactId>
+            <version>11.5.8.0</version>
+            <scope>test</scope>
+        </dependency>
+
         <!-- optional dependencies -->
         <dependency>
             <groupId>joda-time</groupId>
             <artifactId>joda-time</artifactId>
             <version>${joda-time.version}</version>
             <optional>true</optional>
+        </dependency>
+
+        <!-- The test support of core, so that the tests here can extend the same base class the core tests use. -->
+        <dependency>
+            <groupId>org.sql2o</groupId>
+            <artifactId>sql2o</artifactId>
+            <version>${project.version}</version>
+            <type>test-jar</type>
+            <scope>test</scope>
         </dependency>
 
     </dependencies>

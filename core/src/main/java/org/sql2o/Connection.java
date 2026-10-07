@@ -36,7 +36,7 @@ public class Connection implements AutoCloseable, Closeable {
 
     private boolean rollbackOnException = true;
 
-    private Boolean originalAutoCommit;
+    private boolean originalAutoCommit;
 
     public boolean isRollbackOnException() {
         return rollbackOnException;
@@ -333,12 +333,10 @@ public class Connection implements AutoCloseable, Closeable {
 
     private void resetAutoCommitState() {
         // resets the AutoCommit state to make sure that the connection has been reset before reuse (if a connection pool is used)
-        if(originalAutoCommit != null) {
-            try {
-                this.jdbcConnection.setAutoCommit(originalAutoCommit);
-            } catch (SQLException e) {
-                logger.warn(String.format("Could not reset autocommit state for connection to %s.", originalAutoCommit), e);
-            }
+        try {
+            this.jdbcConnection.setAutoCommit(originalAutoCommit);
+        } catch (SQLException e) {
+            logger.warn(String.format("Could not reset autocommit state for connection to %s.", originalAutoCommit), e);
         }
     }
 }
