@@ -1,10 +1,15 @@
 package org.sql2o;
 
-import junit.framework.TestCase;
 import org.h2.jdbcx.JdbcConnectionPool;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
 import javax.sql.DataSource;
 import java.util.List;
+
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertNull;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 /**
  * Created with IntelliJ IDEA.
@@ -13,7 +18,7 @@ import java.util.List;
  * Time: 10:54 PM
  * To change this template use File | Settings | File Templates.
  */
-public class Sql2oDataSourceTest extends TestCase {
+public class Sql2oDataSourceTest {
 
     private Sql2o sql2o;
 
@@ -21,13 +26,14 @@ public class Sql2oDataSourceTest extends TestCase {
     private String user = "sa";
     private String pass = "";
 
-    @Override
-    protected void setUp() throws Exception {
+    @BeforeEach
+    void setUp() throws Exception {
         DataSource ds = JdbcConnectionPool.create(url, user, pass);
 
         sql2o = new Sql2o(ds);
     }
 
+    @Test
     public void testExecuteAndFetchWithNulls(){
         String sql =
                 "create table testExecWithNullsTbl (" +

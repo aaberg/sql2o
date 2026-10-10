@@ -15,6 +15,16 @@ import java.time.ZoneOffset;
 public class LocalDateTimeConverterTest {
 
     @Test
+    void convert_sqlDate_returnsMidnightOfThatDate() throws ConverterException {
+        // A date has no time of day, and midnight is the only reading of it that does not invent anything.
+        final var converter = new LocalDateTimeConverter();
+
+        final var convertedTime = converter.convert(java.sql.Date.valueOf("2024-01-01"));
+
+        assertEquals(LocalDateTime.of(2024, 1, 1, 0, 0, 0, 0), convertedTime);
+    }
+
+    @Test
     void convert_sqlTimestamp_returnsLocalDateTime() throws ConverterException {
         // setup
         final var converter = new LocalDateTimeConverter();
@@ -109,5 +119,14 @@ public class LocalDateTimeConverterTest {
 
         // assert
         assertEquals(targetTime, result);
+    }
+    @Test
+    public void convert_unsupportedType_throwsException() {
+        // setup
+        final var converter = new LocalDateTimeConverter();
+
+        // test and assert
+        final var ex = assertThrows(ConverterException.class, () -> converter.convert(new Object()));
+        assertEquals("Can't convert type java.lang.Object to LocalDateTime", ex.getMessage());
     }
 }

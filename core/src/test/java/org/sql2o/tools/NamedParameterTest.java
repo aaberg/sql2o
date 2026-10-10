@@ -1,6 +1,6 @@
 package org.sql2o.tools;
 
-import junit.framework.TestCase;
+import org.junit.jupiter.api.Test;
 import org.sql2o.quirks.parameterparsing.SqlParameterParsingStrategy;
 import org.sql2o.quirks.parameterparsing.impl.DefaultSqlParameterParsingStrategy;
 
@@ -11,13 +11,14 @@ import java.util.Map;
 import static org.hamcrest.CoreMatchers.equalTo;
 import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.MatcherAssert.assertThat;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 
 /**
  * User: dimzon
  * Date: 4/9/14
  * Time: 4:44 AM
  */
-public class NamedParameterTest extends TestCase {
+public class NamedParameterTest {
 
     private SqlParameterParsingStrategy sqlParameterParsingStrategy = new DefaultSqlParameterParsingStrategy();
 
@@ -27,6 +28,7 @@ public class NamedParameterTest extends TestCase {
      CAST ( expression AS type )
      expression::type
      */
+    @Test
     public void testPostgresSqlCastSyntax() throws Exception {
         Map<String, List<Integer>> map = new HashMap<String, List<Integer>>();
         String preparedQuery = sqlParameterParsingStrategy.parseSql("select :foo", map);
@@ -40,6 +42,7 @@ public class NamedParameterTest extends TestCase {
         assertEquals("select (?)::uuid", preparedQuery);
     }
 
+    @Test
     public void testStringConstant() throws Exception {
         Map<String, List<Integer>> map = new HashMap<String, List<Integer>>();
         String preparedQuery = sqlParameterParsingStrategy.parseSql("select ':foo'", map);

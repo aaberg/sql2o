@@ -32,7 +32,9 @@ public class JndiDataSource {
                     ctx.close();
                 }
                 catch (Throwable e) {
-                    logger.warn("error closing context", e);
+                    // One line, not a stack trace: the lookup already succeeded and the data source is handed
+                    // out, so a context that cannot be closed is worth a note in the log and nothing more.
+                    logger.warn("error closing context: " + e);
                 }
             }
         }

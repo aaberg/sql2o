@@ -9,6 +9,20 @@ services:
         networks:
             sql2o-network:
 
+    mariadb-db:
+        # Pinned to the 11.4 LTS, not latest: a major bump changes defaults (authentication, utc handling)
+        # that the tests below measure rather than assume.
+        image: 'mariadb:11.4'
+        ports:
+            - 13306:3306
+        environment:
+            - MARIADB_ROOT_PASSWORD=testpassword
+            - MARIADB_DATABASE=testdb
+            - MARIADB_USER=testuser
+            - MARIADB_PASSWORD=testpassword
+        networks:
+            sql2o-network:
+
     oracle-xe-21c:
         image: 'container-registry.oracle.com/database/express:latest'
         volumes:
@@ -22,8 +36,45 @@ services:
         networks:
             sql2o-network:
 
+    db2-ce:
+        image: 'ibmcom/db2:11.5.8.0'
+        privileged: true
+        shm_size: '4gb'
+        ports:
+            - "50000:50000"
+        environment:
+            - LICENSE=accept
+            - DB2INSTANCE=db2inst1
+            - DB2INST1_PASSWORD=testpassword
+            - DBNAME=testdb
+            - BLU=false
+            - ENABLE_ORACLE_COMPATIBILITY=false
+            - UPDATEAVAIL=NO
+            - TO_CREATE_SAMPLEDB=false
+            - REPODB=false
+            - IS_OSXFS=false
+            # The database lives in the volume rather than in the home directory of the instance, which is what the
+            # image would otherwise persist on the docker for windows filesystem.
+            - PERSISTENT_HOME=false
+            - HADR_ENABLED=false
+        volumes:
+            - db2-ce-volume:/database
+        healthcheck:
+            # A successful connect prints the alias, a failing one prints SQL1013N and nothing else. The exit code of
+            # the db2 cli is no help here, since it reports both the same way.
+            test: ["CMD-SHELL", "su - db2inst1 -c 'db2 connect to testdb' | grep -q 'Local database alias'"]
+            interval: 30s
+            timeout: 30s
+            retries: 40
+            # The instance takes several minutes to come up the first time, and a failure during that window is
+            # expected rather than a real problem.
+            start_period: 300s
+        networks:
+            sql2o-network:
+
 volumes:
     oracle-xe-21c-volume:
+    db2-ce-volume:
 
 networks:
     sql2o-network:

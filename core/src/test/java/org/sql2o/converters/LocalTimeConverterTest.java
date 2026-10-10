@@ -54,6 +54,37 @@ public class LocalTimeConverterTest {
     }
 
     @Test
+    void convert_sqlTime_keepsTheMillisecondsThatToLocalTimeWouldDrop() throws ConverterException {
+        // java.sql.Time holds the fraction of a second in its epoch value while toLocalTime() throws it away.
+        final var converter = new LocalTimeConverter();
+        final var targetTime = LocalTime.of(0, 1, 2, 123_000_000);
+        final var sqlTime = new java.sql.Time(
+                targetTime.atDate(LocalDate.of(1970, 1, 1)).atZone(ZoneId.systemDefault()).toInstant().toEpochMilli());
+
+        assertEquals(targetTime, converter.convert(sqlTime));
+    }
+
+    @Test
+    void convert_offsetTime_returnsTheWallClockPartOfIt() throws ConverterException {
+        // A driver that keeps the offset of a time with a zone hands over an OffsetTime, and a plain LocalTime means
+        // the wall clock part of it.
+        final var converter = new LocalTimeConverter();
+        final var targetTime = OffsetTime.of(0, 5, 1, 0, ZoneOffset.ofHours(2));
+
+        final var convertedTime = converter.convert(targetTime);
+
+        assertEquals(targetTime.toLocalTime(), convertedTime);
+    }
+
+    @Test
+    void convert_localTime_returnsItself() throws ConverterException {
+        final var converter = new LocalTimeConverter();
+        final var targetTime = LocalTime.of(1, 2, 3);
+
+        assertSame(targetTime, converter.convert(targetTime));
+    }
+
+    @Test
     void convert_invalidTimeString_throwsConverterException() {
         // setup
         final var converter = new LocalTimeConverter();
@@ -71,6 +102,9 @@ public class LocalTimeConverterTest {
      * LocalTime as a local time without time zone, while HSQLDB converts the LocalTime to UTC before storing it. For
      * this reason I haven't been able to make one test that works for both HSQLDB and H2.
      * Read more here https://hsqldb.org/doc/2.0/guide/guide.html#sgc_datetime_types
+     *
+     * <p>HSQLDB is no longer part of the core test classpath at all; its own round trip over the typed parameters lives in
+     * {@code HsqlTypedParameterTest} of the hsqldb extension, which leaves a LocalTime out for this same reason.
      * @param dbName
      * @param url
      * @param user
@@ -140,5 +174,14 @@ public class LocalTimeConverterTest {
         public void setTime(LocalTime time) {
             this.time = time;
         }
+    }
+    @Test
+    public void convert_unsupportedType_throwsException() {
+        // setup
+        final var converter = new LocalTimeConverter();
+
+        // test and assert
+        final var ex = assertThrows(ConverterException.class, () -> converter.convert(new Object()));
+        assertEquals("Can't convert type java.lang.Object to LocalTime", ex.getMessage());
     }
 }

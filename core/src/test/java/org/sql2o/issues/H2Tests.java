@@ -3,8 +3,8 @@ package org.sql2o.issues;
 import org.h2.jdbcx.JdbcDataSource;
 import org.joda.time.DateTime;
 import org.joda.time.DateTimeZone;
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 import org.sql2o.Connection;
 import org.sql2o.Query;
 import org.sql2o.Sql2o;
@@ -19,7 +19,7 @@ import java.util.HashMap;
 import java.util.UUID;
 
 import static org.hamcrest.CoreMatchers.*;
-import static org.junit.Assert.assertThat;
+import static org.hamcrest.MatcherAssert.assertThat;
 
 /**
  * Created by lars on 05.10.2014.
@@ -33,7 +33,7 @@ public class H2Tests {
     String user;
     String pass;
 
-    @Before
+    @BeforeEach
     public void setUp() throws Exception {
         driverClassName = "org.h2.Driver";
         url = "jdbc:h2:mem:test;DB_CLOSE_DELAY=-1";

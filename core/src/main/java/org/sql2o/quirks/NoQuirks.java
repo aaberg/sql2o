@@ -7,6 +7,7 @@ import org.sql2o.quirks.parameterparsing.SqlParameterParsingStrategy;
 import org.sql2o.quirks.parameterparsing.impl.DefaultSqlParameterParsingStrategy;
 
 import java.io.InputStream;
+import java.io.Reader;
 import java.sql.*;
 import java.util.Collections;
 import java.util.HashMap;
@@ -64,12 +65,23 @@ public class NoQuirks implements Quirks {
 
     @Override
     public void setParameter(PreparedStatement statement, int paramIdx, Object value) throws SQLException {
-        statement.setObject(paramIdx, value);
+        if (value instanceof Reader) {
+            // A reader has no type a driver can infer, and handing one over as an object is refused by at least one of
+            // them, so it goes down the path that says what it is rather than the one that leaves the driver guessing.
+            setParameter(statement, paramIdx, (Reader) value);
+        } else {
+            statement.setObject(paramIdx, value);
+        }
     }
 
     @Override
     public void setParameter(PreparedStatement statement, int paramIdx, InputStream value) throws SQLException {
         statement.setBinaryStream(paramIdx, value);
+    }
+
+    @Override
+    public void setParameter(PreparedStatement statement, int paramIdx, Reader value) throws SQLException {
+        statement.setCharacterStream(paramIdx, value);
     }
 
     @Override
