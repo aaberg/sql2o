@@ -27,17 +27,21 @@
     </modules>
 
     <properties>
+        <asm.version>9.10.1</asm.version>
         <commons-dbutils.version>1.8.1</commons-dbutils.version>
-        <embedded-db-junit.version>2.1.1</embedded-db-junit.version>
+        <derby.version>10.14.2.0</derby.version>
         <guava.version>33.0.0-jre</guava.version>
         <h2.version>2.2.224</h2.version>
+        <hamcrest.version>2.2</hamcrest.version>
+        <jacoco.version>0.8.15</jacoco.version>
         <hibernate-core.version>4.3.1.Final</hibernate-core.version>
         <hsqldb.version>2.7.2</hsqldb.version>
         <jdbi.version>2.53</jdbi.version>
         <joda-time.version>2.12.7</joda-time.version>
-        <junit.version>4.13.2</junit.version>
+            <junit-jupiter.version>5.11.4</junit-jupiter.version>
         <mockito.version>4.8.0</mockito.version>
         <mybatis.version>3.2.4</mybatis.version>
+        <mysql.version>9.7.0</mysql.version>
         <persistence-api.version>1.0.2</persistence-api.version>
         <slf4j.version>2.0.12</slf4j.version>
         <spring-jdbc.version>4.0.2.RELEASE</spring-jdbc.version>
@@ -103,15 +107,15 @@
     <dependencies>
         <!-- all projects use junit for testing -->
         <dependency>
-            <groupId>junit</groupId>
-            <artifactId>junit</artifactId>
-            <version>${junit.version}</version>
+            <groupId>org.junit.jupiter</groupId>
+            <artifactId>junit-jupiter</artifactId>
+            <version>${junit-jupiter.version}</version>
             <scope>test</scope>
         </dependency>
         <dependency>
-            <groupId>org.junit.jupiter</groupId>
-            <artifactId>junit-jupiter</artifactId>
-            <version>5.11.4</version>
+            <groupId>org.hamcrest</groupId>
+            <artifactId>hamcrest</artifactId>
+            <version>${hamcrest.version}</version>
             <scope>test</scope>
         </dependency>
 
@@ -150,10 +154,46 @@
                 <configuration>
                     <source>17</source>
                     <target>17</target>
+                    <compilerArgs>
+                        <!-- The build is expected to produce no unchecked warnings. A new one either gets
+                             rewritten, or gets a local SuppressWarnings explaining why it is safe there.
+                             rawtypes is deliberately not enabled, it would add a lot of noise. -->
+                        <arg>-Xlint:unchecked</arg>
+                    </compilerArgs>
                 </configuration>
             </plugin>
 
+            <!-- Pinned, otherwise the version comes from the Maven super POM and the test provider
+                 that gets selected can change with the Maven version. -->
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-surefire-plugin</artifactId>
+                <version>3.5.4</version>
+            </plugin>
 
+            <!-- Writes an HTML report per module to target/site/jacoco, plus jacoco.csv for quick diffing.
+                 The report is bound to the test phase so that a plain "mvn -pl core test" produces it.
+                 Only core is measured locally: the extension tests need the docker services. -->
+            <plugin>
+                <groupId>org.jacoco</groupId>
+                <artifactId>jacoco-maven-plugin</artifactId>
+                <version>${jacoco.version}</version>
+                <executions>
+                    <execution>
+                        <id>jacoco-prepare-agent</id>
+                        <goals>
+                            <goal>prepare-agent</goal>
+                        </goals>
+                    </execution>
+                    <execution>
+                        <id>jacoco-report</id>
+                        <phase>test</phase>
+                        <goals>
+                            <goal>report</goal>
+                        </goals>
+                    </execution>
+                </executions>
+            </plugin>
         </plugins>
     </build>
 

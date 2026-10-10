@@ -20,19 +20,20 @@ public class BooleanConverter extends ConverterBase<Boolean> {
             return ((Number)val).intValue() != 0;
         }
 
-        if (val instanceof Character) {
-            // cast to char is required to compile with java 8
-            return (char)val =='Y'
-                    || (char)val =='T'
-                    || (char)val =='J';
-        }
-
-        if (val instanceof String) {
-            String strVal = ((String)val).trim();
-            return "Y".equalsIgnoreCase(strVal) || "YES".equalsIgnoreCase(strVal) || "TRUE".equalsIgnoreCase(strVal) ||
-                    "T".equalsIgnoreCase(strVal) || "J".equalsIgnoreCase(strVal);
+        if (val instanceof Character || val instanceof String) {
+            return isYes(val.toString());
         }
 
         throw new ConverterException("Don't know how to convert type " + val.getClass().getName() + " to " + Boolean.class.getName());
+    }
+
+    /**
+     * Whether the text means yes. Both a single character and a whole string go through here, so that 'y' and "y"
+     * are answered alike.
+     */
+    private static boolean isYes(String val) {
+        String strVal = val.trim();
+        return "Y".equalsIgnoreCase(strVal) || "YES".equalsIgnoreCase(strVal) || "TRUE".equalsIgnoreCase(strVal) ||
+                "T".equalsIgnoreCase(strVal) || "J".equalsIgnoreCase(strVal);
     }
 }

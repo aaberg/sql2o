@@ -7,12 +7,26 @@ import org.sql2o.Connection;
 import org.sql2o.Sql2o;
 import org.sql2o.TestDatabasesArgumentSourceProvider;
 
+import java.time.LocalDate;
 import java.time.OffsetDateTime;
+import java.time.ZoneId;
 import java.time.ZoneOffset;
 
 import static org.junit.jupiter.api.Assertions.*;
 
 public class OffsetDateTimeConverterTest {
+
+    @Test
+    void convert_sqlDate_returnsMidnightOfThatDateWithTheZoneOfTheJvm() throws ConverterException {
+        // A date has no time of day, and midnight is the only reading of it that does not invent anything.
+        final var converter = new OffsetDateTimeConverter();
+        final var expected = LocalDate.of(2024, 1, 1).atStartOfDay()
+                .atOffset(OffsetDateTime.now(ZoneId.systemDefault()).getOffset());
+
+        final var convertedVal = converter.convert(java.sql.Date.valueOf("2024-01-01"));
+
+        assertEquals(expected, convertedVal);
+    }
 
     @Test
     void convert_noConversionNecessary_returnsOffsetDateTime() throws ConverterException {

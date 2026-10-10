@@ -43,6 +43,15 @@
             <version>6.2.1</version>
             <scope>test</scope>
         </dependency>
+
+        <!-- The test support of core, so that the tests here can extend the same base class the core tests use. -->
+        <dependency>
+            <groupId>org.sql2o</groupId>
+            <artifactId>sql2o</artifactId>
+            <version>${project.version}</version>
+            <type>test-jar</type>
+            <scope>test</scope>
+        </dependency>
     </dependencies>
 
 </project>

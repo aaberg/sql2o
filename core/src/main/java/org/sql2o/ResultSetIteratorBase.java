@@ -34,13 +34,17 @@ public abstract class ResultSetIteratorBase<T> implements Iterator<T> {
         }
     }
 
-    // fields needed to properly implement
-    private ResultSetValue<T> next; // keep track of next item in case hasNext() is called multiple times
+    // Fields needed to properly implement: the prefetched value, if there is one, and whether the result
+    // set is exhausted. A null value is a value like any other — only rs.next() saying false ends the iteration —
+    // so the flag and not the value tracks whether a row was prefetched. This used to wrap every row in a holder
+    // object, allocating one per row for nothing.
+    private T next;
+    private boolean hasPrefetch;
     private boolean resultSetFinished; // used to note when result set exhausted
 
     public boolean hasNext() {
         // check if we already fetched next item
-        if (next != null) {
+        if (hasPrefetch) {
             return true;
         }
 
@@ -50,17 +54,19 @@ public abstract class ResultSetIteratorBase<T> implements Iterator<T> {
         }
 
         // now fetch next item
-        next = safeReadNext();
-
-        // check if we got something
-        if (next != null) {
+        try {
+            if (!rs.next()) {
+                // no more items
+                resultSetFinished = true;
+                return false;
+            }
+            next = readNext();
+            hasPrefetch = true;
             return true;
         }
-
-        // no more items
-        resultSetFinished = true;
-
-        return false;
+        catch (SQLException ex) {
+            throw new Sql2oException("Database error: " + ex.getMessage(), ex);
+        }
     }
 
     public T next() {
@@ -68,9 +74,10 @@ public abstract class ResultSetIteratorBase<T> implements Iterator<T> {
             throw new NoSuchElementException();
         }
 
-        T result = next.value;
+        T result = next;
 
         next = null;
+        hasPrefetch = false;
 
         return result;
     }
@@ -79,32 +86,9 @@ public abstract class ResultSetIteratorBase<T> implements Iterator<T> {
         throw new UnsupportedOperationException();
     }
 
-    private ResultSetValue<T> safeReadNext()
-    {
-        try {
-            if (!rs.next())
-                return null;
-
-            @SuppressWarnings("unchecked")
-            ResultSetValue<T> resultSetValue = new <T>ResultSetValue(readNext());
-            return resultSetValue;
-        }
-        catch (SQLException ex) {
-            throw new Sql2oException("Database error: " + ex.getMessage(), ex);
-        }
-    }
-
     protected abstract T readNext() throws SQLException;
 
     protected String getColumnName(int colIdx) throws SQLException {
         return quirks.getColumnName(meta, colIdx);
-    }
-
-    private final class ResultSetValue<T> {
-        public final T value;
-
-        public ResultSetValue(T value){
-            this.value = value;
-        }
     }
 }

@@ -51,20 +51,6 @@
             <version>${h2.version}</version>
         </dependency>
         <dependency>
-            <scope>test</scope>
-            <groupId>org.hsqldb</groupId>
-            <artifactId>hsqldb</artifactId>
-            <version>${hsqldb.version}</version>
-        </dependency>
-        <!-- Makes it a lot easier to run embedded H2 for tests -->
-        <dependency>
-            <groupId>org.zapodot</groupId>
-            <artifactId>embedded-db-junit</artifactId>
-            <version>${embedded-db-junit.version}</version>
-            <scope>test</scope>
-        </dependency>
-
-        <dependency>
             <groupId>org.mockito</groupId>
             <artifactId>mockito-core</artifactId>
             <version>${mockito.version}</version>
@@ -78,11 +64,28 @@
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-jar-plugin</artifactId>
                 <version>2.4</version>
-                <configuration>
-                    <archive>
-                        <manifestFile>src/main/resources/META-INF/MANIFEST.MF</manifestFile>
-                    </archive>
-                </configuration>
+                <executions>
+                    <!-- The osgi manifest belongs to the artifact that ships, so it is configured on this one
+                         execution rather than on the plugin, where it would also land in the test jar. -->
+                    <execution>
+                        <id>default-jar</id>
+                        <configuration>
+                            <archive>
+                                <manifestFile>src/main/resources/META-INF/MANIFEST.MF</manifestFile>
+                            </archive>
+                        </configuration>
+                    </execution>
+                    <!-- Published so that the extensions can share the test support of core. Bound to test-compile
+                         and not to package, since the extensions are built with `mvn -pl extensions/x -am test`,
+                         which never reaches package and would not find the test jar at all. -->
+                    <execution>
+                        <id>test-jar</id>
+                        <phase>test-compile</phase>
+                        <goals>
+                            <goal>test-jar</goal>
+                        </goals>
+                    </execution>
+                </executions>
             </plugin>
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
@@ -90,6 +93,10 @@
                 <configuration>
                     <source>17</source>
                     <target>17</target>
+                    <!-- Keep in sync with the root pom. -->
+                    <compilerArgs>
+                        <arg>-Xlint:unchecked</arg>
+                    </compilerArgs>
                 </configuration>
             </plugin>
 

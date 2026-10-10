@@ -1,21 +1,15 @@
 package org.sql2o;
 
 import com.google.common.collect.ImmutableList;
-import org.hsqldb.jdbc.JDBCDataSource;
 import org.joda.time.DateTime;
 import org.joda.time.LocalTime;
 import org.joda.time.Period;
-import org.junit.Test;
-import org.junit.runner.RunWith;
-import org.junit.runners.Parameterized;
 import org.sql2o.data.LazyTable;
 import org.sql2o.data.Row;
 import org.sql2o.data.Table;
 import org.sql2o.pojos.*;
 import org.sql2o.tools.IOUtils;
 
-import javax.naming.Context;
-import javax.naming.InitialContext;
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.InputStream;
@@ -23,11 +17,12 @@ import java.math.BigDecimal;
 import java.sql.SQLException;
 import java.sql.Time;
 import java.sql.Timestamp;
-import java.time.OffsetTime;
 import java.util.*;
+import java.util.stream.Stream;
 
 import static org.hamcrest.CoreMatchers.*;
-import static org.junit.Assert.*;
+import static org.hamcrest.MatcherAssert.assertThat;
+import static org.junit.jupiter.api.Assertions.*;
 import static org.sql2o.connectionsources.ConnectionSources.join;
 
 /**
@@ -37,19 +32,21 @@ import static org.sql2o.connectionsources.ConnectionSources.join;
  * Time: 9:25 PM
  * Most sql2o tests are in this class.
  */
-@RunWith(Parameterized.class)
-public class Sql2oTest extends BaseMemDbTest {
+public class Sql2oTest {
 
     private static final int NUMBER_OF_USERS_IN_THE_TEST = 10000;
 
     private int insertIntoUsers = 0;
 
-    public Sql2oTest(DbType dbType, String testName) {
-        super(dbType, testName);
+    private Sql2o sql2o;
+
+    static Stream<TestDatabase> databases() {
+        return TestDatabase.databases();
     }
 
-    @Test
-    public void testExecuteAndFetch(){
+    @DatabaseTest
+    public void testExecuteAndFetch(TestDatabase db) {
+        sql2o = db.getSql2o();
         createAndFillUserTable();
 
         try (Connection con = sql2o.open()) {
@@ -77,8 +74,9 @@ public class Sql2oTest extends BaseMemDbTest {
         deleteUserTable();
     }
 
-    @Test
-    public void testExecuteAndFetchUniqueWhenUnique(){
+    @DatabaseTest
+    public void testExecuteAndFetchUniqueWhenUnique(TestDatabase db) {
+        sql2o = db.getSql2o();
         createAndFillUserTable();
 
         try (Connection con = sql2o.open()) {
@@ -91,21 +89,24 @@ public class Sql2oTest extends BaseMemDbTest {
         deleteUserTable();
     }
 
-    @Test(expected = Sql2oException.class)
-    public void testExecuteAndFetchUniqueWhenNotUnique(){
+    @DatabaseTest
+    public void testExecuteAndFetchUniqueWhenNotUnique(TestDatabase db) {
+        sql2o = db.getSql2o();
         createAndFillUserTable();
 
         try (Connection con = sql2o.open()) {
 
-            User user = con.createQuery("select * from user_table u where u.id > 0").executeAndFetchUnique(User.class);
+            assertThrows(Sql2oException.class, () ->
+                    con.createQuery("select * from user_table u where u.id > 0").executeAndFetchUnique(User.class));
         }
         finally {
             deleteUserTable();
         }
     }
 
-    @Test
-    public void testExecuteAndFetchWithNulls(){
+    @DatabaseTest
+    public void testExecuteAndFetchWithNulls(TestDatabase db) {
+        sql2o = db.getSql2o();
         String sql =
                 "create table testExecWithNullsTbl (" +
                 "id int identity primary key, " +
@@ -139,8 +140,9 @@ public class Sql2oTest extends BaseMemDbTest {
         }
     }
 
-    @Test
-    public void testBatch(){
+    @DatabaseTest
+    public void testBatch(TestDatabase db) {
+        sql2o = db.getSql2o();
         sql2o.createQuery(
                 "create table user_table(\n" +
                 "id int identity primary key,\n" +
@@ -165,8 +167,9 @@ public class Sql2oTest extends BaseMemDbTest {
         deleteUserTable();
     }
 
-    @Test
-    public void testExecuteScalar(){
+    @DatabaseTest
+    public void testExecuteScalar(TestDatabase db) {
+        sql2o = db.getSql2o();
         createAndFillUserTable();
 
         Object o = sql2o.createQuery("select text from user_table where id = 2").executeScalar();
@@ -178,8 +181,9 @@ public class Sql2oTest extends BaseMemDbTest {
         deleteUserTable();
     }
 
-    @Test
-    public void testBatchNoTransaction(){
+    @DatabaseTest
+    public void testBatchNoTransaction(TestDatabase db) {
+        sql2o = db.getSql2o();
 
         sql2o.createQuery(
                 "create table user_table(\n" +
@@ -198,8 +202,9 @@ public class Sql2oTest extends BaseMemDbTest {
         deleteUserTable();
     }
 
-    @Test
-    public void testCaseInsensitive(){
+    @DatabaseTest
+    public void testCaseInsensitive(TestDatabase db) {
+        sql2o = db.getSql2o();
         sql2o.createQuery("create table testCI(id2 int primary key, value2 varchar(20), sometext varchar(20), valwithgetter varchar(20))").executeUpdate();
 
         Query query = sql2o.createQuery("insert into testCI(id2, value2, sometext, valwithgetter) values(:id, :value, :someText, :valwithgetter)");
@@ -219,9 +224,10 @@ public class Sql2oTest extends BaseMemDbTest {
         assertTrue(ciEntities2.size() == 20);
     }
 
-    @Test(expected = java.lang.IllegalArgumentException.class)
-    public void testSetMaxBatchRecords(){
-        try (Connection conn = this.sql2o.open()){
+    @DatabaseTest
+    public void testSetMaxBatchRecords(TestDatabase db) {
+        sql2o = db.getSql2o();
+        try (Connection conn = sql2o.open()){
             Query q = conn.createQuery("select 'test'");
             q.setMaxBatchRecords(20);
             assertTrue(q.getMaxBatchRecords() == 20);
@@ -229,12 +235,13 @@ public class Sql2oTest extends BaseMemDbTest {
             q.setMaxBatchRecords(0);
             assertTrue(q.getMaxBatchRecords() == 0);
 
-            q.setMaxBatchRecords(-1);
+            assertThrows(java.lang.IllegalArgumentException.class, () -> q.setMaxBatchRecords(-1));
         }
     }
 
-    @Test
-    public void testBatchWithMaxBatchRecords(){
+    @DatabaseTest
+    public void testBatchWithMaxBatchRecords(TestDatabase db) {
+        sql2o = db.getSql2o();
         try (Connection connection = sql2o.open()) {
             createAndFillUserTable(connection, true, 50);
             genericTestOnUserData(connection);
@@ -248,8 +255,9 @@ public class Sql2oTest extends BaseMemDbTest {
         }
     }
 
-    @Test
-    public void testExecuteAndFetchResultSet() throws SQLException {
+    @DatabaseTest
+    public void testExecuteAndFetchResultSet(TestDatabase db) throws SQLException {
+        sql2o = db.getSql2o();
         List<Integer> list = sql2o.createQuery("select 1 val from (values(0)) union select 2 from (values(0)) union select 3 from (values(0))").executeScalarList(Integer.class);
 
         assertEquals((int)list.get(0), 1);
@@ -257,8 +265,9 @@ public class Sql2oTest extends BaseMemDbTest {
         assertEquals((int)list.get(2), 3);
     }
 
-    @Test
-    public void testExecuteScalarListWithNulls() throws SQLException {
+    @DatabaseTest
+    public void testExecuteScalarListWithNulls(TestDatabase db) throws SQLException {
+        sql2o = db.getSql2o();
         List<String> list = sql2o.createQuery("select val from ( "+
                                               "select 1 ord, null val from (values(0)) union " +
                                               "select 2 ord, 'one' from (values(0)) union " +
@@ -275,8 +284,9 @@ public class Sql2oTest extends BaseMemDbTest {
         assertEquals(list.get(3), "two");
     }
 
-    @Test
-    public void testJodaTime(){
+    @DatabaseTest
+    public void testJodaTime(TestDatabase db) {
+        sql2o = db.getSql2o();
 
         sql2o.createQuery("create table testjoda(id int primary key, joda1 datetime, joda2 datetime)").executeUpdate();
 
@@ -293,8 +303,9 @@ public class Sql2oTest extends BaseMemDbTest {
 
     }
 
-    @Test
-    public void testColumnAnnotation(){
+    @DatabaseTest
+    public void testColumnAnnotation(TestDatabase db) {
+        sql2o = db.getSql2o();
         try(Connection connection = sql2o.open()) {
             connection.createQuery("create table test_column_annotation(id int primary key, text_col varchar(20))").executeUpdate();
 
@@ -313,8 +324,9 @@ public class Sql2oTest extends BaseMemDbTest {
         }
     }
 
-    @Test
-    public void testUtilDate(){
+    @DatabaseTest
+    public void testUtilDate(TestDatabase db) {
+        sql2o = db.getSql2o();
         sql2o.createQuery("create table testutildate(id int primary key, d1 datetime, d2 timestamp, d3 date)").executeUpdate();
 
         Date now = new Date();
@@ -338,8 +350,9 @@ public class Sql2oTest extends BaseMemDbTest {
         }
     }
 
-    @Test
-    public void testConversion(){
+    @DatabaseTest
+    public void testConversion(TestDatabase db) {
+        sql2o = db.getSql2o();
 
         String sql = "select cast(1 as smallint) as val1, 2 as val2 from (values(0)) union select cast(3 as smallint) as val1, 4 as val2 from (values(0))";
         List<TypeConvertEntity> entities = sql2o.createQuery(sql).executeAndFetch(TypeConvertEntity.class);
@@ -347,8 +360,9 @@ public class Sql2oTest extends BaseMemDbTest {
         assertTrue(entities.size() == 2);
     }
 
-    @Test
-    public void testUpdateNoTransaction() throws SQLException {
+    @DatabaseTest
+    public void testUpdateNoTransaction(TestDatabase db) throws SQLException {
+        sql2o = db.getSql2o();
         String ddlQuery = "create table testUpdateNoTransaction(id int primary key, \"value\" varchar(50))";
         Connection connection = sql2o.createQuery(ddlQuery).executeUpdate();
 
@@ -361,8 +375,9 @@ public class Sql2oTest extends BaseMemDbTest {
         assertTrue(connection.getJdbcConnection().isClosed());
     }
 
-    @Test
-    public void testNullDate(){
+    @DatabaseTest
+    public void testNullDate(TestDatabase db) {
+        sql2o = db.getSql2o();
         sql2o.createQuery("create table nullDateTest(id integer primary key, somedate datetime)").executeUpdate();
 
         sql2o.createQuery("insert into nullDateTest(id, somedate) values(:id, :date)")
@@ -373,8 +388,9 @@ public class Sql2oTest extends BaseMemDbTest {
         assertNull(d);
     }
 
-    @Test
-    public void testGetResult(){
+    @DatabaseTest
+    public void testGetResult(TestDatabase db) {
+        sql2o = db.getSql2o();
 
         sql2o.createQuery("create table get_result_test(id integer primary key, \"value\" varchar(20))").executeUpdate();
 
@@ -389,8 +405,9 @@ public class Sql2oTest extends BaseMemDbTest {
         assertEquals(3, result);
     }
 
-    @Test
-    public void testGetKeys(){
+    @DatabaseTest
+    public void testGetKeys(TestDatabase db) {
+        sql2o = db.getSql2o();
 
         sql2o.createQuery("create table get_keys_test(id integer identity primary key, \"value\" varchar(20))").executeUpdate();
 
@@ -413,19 +430,14 @@ public class Sql2oTest extends BaseMemDbTest {
 
         assertNotNull(keys);
 
-        // return value of auto generated keys is DB dependent.
-        // H2 will always just return the last generated identity.
-        // HyperSQL returns all generated identities (which is more ideal).
-        if (this.dbType == DbType.HyperSQL) {
-            assertTrue(keys.length == 2);
-        }
-        else {
-            assertTrue(keys.length > 0);
-        }
+        // The return value of auto generated keys is DB dependent: h2 answers with the last generated identity, and the
+        // databases that hand back every one of them assert that where they run.
+        assertTrue(keys.length > 0);
     }
 
-    @Test
-    public void testExecuteBatchGetKeys() {
+    @DatabaseTest
+    public void testExecuteBatchGetKeys(TestDatabase db) {
+        sql2o = db.getSql2o();
         sql2o.createQuery("create table get_keys_test2(id integer identity primary key, \"value\" varchar(20))").executeUpdate();
 
         String insertSql = "insert into get_keys_test2(\"value\") values(:val)";
@@ -450,19 +462,14 @@ public class Sql2oTest extends BaseMemDbTest {
             assertTrue(key >= 0);
         }
 
-        // return value of auto generated keys is DB dependent.
-        // H2 will always just return the last generated identity.
-        // HyperSQL returns all generated identities (which is more ideal).
-        if (this.dbType == DbType.HyperSQL) {
-            assertTrue(keys.size() == vals.size());
-        }
-        else {
-            assertTrue(keys.size() > 0);
-        }
+        // The return value of auto generated keys is DB dependent: h2 answers with the last generated identity, and the
+        // databases that hand back every one of them assert that where they run.
+        assertTrue(keys.size() > 0);
     }
 
-    @Test
-    public void testRollback(){
+    @DatabaseTest
+    public void testRollback(TestDatabase db) {
+        sql2o = db.getSql2o();
 
         sql2o.createQuery("create table test_rollback_table(id integer identity primary key, \"value\" varchar(25))").executeUpdate();
 
@@ -485,8 +492,9 @@ public class Sql2oTest extends BaseMemDbTest {
         assertEquals(1, rowCount);
     }
 
-    @Test
-    public void testBigDecimals(){
+    @DatabaseTest
+    public void testBigDecimals(TestDatabase db) {
+        sql2o = db.getSql2o();
 
         sql2o.createQuery("create table bigdectesttable (id integer identity primary key, val1 numeric(5,3), val2 integer)").executeUpdate();
 
@@ -498,8 +506,9 @@ public class Sql2oTest extends BaseMemDbTest {
         assertEquals(new BigDecimal("4"), pojo.val2);
     }
 
-    @Test
-    public void testQueryDbMappings(){
+    @DatabaseTest
+    public void testQueryDbMappings(TestDatabase db) {
+        sql2o = db.getSql2o();
         Entity entity = sql2o.createQuery("select 1 as id, 'something' as caption, cast('2011-01-01' as date) as theTime from (values(0))")
                 .addColumnMapping("caption", "text")
                 .addColumnMapping("theTime", "time").executeAndFetchFirst(Entity.class);
@@ -509,9 +518,10 @@ public class Sql2oTest extends BaseMemDbTest {
         assertEquals(new DateTime(2011,1,1,0,0,0,0).toDate(), entity.time);
     }
 
-    @Test
-    public void testGlobalDbMappings(){
-        Sql2o sql2o1 = new Sql2o(dbType.url, dbType.user, dbType.pass);
+    @DatabaseTest
+    public void testGlobalDbMappings(TestDatabase db) {
+        sql2o = db.getSql2o();
+        Sql2o sql2o1 = new Sql2o(db.getUrl(), db.getUser(), db.getPass());
 
         Map<String,String> defaultColMaps = new HashMap<String, String>();
         defaultColMaps.put("caption", "text");
@@ -527,16 +537,18 @@ public class Sql2oTest extends BaseMemDbTest {
 
     }
 
-    @Test
-    public void testSetPrivateFields(){
+    @DatabaseTest
+    public void testSetPrivateFields(TestDatabase db) {
+        sql2o = db.getSql2o();
         EntityWithPrivateFields entity = sql2o.createQuery("select 1 id, 'hello' \"value\" from (values(0))").executeAndFetchFirst(EntityWithPrivateFields.class);
 
         assertEquals(1, entity.getId());
         assertEquals("hello1", entity.getValue());
     }
 
-    @Test
-    public void testFetchTable(){
+    @DatabaseTest
+    public void testFetchTable(TestDatabase db) {
+        sql2o = db.getSql2o();
         sql2o.createQuery("create table tabletest(id integer identity primary key, \"VALUE\" varchar(20), value2 decimal(5,1))").executeUpdate();
         sql2o.createQuery("insert into tabletest(\"VALUE\",value2) values (:value, :value2)")
                 .addParameter("value", "something").addParameter("value2", new BigDecimal("3.4")).addToBatch()
@@ -564,8 +576,9 @@ public class Sql2oTest extends BaseMemDbTest {
         assertEquals(5.5D, row1.getDouble(2), 0.00001);
     }
 
-    @Test
-    public void testTable_asList() {
+    @DatabaseTest
+    public void testTable_asList(TestDatabase db) {
+        sql2o = db.getSql2o();
         createAndFillUserTable();
 
         List<Map<String, Object>> rows;
@@ -588,8 +601,9 @@ public class Sql2oTest extends BaseMemDbTest {
         deleteUserTable();
     }
 
-    @Test
-    public void testStringConversion() {
+    @DatabaseTest
+    public void testStringConversion(TestDatabase db) {
+        sql2o = db.getSql2o();
         StringConversionPojo pojo = sql2o.createQuery("select '1' val1, '2  ' val2, '' val3, '' val4, null val5 from (values(0))").executeAndFetchFirst(StringConversionPojo.class);
 
         assertEquals((Integer)1, pojo.val1);
@@ -599,16 +613,18 @@ public class Sql2oTest extends BaseMemDbTest {
         assertNull(pojo.val5);
     }
 
-    @Test
-    public void testSuperPojo(){
+    @DatabaseTest
+    public void testSuperPojo(TestDatabase db) {
+        sql2o = db.getSql2o();
         SuperPojo pojo = sql2o.createQuery("select 1 id, 'something' \"value\" from (values(0))").executeAndFetchFirst(SuperPojo.class);
 
         assertEquals(1, pojo.getId());
         assertEquals("something1", pojo.getValue());
     }
 
-    @Test
-    public void testComplexTypes(){
+    @DatabaseTest
+    public void testComplexTypes(TestDatabase db) {
+        sql2o = db.getSql2o();
         try (final var connection = sql2o.open()) {
             ComplexEntity pojo = connection.createQuery("select 1 id, 1 \"entity.id\", 'something' \"entity.value\" from (values(0))").setName("testComplexTypes").executeAndFetchFirst(ComplexEntity.class);
 
@@ -618,8 +634,9 @@ public class Sql2oTest extends BaseMemDbTest {
         }
     }
 
-    @Test
-    public void testRunInsideTransaction(){
+    @DatabaseTest
+    public void testRunInsideTransaction(TestDatabase db) {
+        sql2o = db.getSql2o();
 
         sql2o.createQuery("create table runinsidetransactiontable(id integer identity primary key, \"value\" varchar(50))").executeUpdate();
         boolean failed = false;
@@ -671,8 +688,9 @@ public class Sql2oTest extends BaseMemDbTest {
         assertEquals(2, rowCount);
     }
 
-    @Test
-    public void testRunInsideTransactionWithResult(){
+    @DatabaseTest
+    public void testRunInsideTransactionWithResult(TestDatabase db) {
+        sql2o = db.getSql2o();
         sql2o.createQuery("create table testRunInsideTransactionWithResultTable(id integer identity primary key, \"value\" varchar(50))").executeUpdate();
 
     }
@@ -693,8 +711,9 @@ public class Sql2oTest extends BaseMemDbTest {
         }
     }
 
-    @Test
-    public void testDynamicExecuteScalar(){
+    @DatabaseTest
+    public void testDynamicExecuteScalar(TestDatabase db) {
+        sql2o = db.getSql2o();
         Object origVal = sql2o.createQuery("select 1 from (values(0))").executeScalar();
         assertTrue(Integer.class.equals(origVal.getClass()));
         assertEquals(1, origVal);
@@ -707,8 +726,9 @@ public class Sql2oTest extends BaseMemDbTest {
         assertEquals(expected, shortVal);
     }
 
-    @Test
-    public void testUpdateWithNulls() {
+    @DatabaseTest
+    public void testUpdateWithNulls(TestDatabase db) {
+        sql2o = db.getSql2o();
         sql2o.createQuery("create table testUpdateWithNulls_2(id integer identity primary key, \"value\" integer)").executeUpdate();
 
         Integer nullInt = null;
@@ -716,8 +736,9 @@ public class Sql2oTest extends BaseMemDbTest {
         sql2o.createQuery("insert into testUpdateWithNulls_2(\"value\") values(:val)").addParameter("val", 2).addToBatch().addParameter("val", nullInt).addToBatch().executeBatch();
     }
 
-    @Test
-    public void testExceptionInRunnable() {
+    @DatabaseTest
+    public void testExceptionInRunnable(TestDatabase db) {
+        sql2o = db.getSql2o();
         sql2o.createQuery("create table testExceptionInRunnable(id integer primary key, \"value\" varchar(20))").executeUpdate();
 
         try{
@@ -771,8 +792,9 @@ public class Sql2oTest extends BaseMemDbTest {
         public TestEnum val2;
     }
 
-    @Test
-    public void testEnums() {
+    @DatabaseTest
+    public void testEnums(TestDatabase db) {
+        sql2o = db.getSql2o();
         sql2o.createQuery("create table EnumTest(id int identity primary key, enum_val varchar(10), enum_val2 int) ").executeUpdate();
 
         sql2o.createQuery("insert into EnumTest(enum_val, enum_val2) values (:val, :val2)")
@@ -798,8 +820,9 @@ public class Sql2oTest extends BaseMemDbTest {
         public Boolean val2;
     }
 
-    @Test
-    public void testBooleanConverter() {
+    @DatabaseTest
+    public void testBooleanConverter(TestDatabase db) {
+        sql2o = db.getSql2o();
         String sql = "select true as val1, false as val2 from (values(0))";
 
         BooleanPOJO pojo = sql2o.createQuery(sql).executeAndFetchFirst(BooleanPOJO.class);
@@ -827,8 +850,9 @@ public class Sql2oTest extends BaseMemDbTest {
         public InputStream data;
     }
 
-    @Test
-    public void testBlob() throws IOException {
+    @DatabaseTest
+    public void testBlob(TestDatabase db) throws IOException {
+        sql2o = db.getSql2o();
         String createSql = "create table blobtbl2(id int identity primary key, data blob)";
         sql2o.createQuery(createSql).executeUpdate();
 
@@ -850,8 +874,9 @@ public class Sql2oTest extends BaseMemDbTest {
         assertThat(dataString, is(equalTo(pojo2DataString)));
     }
 
-    @Test
-    public void testInputStream() throws IOException {
+    @DatabaseTest
+    public void testInputStream(TestDatabase db) throws IOException {
+        sql2o = db.getSql2o();
         String createSql = "create table blobtbl(id int identity primary key, data blob)";
         sql2o.createQuery(createSql).executeUpdate();
 
@@ -876,8 +901,9 @@ public class Sql2oTest extends BaseMemDbTest {
         assertThat(dataString, is(equalTo(pojo2DataString)));
     }
 
-    @Test
-    public void testTimeConverter(){
+    @DatabaseTest
+    public void testTimeConverter(TestDatabase db) {
+        sql2o = db.getSql2o();
         String sql = "select current_time as col1 from (values(0))";
 
         Time sqlTime = sql2o.createQuery(sql).executeScalar(Time.class);
@@ -928,8 +954,9 @@ public class Sql2oTest extends BaseMemDbTest {
 
     }
 
-    @Test
-    public void testBindPojo(){
+    @DatabaseTest
+    public void testBindPojo(TestDatabase db) {
+        sql2o = db.getSql2o();
         String createSql = "create table bindtbl(id int identity primary key, data1 varchar(10), data2 timestamp, data3 bigint)";
         sql2o.createQuery(createSql).executeUpdate();
 
@@ -953,8 +980,9 @@ public class Sql2oTest extends BaseMemDbTest {
         assertTrue(pojo1.equals(pojo2));
     }
 
-    @Test
-    public void testRowGetObjectWithConverters() {
+    @DatabaseTest
+    public void testRowGetObjectWithConverters(TestDatabase db) {
+        sql2o = db.getSql2o();
         String sql = "select 1 col1, '23' col2 from (values(0))";
         Table t = sql2o.createQuery(sql).executeAndFetchTable();
         Row r = t.rows().get(0);
@@ -976,8 +1004,9 @@ public class Sql2oTest extends BaseMemDbTest {
         assertThat(col2AsLong, is(equalTo(23L)));
     }
 
-    @Test
-    public void testExecuteAndFetchLazy(){
+    @DatabaseTest
+    public void testExecuteAndFetchLazy(TestDatabase db) {
+        sql2o = db.getSql2o();
         createAndFillUserTable();
 
         ResultSetIterable<User> allUsers = sql2o.createQuery("select * from user_table").executeAndFetchLazy(User.class);
@@ -1001,8 +1030,9 @@ public class Sql2oTest extends BaseMemDbTest {
         deleteUserTable();
     }
 
-    @Test
-    public void testResultSetIterator_multipleHasNextWorks() {
+    @DatabaseTest
+    public void testResultSetIterator_multipleHasNextWorks(TestDatabase db) {
+        sql2o = db.getSql2o();
         createAndFillUserTable();
 
         ResultSetIterable<User> allUsers = sql2o.createQuery("select * from user_table").executeAndFetchLazy(User.class);
@@ -1026,8 +1056,9 @@ public class Sql2oTest extends BaseMemDbTest {
         deleteUserTable();
     }
 
-    @Test
-    public void testExecuteAndFetch_fallbackToExecuteScalar() {
+    @DatabaseTest
+    public void testExecuteAndFetch_fallbackToExecuteScalar(TestDatabase db) {
+        sql2o = db.getSql2o();
         createAndFillUserTable();
 
         // this should NOT fallback to executeScalar
@@ -1046,8 +1077,9 @@ public class Sql2oTest extends BaseMemDbTest {
         deleteUserTable();
     }
 
-    @Test
-    public void testExecuteAndFetchWithAutoclose() throws SQLException {
+    @DatabaseTest
+    public void testExecuteAndFetchWithAutoclose(TestDatabase db) throws SQLException {
+        sql2o = db.getSql2o();
         createAndFillUserTable();
 
         Connection con = sql2o.open();
@@ -1067,8 +1099,9 @@ public class Sql2oTest extends BaseMemDbTest {
 
     }
 
-    @Test
-    public void testLazyTable() throws SQLException {
+    @DatabaseTest
+    public void testLazyTable(TestDatabase db) throws SQLException {
+        sql2o = db.getSql2o();
         createAndFillUserTable();
 
         Query q = sql2o.createQuery("select * from user_table");
@@ -1092,8 +1125,9 @@ public class Sql2oTest extends BaseMemDbTest {
         assertThat(q.getConnection().getJdbcConnection().isClosed(), is(true));
     }
 
-    @Test
-    public void testTransactionAutoClosable() {
+    @DatabaseTest
+    public void testTransactionAutoClosable(TestDatabase db) {
+        sql2o = db.getSql2o();
 
         sql2o.createQuery("create table testTransactionAutoClosable(id int primary key, val varchar(20) not null)").executeUpdate();
 
@@ -1127,8 +1161,9 @@ public class Sql2oTest extends BaseMemDbTest {
 
     }
 
-    @Test
-    public void testExternalTransactionCommit() {
+    @DatabaseTest
+    public void testExternalTransactionCommit(TestDatabase db) {
+        sql2o = db.getSql2o();
 
         try (Connection connection1 = sql2o.open()) {
             connection1.createQuery("create table testExternalTransactionCommit(id int primary key, val varchar(20) not null)")
@@ -1173,8 +1208,9 @@ public class Sql2oTest extends BaseMemDbTest {
 
     }
 
-    @Test
-    public void testExternalTransactionRollback() {
+    @DatabaseTest
+    public void testExternalTransactionRollback(TestDatabase db) {
+        sql2o = db.getSql2o();
 
         try (Connection connection1 = sql2o.open()) {
             connection1.createQuery("create table testExternalTransactionRollback(id int primary key, val varchar(20) not null)")
@@ -1219,8 +1255,9 @@ public class Sql2oTest extends BaseMemDbTest {
 
     }
 
-    @Test
-    public void testOpenConnection() throws SQLException {
+    @DatabaseTest
+    public void testOpenConnection(TestDatabase db) throws SQLException {
+        sql2o = db.getSql2o();
 
         Connection connection = sql2o.open();
 
@@ -1238,8 +1275,9 @@ public class Sql2oTest extends BaseMemDbTest {
         assertThat(connection.getJdbcConnection().isClosed(), is(true));
     }
 
-    @Test
-    public void testWithConnection() {
+    @DatabaseTest
+    public void testWithConnection(TestDatabase db) {
+        sql2o = db.getSql2o();
 
         createAndFillUserTable();
 
@@ -1319,8 +1357,9 @@ public class Sql2oTest extends BaseMemDbTest {
         }
     }
 
-    @Test
-    public void testAutoDeriveColumnNames () {
+    @DatabaseTest
+    public void testAutoDeriveColumnNames(TestDatabase db) {
+        sql2o = db.getSql2o();
         String createTableSql = "create table testAutoDeriveColumnNames (id_val integer primary key, another_very_exciting_value varchar(20))";
         String insertSql = "insert into testAutoDeriveColumnNames values (:id, :val)";
         String selectSql = "select * from testAutoDeriveColumnNames";
@@ -1352,8 +1391,9 @@ public class Sql2oTest extends BaseMemDbTest {
         }
     }
 
-    @Test
-    public void testClob() {
+    @DatabaseTest
+    public void testClob(TestDatabase db) {
+        sql2o = db.getSql2o();
         try (Connection connection = sql2o.open()) {
             connection.createQuery("create table testClob(id integer primary key, val clob)")
                     .executeUpdate();
@@ -1373,8 +1413,9 @@ public class Sql2oTest extends BaseMemDbTest {
 
     }
 
-    @Test
-    public void testBindInIteration() {
+    @DatabaseTest
+    public void testBindInIteration(TestDatabase db) {
+        sql2o = db.getSql2o();
         try (Connection connection = sql2o.open()) {
             createAndFillUserTable(connection, true);
             genericTestOnUserData(connection);
@@ -1382,8 +1423,9 @@ public class Sql2oTest extends BaseMemDbTest {
 
     }
 
-    @Test
-    public void testArrayParameter(){
+    @DatabaseTest
+    public void testArrayParameter(TestDatabase db) {
+        sql2o = db.getSql2o();
         createAndFillUserTable();
 
         try(Connection connection = sql2o.open()) {

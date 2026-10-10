@@ -12,6 +12,7 @@ import org.sql2o.quirks.Quirks;
 import org.sql2o.reflection2.PojoIntrospector;
 
 import java.io.InputStream;
+import java.io.Reader;
 import java.lang.reflect.InvocationTargetException;
 import java.sql.*;
 import java.util.*;
@@ -25,6 +26,19 @@ import static org.sql2o.converters.Convert.throwIfNull;
 public class Query implements AutoCloseable {
 
     private final static Logger logger = LocalLoggerFactory.getLogger(Query.class);
+
+    /** Hands a value back exactly as it came, for the scalar reads that ask for no particular type. */
+    private final static Converter<Object> identityConverter = new Converter<Object>() {
+        @Override
+        public Object convert(Object val) throws ConverterException {
+            return val;
+        }
+
+        @Override
+        public Object toDatabaseParam(Object val) {
+            return val;
+        }
+    };
 
     private Connection connection;
     private Map<String, String> caseSensitiveColumnMappings;
@@ -164,6 +178,8 @@ public class Query implements AutoCloseable {
         //TODO: must cover most of types: BigDecimal,Boolean,SmallInt,Double,Float,byte[]
         if(InputStream.class.isAssignableFrom(parameterClass))
             return addParameter(name, (InputStream)value);
+        if(Reader.class.isAssignableFrom(parameterClass))
+            return addParameter(name, (Reader)value);
         if(Integer.class==parameterClass)
             return addParameter(name, (Integer)value);
         if(Long.class==parameterClass)
@@ -195,6 +211,17 @@ public class Query implements AutoCloseable {
         return this;
     }
 
+    /**
+     * Adds parameters positionally, naming them after the position they were given in: the first value is bound to
+     * {@code p1}, the second to {@code p2}, and so on. The statement therefore has to name them that way, for
+     * example {@code select * from t where a = :p1 and b = :p2}.
+     *
+     * <p>Adding a value whose generated name is not declared in the statement fails with a
+     * {@link Sql2oException}, so the count has to line up with the named placeholders.
+     *
+     * @param paramValues the values to bind, in the order they appear
+     * @return this query, for chaining
+     */
     public Query withParams(Object... paramValues){
         int i=0;
         for (Object paramValue : paramValues) {
@@ -213,6 +240,23 @@ public class Query implements AutoCloseable {
     }
 
     public Query addParameter(String name, final InputStream value){
+        addParameterInternal(name, new ParameterSetter() {
+            public void setParameter(int paramIdx, PreparedStatement statement) throws SQLException {
+                getConnection().getSql2o().getQuirks().setParameter(statement, paramIdx, value);
+            }
+        });
+
+        return this;
+    }
+
+    /**
+     * Binds a stream of characters, which is how a clob is written when the text does not already sit in a String. This is
+     * the counterpart of the {@link InputStream} overload for a blob, and it goes to the driver's character stream
+     * rather than to {@code setObject}, which at least one of the databases here refuses for a reader.
+     *
+     * <p>The reader is not closed: whoever opened it owns it, the same as for an {@link InputStream}.
+     */
+    public Query addParameter(String name, final Reader value){
         addParameterInternal(name, new ParameterSetter() {
             public void setParameter(int paramIdx, PreparedStatement statement) throws SQLException {
                 getConnection().getSql2o().getQuirks().setParameter(statement, paramIdx, value);
@@ -694,30 +738,7 @@ public class Query implements AutoCloseable {
     }
 
     public Object executeScalar() {
-        long start = System.currentTimeMillis();
-
-        logExecution();
-        try (final PreparedStatement ps = buildPreparedStatement();
-             final ResultSet rs = ps.executeQuery()) {
-            if (rs.next()) {
-                Object o = getQuirks().getRSVal(rs, 1);
-                long end = System.currentTimeMillis();
-                logger.debug("total: {} ms; executed scalar [{}]", new Object[]{
-                    end - start,
-                    this.getName() == null ? "No name" : this.getName()
-                });
-                return o;
-            } else {
-                return null;
-            }
-
-        } catch (SQLException e) {
-            this.connection.onException();
-            throw new Sql2oException("Database error occurred while running executeScalar: " + e.getMessage(), e);
-        } finally {
-            closeConnectionIfNecessary();
-        }
-
+        return executeScalar(identityConverter);
     }
 
     private Quirks getQuirks() {
@@ -729,20 +750,49 @@ public class Query implements AutoCloseable {
             Converter<V> converter;
             //noinspection unchecked
             converter = throwIfNull(returnType, getQuirks().converterOf(returnType));
-            //noinspection unchecked
-            logExecution();
+            // executeScalar(Converter) logs the query itself, and logging it here as well logged it twice.
             return executeScalar(converter);
         } catch (ConverterException e) {
             throw new Sql2oException("Error occured while converting value from database to type " + returnType, e);
         }
     }
 
+    /**
+     * Reads the first column of the first row and converts it while the result set is still open.
+     *
+     * <p>That order is what makes a value the driver hands back as a handle readable at all: a clob or a blob is a
+     * locator that is only valid as long as the statement that produced it, so converting after the try-with-resources
+     * below has closed the result set and the statement leaves db2 answering {@code SQLCODE=-4470, Lob object is
+     * closed}. For a value the driver gives over outright the order makes no difference, which is why it went unnoticed.
+     */
     public <V> V executeScalar(Converter<V> converter){
-        try {
-            //noinspection unchecked
-            return converter.convert(executeScalar());
-        } catch (ConverterException e) {
-            throw new Sql2oException("Error occured while converting value from database", e);
+        long start = System.currentTimeMillis();
+
+        logExecution();
+        try (final PreparedStatement ps = buildPreparedStatement();
+             final ResultSet rs = ps.executeQuery()) {
+            try {
+                if (rs.next()) {
+                    Object o = getQuirks().getRSVal(rs, 1);
+                    long end = System.currentTimeMillis();
+                    logger.debug("total: {} ms; executed scalar [{}]", new Object[]{
+                        end - start,
+                        this.getName() == null ? "No name" : this.getName()
+                    });
+
+                    //noinspection unchecked
+                    return converter.convert(o);
+                } else {
+                    return converter.convert(null);
+                }
+            } catch (ConverterException e) {
+                throw new Sql2oException("Error occured while converting value from database", e);
+            }
+        } catch (SQLException e) {
+            this.connection.onException();
+            throw new Sql2oException("Database error occurred while running executeScalar: " + e.getMessage(), e);
+        } finally {
+            closeConnectionIfNecessary();
         }
     }
 

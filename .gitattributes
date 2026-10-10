@@ -1,0 +1,3 @@
+# Line endings are LF in the repository and in every working tree, matching .editorconfig.
+# Without this, core.autocrlf on a Windows clone turns the checkout into CRLF and git warns on every add.
+* text=auto eol=lf

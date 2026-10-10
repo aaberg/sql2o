@@ -26,6 +26,10 @@
         <module>oracle</module>
         <module>oracle-joda-time</module>
         <module>db2</module>
+        <module>bytecode</module>
+        <module>hsqldb</module>
+        <module>derby</module>
+        <module>mysql</module>
     </modules>
 
     <dependencies>
